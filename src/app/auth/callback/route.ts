@@ -6,7 +6,7 @@ export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
   // 로그인 후 이동할 페이지 (기본값: '/')
-  const next = searchParams.get('next') ?? '/'
+  const next = searchParams.get('next') ?? '/timebox'
 
   if (code) {
     // server.ts에서 만든 비동기 클라이언트 호출
