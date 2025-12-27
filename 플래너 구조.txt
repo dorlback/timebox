@@ -1,0 +1,16 @@
+app/timebox/page 
+랜더링 될 페이지 메인
+
+컴포넌트: TimeBoxPlanner
+제일 상단이 될 플래너의 뼈대.
+날짜, 브레인 덤프 드래그 앤 드롭 등각종 이벤트들 관리 영역과
+추후 저장/불러오기 데이터 관리 영역도 추가 될 예정
+
+좌측에 TodoList,BrainDump
+우측에TimePlan(전체적인 타임플랜 박스), TimeBlockEditor(시간 수정 모달)
+
+
+timeplan 은 우축에 그려질 시간표임
+DateSelector 날짜 선택
+TimeGrid 시간표 가있음
+

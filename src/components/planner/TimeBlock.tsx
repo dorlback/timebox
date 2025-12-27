@@ -23,20 +23,29 @@ export const TimeBlock: React.FC<TimeBlockProps> = ({
   const color = getColorByIndex(block.colorIndex);
   const isCompleted = block.completed;
 
+  // 50분 미만이면 내용 숨김
+  const duration = block.endTime - block.startTime;
+  const showContent = duration >= 50;
+
   return (
     <div
-      className={`absolute left-12 right-0 rounded px-2 py-1 transition-colors ${isCompleted
+      className={`absolute left-12 right-0 rounded px-2 py-1 transition-all ${isCompleted
         ? 'bg-gray-200 border-2 border-gray-400'
         : `${color.bg} border-2 ${color.border}`
-        } ${isDragging ? 'opacity-70 shadow-lg cursor-move' : ''
-        } ${isResizing ? 'opacity-70 shadow-lg' : ''} ${isCompleted ? '' : 'hover:brightness-95'
-        }`}
+        } ${isDragging ? 'opacity-70 shadow-lg cursor-move' : ''} ${isResizing ? 'opacity-70 shadow-lg' : ''
+        } ${isCompleted ? '' : 'hover:brightness-95'}`}
       style={{
         top: `${top}px`,
         height: `${height}px`,
         cursor: isDragging ? 'move' : 'default'
       }}
       onMouseDown={(e) => onMouseDown(e, block)}
+      onDoubleClick={(e) => {
+        if (!showContent) {
+          e.stopPropagation();
+          onEdit(block);
+        }
+      }}
       onMouseMove={(e) => {
         if (isDragging || isResizing) return;
         const rect = e.currentTarget.getBoundingClientRect();
@@ -45,7 +54,7 @@ export const TimeBlock: React.FC<TimeBlockProps> = ({
         if (offsetY <= 10 || offsetY >= blockHeight - 10) {
           e.currentTarget.style.cursor = 'ns-resize';
         } else {
-          e.currentTarget.style.cursor = 'move';
+          e.currentTarget.style.cursor = showContent ? 'move' : 'pointer';
         }
       }}
       onMouseLeave={(e) => {
@@ -53,28 +62,48 @@ export const TimeBlock: React.FC<TimeBlockProps> = ({
           e.currentTarget.style.cursor = 'default';
         }
       }}
+      title={
+        !showContent
+          ? `${block.text}\n${formatTimeDisplay(block.startTime)} - ${formatTimeDisplay(
+            block.endTime
+          )} (${duration}분)`
+          : ''
+      }
     >
-      <div className={`text-xs font-semibold truncate pointer-events-none ${isCompleted ? 'text-gray-600 line-through' : color.text
-        }`}>
-        {block.text}
-      </div>
-      <div className={`text-xs mt-1 flex justify-between items-center ${isCompleted ? 'text-gray-500' : color.text.replace('900', '700')
-        }`}>
-        <span className="pointer-events-none">
-          {formatTimeDisplay(block.startTime)} - {formatTimeDisplay(block.endTime)}
-          <span className="ml-2">({block.endTime - block.startTime}분)</span>
-        </span>
-        <button
-          className={`edit-button text-white px-2 py-1 rounded text-xs ${isCompleted ? 'bg-gray-400 hover:bg-gray-500' : 'bg-blue-500 hover:bg-blue-600'
-            }`}
-          onClick={(e) => {
-            e.stopPropagation();
-            onEdit(block);
-          }}
-        >
-          수정
-        </button>
-      </div>
+      {showContent && (
+        <>
+          <div
+            className={`text-xs font-semibold truncate pointer-events-none ${isCompleted ? 'text-gray-600 line-through' : color.text
+              }`}
+          >
+            {block.text}
+          </div>
+          <div
+            className={`text-xs mt-1 flex justify-between items-center ${isCompleted
+              ? 'text-gray-500'
+              : color.text.replace('900', '700')
+              }`}
+          >
+            <span className="pointer-events-none">
+              {formatTimeDisplay(block.startTime)} -{' '}
+              {formatTimeDisplay(block.endTime)}
+              <span className="ml-2">({duration}분)</span>
+            </span>
+            <button
+              className={`edit-button text-white px-2 py-1 rounded text-xs ${isCompleted
+                ? 'bg-gray-400 hover:bg-gray-500'
+                : 'bg-blue-500 hover:bg-blue-600'
+                }`}
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit(block);
+              }}
+            >
+              수정
+            </button>
+          </div>
+        </>
+      )}
     </div>
   );
 };

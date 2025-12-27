@@ -12,8 +12,10 @@ import { TimeBlockEditor } from './TimeBlockEditor';
 import { ErrorToast } from './ErrorToast';
 
 const TimeBoxPlanner = () => {
+  // 날짜를 적용할 스테이트
   const [date, setDate] = useState(new Date());
   const { errorMessage, showError } = useErrorToast();
+  // 날짜에 맞게 덤프,투두,플래너 등을 불러올 커스텀훅
   const {
     brainDump,
     todoList,
@@ -23,10 +25,10 @@ const TimeBoxPlanner = () => {
     setTimeBlocks
   } = usePlannerData(date);
 
-  const [newDumpText, setNewDumpText] = useState('');
-  const [draggedItem, setDraggedItem] = useState<any>(null);
-  const [dragSource, setDragSource] = useState<string | null>(null);
-  const [editingBlock, setEditingBlock] = useState<TimeBlock | null>(null);
+  const [newDumpText, setNewDumpText] = useState(''); // 브레인 덤프 입력창 상태
+  const [draggedItem, setDraggedItem] = useState<any>(null); // 현재 드래그 중인 아이템
+  const [dragSource, setDragSource] = useState<string | null>(null); // 드래그 시작 지점이 어디인지 ('brain-dump' 또는 'todo-list')
+  const [editingBlock, setEditingBlock] = useState<TimeBlock | null>(null); // 수정 중인 타임 블록
 
   // 날짜 변경 핸들러
   const handleDateChange = (year: number, month: number, day: number) => {
@@ -44,6 +46,7 @@ const TimeBoxPlanner = () => {
   };
 
   // TimeBlock 업데이트
+  // 시간 블록의 시작/종료 시간 업데이트
   const updateBlockTime = (blockId: number, newStart: number, newEnd: number) => {
     setTimeBlocks(timeBlocks.map(block =>
       block.id === blockId ? { ...block, startTime: newStart, endTime: newEnd } : block
@@ -222,58 +225,70 @@ const TimeBoxPlanner = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
-        <div className="bg-gray-700 text-white px-4 py-2 mb-6 rounded">
+    <div className="h-screen bg-gray-50 p-6 flex flex-col">
+      {/* 상단 헤더 */}
+      <div className="max-w-7xl mx-auto w-full flex flex-col flex-grow overflow-hidden">
+        <div className="bg-gray-700 text-white px-4 py-2 mb-6 rounded flex-shrink-0">
           <h1 className="text-lg font-semibold">DAILY TIME BOX PLANNER</h1>
         </div>
 
         <ErrorToast message={errorMessage} />
 
-        <div className="grid grid-cols-3 gap-6">
-          <div className="space-y-6">
-            <TodoList
-              items={todoList}
-              onToggleComplete={toggleTodoComplete}
-              onDeleteItem={deleteTodo}
-              onMoveToBrainDump={moveTodoToBrainDump}
-              onDragStart={(e, item) => handleDragStart(e, item, 'todo-list')}
-              onDragOver={handleDragOver}
-              onDrop={handleDropToTodo}
-            />
+        <div className="grid grid-cols-3 gap-6 flex-grow overflow-hidden">
+          {/* 왼쪽 사이드바 수정 영역 */}
+          <div className="flex flex-col h-full overflow-hidden">
+            {/* 상단: TodoList & BrainDump 묶음 */}
+            <div className="flex-grow overflow-y-auto space-y-6 pr-2">
 
-            <BrainDump
-              items={brainDump}
-              newItemText={newDumpText}
-              onNewItemTextChange={setNewDumpText}
-              onAddItem={addBrainDump}
-              onDeleteItem={deleteBrainDump}
-              onMoveToTodo={moveBrainDumpToTodo}
-              onDragStart={(e, item) => handleDragStart(e, item, 'brain-dump')}
-              onDragOver={handleDragOver}
-              onDrop={handleDropToBrainDump}
-            />
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+                <TodoList
+                  items={todoList}
+                  onToggleComplete={toggleTodoComplete}
+                  onDeleteItem={deleteTodo}
+                  onMoveToBrainDump={moveTodoToBrainDump}
+                  onDragStart={(e, item) => handleDragStart(e, item, 'todo-list')}
+                  onDragOver={handleDragOver}
+                  onDrop={handleDropToTodo}
+                />
+              </div>
+
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+                <BrainDump
+                  items={brainDump}
+                  newItemText={newDumpText}
+                  onNewItemTextChange={setNewDumpText}
+                  onAddItem={addBrainDump}
+                  onDeleteItem={deleteBrainDump}
+                  onMoveToTodo={moveBrainDumpToTodo}
+                  onDragStart={(e, item) => handleDragStart(e, item, 'brain-dump')}
+                  onDragOver={handleDragOver}
+                  onDrop={handleDropToBrainDump}
+                />
+              </div>
+            </div>
           </div>
 
-          <TimePlan
-            date={date}
-            timeBlocks={timeBlocks}
-            draggingBlockId={draggingBlock}
-            resizingBlockId={resizingBlock}
-            onDateChange={handleDateChange}
-            onDayOfWeekClick={handleDayOfWeekClick}
-            onBlockMouseDown={handleBlockMouseDown}
-            onBlockEdit={setEditingBlock}
-          />
+          {/* 오른쪽 타임 플랜 (2개 컬럼 차지하게 하려면 col-span-2 추천) */}
+          <div className="col-span-2 h-full overflow-hidden rounded-lg shadow border border-gray-200">
+            <TimePlan
+              date={date}
+              timeBlocks={timeBlocks}
+              draggingBlockId={draggingBlock}
+              resizingBlockId={resizingBlock}
+              onDateChange={handleDateChange}
+              onDayOfWeekClick={handleDayOfWeekClick}
+              onBlockMouseDown={handleBlockMouseDown}
+              onBlockEdit={setEditingBlock}
+            />
+          </div>
+          {editingBlock && (
+            <TimeBlockEditor
+              block={editingBlock}
+              onSave={handleBlockEditorSave}
+              onClose={() => setEditingBlock(null)}
+            />
+          )}
         </div>
-
-        {editingBlock && (
-          <TimeBlockEditor
-            block={editingBlock}
-            onSave={handleBlockEditorSave}
-            onClose={() => setEditingBlock(null)}
-          />
-        )}
       </div>
     </div>
   );

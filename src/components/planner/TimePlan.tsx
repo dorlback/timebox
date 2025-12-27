@@ -25,7 +25,7 @@ export const TimePlan: React.FC<TimePlanProps> = ({
   onBlockEdit
 }) => {
   return (
-    <div className="col-span-2 bg-white rounded-lg shadow p-4">
+    <div className="h-full flex flex-col bg-white col-span-2 rounded-lg shadow p-4">
       <div className="flex justify-between items-center mb-4">
         <h2 className="font-semibold text-gray-700">TIME PLAN</h2>
         <DateSelector
@@ -35,7 +35,7 @@ export const TimePlan: React.FC<TimePlanProps> = ({
         />
       </div>
 
-      <div className="overflow-auto" style={{ maxHeight: '700px' }}>
+      <div className="h-full overflow-auto" >
         <TimeGrid
           timeBlocks={timeBlocks}
           draggingBlockId={draggingBlockId}
