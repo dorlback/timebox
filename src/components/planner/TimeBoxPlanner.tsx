@@ -82,8 +82,12 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
   // TimeBlock 업데이트
   // 시간 블록의 시작/종료 시간 업데이트
   const updateBlockTime = (blockId: number, newStart: number, newEnd: number) => {
+    if (!timeBlocks) return; // 데이터가 없으면 아무것도 안 함
+
     setTimeBlocks(timeBlocks.map(block =>
-      block.id === blockId ? { ...block, startTime: newStart, endTime: newEnd } : block
+      block.id === blockId
+        ? { ...block, startTime: newStart, endTime: newEnd }
+        : block
     ));
   };
 
@@ -92,11 +96,11 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
     draggingBlock,
     resizingBlock,
     handleBlockMouseDown
-  } = useTimeBlockInteraction(timeBlocks, updateBlockTime);
+  } = useTimeBlockInteraction(timeBlocks || [], updateBlockTime);
 
   // TimeBlock Editor 저장
   const handleBlockEditorSave = (blockId: number, newStart: number, newEnd: number) => {
-    const hasConflict = checkTimeConflict(timeBlocks, blockId, newStart, newEnd);
+    const hasConflict = checkTimeConflict(timeBlocks || [], blockId, newStart, newEnd);
 
     if (hasConflict) {
       showError('다른 일정과 시간이 겹칩니다. 시간을 다시 설정해주세요.');
@@ -115,7 +119,7 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
   // Brain Dump 핸들러
   const addBrainDump = () => {
     if (newDumpText.trim()) {
-      setBrainDump([...brainDump, {
+      setBrainDump([...brainDump || [], {
         id: Date.now(),
         text: newDumpText,
         completed: false
@@ -125,22 +129,25 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
   };
 
   const deleteBrainDump = (id: number) => {
-    setBrainDump(brainDump.filter(item => item.id !== id));
+    // brainDump가 없으면 빈 배열로 치환한 뒤 필터링 진행
+    setBrainDump((brainDump || []).filter(item => item.id !== id));
   };
 
   // Todo 핸들러
   const deleteTodo = (id: number) => {
-    setTodoList(todoList.filter(item => item.id !== id));
-    setTimeBlocks(timeBlocks.filter(block => block.todoId !== id));
+    setTodoList((todoList || []).filter(item => item.id !== id));
+    setTimeBlocks((timeBlocks || []).filter(block => block.todoId !== id));
   };
 
   const toggleTodoComplete = (id: number) => {
+    if (!todoList) return;
     setTodoList(todoList.map(item =>
       item.id === id ? { ...item, completed: !item.completed } : item
     ));
 
     const updatedTodo = todoList.find(item => item.id === id);
     if (updatedTodo) {
+      if (!timeBlocks) return;
       setTimeBlocks(timeBlocks.map(block =>
         block.todoId === id ? { ...block, completed: !updatedTodo.completed } : block
       ));
@@ -149,6 +156,10 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
 
   // 이동 핸들러
   const moveBrainDumpToTodo = (item: BrainDumpItem) => {
+    if (!todoList) return;
+    if (!timeBlocks) return;
+    if (!brainDump) return;
+
     if (todoList.length >= 5) {
       showError('할 일 목록은 최대 5개까지만 추가할 수 있습니다.');
       return;
@@ -185,9 +196,9 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
       text: item.text,
       completed: false
     };
-    setBrainDump([...brainDump, newBrainDumpItem]);
-    setTodoList(todoList.filter(i => i.id !== item.id));
-    setTimeBlocks(timeBlocks.filter(block => block.todoId !== item.id));
+    setBrainDump([...brainDump || [], newBrainDumpItem]);
+    setTodoList((todoList || []).filter(i => i.id !== item.id));
+    setTimeBlocks((timeBlocks || []).filter(block => block.todoId !== item.id));
   };
 
   // 드래그앤드롭 핸들러
@@ -203,6 +214,10 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
   };
 
   const handleDropToTodo = (e: React.DragEvent) => {
+    if (!todoList) return;
+    if (!timeBlocks) return;
+    if (!brainDump) return;
+
     e.preventDefault();
     if (draggedItem && dragSource === 'brain-dump') {
       if (todoList.length >= 5) {
@@ -243,6 +258,10 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
   };
 
   const handleDropToBrainDump = (e: React.DragEvent) => {
+    if (!todoList) return;
+    if (!timeBlocks) return;
+    if (!brainDump) return;
+
     e.preventDefault();
     if (draggedItem && dragSource === 'todo-list') {
       const newBrainDumpItem = {
@@ -302,7 +321,7 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
 
               <div className="bg-white rounded-lg shadow-sm border border-gray-200">
                 <TodoList
-                  items={todoList}
+                  items={todoList || []}
                   onToggleComplete={toggleTodoComplete}
                   onDeleteItem={deleteTodo}
                   onMoveToBrainDump={moveTodoToBrainDump}
@@ -314,7 +333,7 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
 
               <div className="bg-white rounded-lg shadow-sm border border-gray-200">
                 <BrainDump
-                  items={brainDump}
+                  items={brainDump || []}
                   newItemText={newDumpText}
                   onNewItemTextChange={setNewDumpText}
                   onAddItem={addBrainDump}
@@ -332,7 +351,7 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
           <div className="col-span-2 h-full overflow-hidden rounded-lg shadow border border-gray-200">
             <TimePlan
               date={date}
-              timeBlocks={timeBlocks}
+              timeBlocks={timeBlocks || []}
               draggingBlockId={draggingBlock}
               resizingBlockId={resizingBlock}
               onDateChange={handleDateChange}
