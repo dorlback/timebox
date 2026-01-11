@@ -31,7 +31,7 @@ export const TimePlan: React.FC<TimePlanProps> = ({
         <DateSelector
           date={date}
           onDateChange={onDateChange}
-          onDayOfWeekClick={onDayOfWeekClick}
+        // onDayOfWeekClick={onDayOfWeekClick}
         />
       </div>
 
