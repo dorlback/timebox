@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { BrainDumpItem, TodoItem, TimeBlock } from '@/types/planner';
-import { usePlannerData } from '@/hooks/usePlannerData';
 import { useErrorToast } from '@/hooks/useErrorToast';
 import { useTimeBlockInteraction } from '@/hooks/useTimeBlockInteraction';
 import { findAvailableSlot, checkTimeConflict } from '@/utils/timeUtils';
@@ -10,25 +9,60 @@ import { TodoList } from './TodoList';
 import { TimePlan } from './TimePlan';
 import { TimeBlockEditor } from './TimeBlockEditor';
 import { ErrorToast } from './ErrorToast';
+import { SuccessToast } from './SuccessToast';
+import { usePlannerTestData } from '@/hooks/usePlannerTestData';
+import { User } from '@/types/user';
+import { usePlannerData } from '@/hooks/usePlannerDate';
+import { useSuccessToast } from '@/hooks/useSuccessToast';
+import Link from "next/link";
 
-const TimeBoxPlanner = () => {
+const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
   // 날짜를 적용할 스테이트
   const [date, setDate] = useState(new Date());
   const { errorMessage, showError } = useErrorToast();
+  const { successMessage, showSuccess } = useSuccessToast();
+
   // 날짜에 맞게 덤프,투두,플래너 등을 불러올 커스텀훅
+
+
   const {
     brainDump,
     todoList,
     timeBlocks,
     setBrainDump,
     setTodoList,
-    setTimeBlocks
-  } = usePlannerData(date);
+    setTimeBlocks,
+    loading, // 로딩 상태 추가
+    handleSave,
+    handleAutoSave,
+  } = usePlannerData(date, CurrentUser.id, showSuccess, showError);
+
+  // const {
+  //   brainDump,
+  //   todoList,
+  //   timeBlocks,
+  //   setBrainDump,
+  //   setTodoList,
+  //   setTimeBlocks
+  // } = usePlannerTestData(date);
 
   const [newDumpText, setNewDumpText] = useState(''); // 브레인 덤프 입력창 상태
   const [draggedItem, setDraggedItem] = useState<any>(null); // 현재 드래그 중인 아이템
   const [dragSource, setDragSource] = useState<string | null>(null); // 드래그 시작 지점이 어디인지 ('brain-dump' 또는 'todo-list')
   const [editingBlock, setEditingBlock] = useState<TimeBlock | null>(null); // 수정 중인 타임 블록
+
+  useEffect(() => {
+    // 로딩 중일 때는 실행하지 않음
+    if (loading) return;
+
+    const timer = setTimeout(() => {
+      // 데이터가 존재할 때만 자동 저장 실행
+      handleAutoSave();
+      console.log("자동 저장 완료!");
+    }, 2000); // 사용자가 입력을 멈추고 2초 뒤 저장
+
+    return () => clearTimeout(timer);
+  }, [brainDump, todoList, timeBlocks]); // 데이터가 바뀔 때마다 타이머 리셋
 
   // 날짜 변경 핸들러
   const handleDateChange = (year: number, month: number, day: number) => {
@@ -226,13 +260,39 @@ const TimeBoxPlanner = () => {
 
   return (
     <div className="h-screen bg-gray-50 p-6 flex flex-col">
+      {loading && (
+        <div className="absolute inset-0 bg-white/50 z-50 flex items-center justify-center">
+          <div className="text-blue-500 font-bold">데이터 불러오는 중...</div>
+        </div>
+      )}
       {/* 상단 헤더 */}
       <div className="max-w-7xl mx-auto w-full flex flex-col flex-grow overflow-hidden">
-        <div className="bg-gray-700 text-white px-4 py-2 mb-6 rounded flex-shrink-0">
-          <h1 className="text-lg font-semibold">DAILY TIME BOX PLANNER</h1>
+        <div className="flex items-center justify-between px-4 py-2 mb-6 drop-shadow border border-gray-200 bg-white rounded-full flex-shrink-0">
+          {/* 왼쪽: 타이틀 (두께와 자간 조절로 미니멀함 강조) */}
+
+          <Link
+            href="/"
+          >
+            <h1 className="text-sm font-bold tracking-tight text-gray-400 uppercase">
+              Daily <span className="text-gray-900">Time Box</span>
+            </h1>
+          </Link>
+
+          {/* 오른쪽: 저장 버튼 (포인트 컬러 #3B82F6 적용) */}
+          <button
+            onClick={handleSave}
+            className="flex items-center gap-2 bg-[#3B82F6] hover:bg-[#2563EB] text-white text-xs font-semibold px-5 py-2 rounded-full transition-all shadow-sm active:scale-95"
+          >
+            {/* 저장 아이콘을 살짝 추가하면 더 직관적입니다 */}
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" /><polyline points="17 21 17 13 7 13 7 21" /><polyline points="7 3 7 8 15 8" />
+            </svg>
+            저장
+          </button>
         </div>
 
         <ErrorToast message={errorMessage} />
+        <SuccessToast message={successMessage} />
 
         <div className="grid grid-cols-3 gap-6 flex-grow overflow-hidden">
           {/* 왼쪽 사이드바 수정 영역 */}
@@ -290,7 +350,7 @@ const TimeBoxPlanner = () => {
           )}
         </div>
       </div>
-    </div>
+    </div >
   );
 };
 

@@ -30,7 +30,7 @@ export default function HomePage() {
               href="/timebox"
               className="px-8 py-4 border-2 border-slate-300 text-slate-700 rounded-lg font-semibold hover:border-slate-400 transition-colors"
             >
-              둘러보기
+              플래너로 이동
             </Link>
           </div>
         </div>
@@ -133,7 +133,7 @@ export default function HomePage() {
       {/* Footer */}
       <footer className="border-t border-slate-200 py-8">
         <div className="container mx-auto px-4 text-center text-slate-600">
-          <p>© 2024 TimeBox Planner. All rights reserved.</p>
+          <p>© 2026 dorlback.</p>
         </div>
       </footer>
     </div>

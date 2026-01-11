@@ -1,0 +1,27 @@
+{
+  "brainDump": [
+    {
+      "id": 1715832000000,
+      "text": "아이디어 구상하기",
+      "completed": false
+    }
+  ],
+  "todoList": [
+    {
+      "id": 1715832100000,
+      "text": "Next.js 공부하기",
+      "completed": false
+    }
+  ],
+  "timeBlocks": [
+    {
+      "id": 1715832200000,
+      "todoId": 1715832100000,
+      "text": "Next.js 공부하기",
+      "startTime": 600,
+      "endTime": 720,
+      "colorIndex": 3,
+      "completed": false
+    }
+  ]
+}

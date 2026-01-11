@@ -1,4 +1,3 @@
-// utils/supabase/server.ts
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
@@ -7,7 +6,7 @@ export async function createClient() {
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
     {
       cookies: {
         // 모든 쿠키를 가져오는 최신 방식
@@ -23,9 +22,15 @@ export async function createClient() {
           } catch {
             // 서버 컴포넌트(RSC)에서 호출될 때의 에러는 무시합니다.
             // 실제 쿠키 설정은 Middleware나 Route Handler에서 처리됩니다.
+
           }
+
         },
+
       },
+
     }
+
   )
+
 }
