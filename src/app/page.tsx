@@ -1,8 +1,14 @@
 // app/page.tsx
 import Link from "next/link";
 import { ArrowRight, Calendar, Clock, Target, Zap } from "lucide-react";
+import { createClient } from "@/lib/supabase/server";
 
-export default function HomePage() {
+export default async function HomePage() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  const startHref = user ? "/timebox" : "/login";
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
       {/* Hero Section */}
@@ -20,7 +26,7 @@ export default function HomePage() {
           </p>
           <div className="flex gap-4 justify-center">
             <Link
-              href="/login"
+              href={startHref}
               className="px-8 py-4 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center gap-2"
             >
               시작하기
@@ -121,7 +127,7 @@ export default function HomePage() {
             TimeBox Planner로 더 효율적인 하루를 계획하고 실행하세요.
           </p>
           <Link
-            href="/login"
+            href={startHref}
             className="inline-flex items-center gap-2 px-8 py-4 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors text-lg"
           >
             무료로 시작하기
