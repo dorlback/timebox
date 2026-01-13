@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { ArrowRight, Calendar, Clock, Target, Zap } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import NavBar from "@/components/NavBar";
 
 export default async function HomePage() {
   const supabase = await createClient()
@@ -11,6 +12,7 @@ export default async function HomePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
+      <NavBar user={user} />
       {/* Hero Section */}
       <div className="container mx-auto px-4 pt-20 pb-16">
         <div className="text-center max-w-4xl mx-auto">
