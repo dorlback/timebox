@@ -8,7 +8,6 @@ interface BrainDumpProps {
   onNewItemTextChange: (text: string) => void;
   onAddItem: () => void;
   onDeleteItem: (id: number) => void;
-  onToggleComplete: (id: number) => void;
   onMoveToTodo: (item: BrainDumpItem) => void;
   onDragStart: (e: React.DragEvent, item: BrainDumpItem) => void;
   onDragOver: (e: React.DragEvent) => void;
@@ -21,7 +20,6 @@ export const BrainDump: React.FC<BrainDumpProps> = ({
   onNewItemTextChange,
   onAddItem,
   onDeleteItem,
-  onToggleComplete,
   onMoveToTodo,
   onDragStart,
   onDragOver,
@@ -43,16 +41,7 @@ export const BrainDump: React.FC<BrainDumpProps> = ({
             className="flex items-center gap-2 p-2 bg-gray-50 rounded border border-gray-200 cursor-move hover:bg-gray-100"
           >
             <GripVertical size={16} className="text-gray-400" />
-            <input
-              type="checkbox"
-              checked={item.completed}
-              onChange={() => onToggleComplete(item.id)}
-              className="w-4 h-4"
-              onClick={(e) => e.stopPropagation()}
-            />
-            <span className={`flex-1 text-sm ${item.completed ? 'line-through text-gray-400' : ''}`}>
-              {item.text}
-            </span>
+            <span className="flex-1 text-sm">{item.text}</span>
             <button
               onClick={() => onMoveToTodo(item)}
               className="text-blue-500 hover:text-blue-700"
