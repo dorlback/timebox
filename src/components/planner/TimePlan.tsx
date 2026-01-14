@@ -65,7 +65,7 @@ export const TimePlan: React.FC<TimePlanProps> = ({
       <div
         ref={scrollContainerRef}
         className="overflow-auto"
-        style={{ maxHeight: '700px' }}
+      // style={{ maxHeight: '700px' }}
       >
         <TimeGrid
           timeBlocks={timeBlocks}
