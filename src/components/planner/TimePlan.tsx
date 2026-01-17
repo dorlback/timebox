@@ -51,6 +51,15 @@ export const TimePlan: React.FC<TimePlanProps> = ({
     }, 100); // 100ms 후 실행
   }, [date]); // date가 변경될 때마다 다시 스크롤
 
+  const isToday = (date: Date): boolean => {
+    const today = new Date();
+    return (
+      date.getDate() === today.getDate() &&
+      date.getMonth() === today.getMonth() &&
+      date.getFullYear() === today.getFullYear()
+    );
+  };
+
 
   return (
     <div className="h-full flex flex-col bg-white col-span-2 rounded-lg shadow p-4">
@@ -73,6 +82,7 @@ export const TimePlan: React.FC<TimePlanProps> = ({
           resizingBlockId={resizingBlockId}
           onBlockMouseDown={onBlockMouseDown}
           onBlockEdit={onBlockEdit}
+          showCurrentTime={isToday(date)}
         />
       </div>
     </div>

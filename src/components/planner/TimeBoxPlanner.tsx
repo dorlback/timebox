@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { BrainDumpItem, TodoItem, TimeBlock } from '@/types/planner';
 import { useErrorToast } from '@/hooks/useErrorToast';
 import { useTimeBlockInteraction } from '@/hooks/useTimeBlockInteraction';
-import { findAvailableSlot, checkTimeConflict } from '@/utils/timeUtils';
+import { findAvailableSlot, findAvailableSlotAfterNow, checkTimeConflict } from '@/utils/timeUtils';
 import { PASTEL_COLORS } from '@/utils/colorUtils';
 import { BrainDump } from './BrainDump';
 import { TodoList } from './TodoList';
@@ -162,7 +162,7 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
     }
   };
 
-  // 이동 핸들러 - 체크 상태 유지
+  // 이동 핸들러 - 체크 상태 유지 + 현재 시간 이후 배치
   const moveBrainDumpToTodo = (item: BrainDumpItem) => {
     if (!todoList) return;
     if (!timeBlocks) return;
@@ -178,7 +178,8 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
       block.todoId === item.id && block.isDirectFromBrainDump
     );
 
-    const slot = findAvailableSlot(
+    // 현재 시간 이후 슬롯 찾기
+    const slot = findAvailableSlotAfterNow(
       existingDirectBlock
         ? timeBlocks.filter(block => block.id !== existingDirectBlock.id)
         : timeBlocks,
@@ -260,7 +261,8 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
         block.todoId === draggedItem.id && block.isDirectFromBrainDump
       );
 
-      const slot = findAvailableSlot(
+      // 현재 시간 이후 슬롯 찾기
+      const slot = findAvailableSlotAfterNow(
         existingDirectBlock
           ? timeBlocks.filter(block => block.id !== existingDirectBlock.id)
           : timeBlocks,
@@ -325,7 +327,7 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
     setDragSource(null);
   };
 
-  // 기존 함수를 토글 방식으로 변경
+  // Brain Dump를 타임플랜에 직접 추가 - 현재 시간 이후 배치
   const addBrainDumpToTimePlan = (item: BrainDumpItem) => {
     if (!timeBlocks) return;
     if (!brainDump) return;
@@ -342,8 +344,8 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
       return;
     }
 
-    // 없으면 추가
-    const slot = findAvailableSlot(timeBlocks, 60);
+    // 현재 시간 이후 슬롯 찾기
+    const slot = findAvailableSlotAfterNow(timeBlocks, 60);
     if (!slot) {
       showError('타임 플랜에 사용 가능한 시간이 없습니다. 기존 일정을 조정해주세요.');
       return;
@@ -430,7 +432,7 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
                   onDeleteItem={deleteBrainDump}
                   onToggleComplete={toggleBrainDumpComplete}
                   onMoveToTodo={moveBrainDumpToTodo}
-                  onAddToTimePlan={addBrainDumpToTimePlan} // 새로 추가
+                  onAddToTimePlan={addBrainDumpToTimePlan}
                   onDragStart={(e, item) => handleDragStart(e, item, 'brain-dump')}
                   onDragOver={handleDragOver}
                   onDrop={handleDropToBrainDump}
