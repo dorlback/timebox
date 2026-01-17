@@ -41,10 +41,8 @@ export const TimeBlock: React.FC<TimeBlockProps> = ({
       }}
       onMouseDown={(e) => onMouseDown(e, block)}
       onDoubleClick={(e) => {
-        if (!showContent) {
-          e.stopPropagation();
-          onEdit(block);
-        }
+        e.stopPropagation();
+        onEdit(block);
       }}
       onMouseMove={(e) => {
         if (isDragging || isResizing) return;
