@@ -109,16 +109,36 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
     }
   };
 
+  // Brain Dump 삭제
   const deleteBrainDump = (id: number) => {
     setBrainDump((brainDump || []).filter(item => item.id !== id));
+
+    // Brain Dump에서 직접 추가된 타임블록도 제거
+    if (timeBlocks) {
+      setTimeBlocks(timeBlocks.filter(block =>
+        !(block.todoId === id && block.isDirectFromBrainDump)
+      ));
+    }
   };
 
   // Brain Dump 체크박스 토글 추가
   const toggleBrainDumpComplete = (id: number) => {
     if (!brainDump) return;
+
     setBrainDump(brainDump.map(item =>
       item.id === id ? { ...item, completed: !item.completed } : item
     ));
+
+    // Brain Dump에서 직접 추가된 타임블록도 체크 상태 동기화
+    if (!timeBlocks) return;
+    const updatedItem = brainDump.find(item => item.id === id);
+    if (updatedItem) {
+      setTimeBlocks(timeBlocks.map(block =>
+        block.todoId === id && block.isDirectFromBrainDump
+          ? { ...block, completed: !updatedItem.completed }
+          : block
+      ));
+    }
   };
 
   // Todo 핸들러
@@ -153,7 +173,18 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
       return;
     }
 
-    const slot = findAvailableSlot(timeBlocks, 60);
+    // Brain Dump에서 직접 추가된 기존 타임블록 제거
+    const existingDirectBlock = timeBlocks.find(block =>
+      block.todoId === item.id && block.isDirectFromBrainDump
+    );
+
+    const slot = findAvailableSlot(
+      existingDirectBlock
+        ? timeBlocks.filter(block => block.id !== existingDirectBlock.id)
+        : timeBlocks,
+      60
+    );
+
     if (!slot) {
       showError('타임 플랜에 사용 가능한 시간이 없습니다. 기존 일정을 조정해주세요.');
       return;
@@ -162,31 +193,39 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
     const newTodo = {
       id: item.id,
       text: item.text,
-      completed: item.completed // 체크 상태 유지
+      completed: item.completed
     };
     setTodoList([...todoList, newTodo]);
     setBrainDump(brainDump.filter(i => i.id !== item.id));
 
     const colorIndex = timeBlocks.length % PASTEL_COLORS.length;
-    setTimeBlocks([...timeBlocks, {
-      id: Date.now(),
-      todoId: newTodo.id,
-      text: newTodo.text,
-      startTime: slot.startTime,
-      endTime: slot.endTime,
-      colorIndex,
-      completed: item.completed // 체크 상태 유지
-    }]);
+
+    // 기존 Brain Dump 직접 추가 블록 제거하고 새로운 Todo 블록 생성
+    setTimeBlocks([
+      ...timeBlocks.filter(block => !(block.todoId === item.id && block.isDirectFromBrainDump)),
+      {
+        id: Date.now(),
+        todoId: newTodo.id,
+        text: newTodo.text,
+        startTime: slot.startTime,
+        endTime: slot.endTime,
+        colorIndex,
+        completed: item.completed,
+        isDirectFromBrainDump: false
+      }
+    ]);
   };
 
   const moveTodoToBrainDump = (item: TodoItem) => {
     const newBrainDumpItem = {
       id: item.id,
       text: item.text,
-      completed: item.completed // 체크 상태 유지
+      completed: item.completed
     };
     setBrainDump([...brainDump || [], newBrainDumpItem]);
     setTodoList((todoList || []).filter(i => i.id !== item.id));
+
+    // Todo에서 온 타임블록은 완전히 제거 (isDirectFromBrainDump가 false인 것)
     setTimeBlocks((timeBlocks || []).filter(block => block.todoId !== item.id));
   };
 
@@ -216,7 +255,18 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
         return;
       }
 
-      const slot = findAvailableSlot(timeBlocks, 60);
+      // Brain Dump에서 직접 추가된 기존 타임블록 제거
+      const existingDirectBlock = timeBlocks.find(block =>
+        block.todoId === draggedItem.id && block.isDirectFromBrainDump
+      );
+
+      const slot = findAvailableSlot(
+        existingDirectBlock
+          ? timeBlocks.filter(block => block.id !== existingDirectBlock.id)
+          : timeBlocks,
+        60
+      );
+
       if (!slot) {
         showError('타임 플랜에 사용 가능한 시간이 없습니다. 기존 일정을 조정해주세요.');
         setDraggedItem(null);
@@ -227,21 +277,27 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
       const newTodo = {
         id: draggedItem.id,
         text: draggedItem.text,
-        completed: draggedItem.completed // 체크 상태 유지
+        completed: draggedItem.completed
       };
       setTodoList([...todoList, newTodo]);
       setBrainDump(brainDump.filter(item => item.id !== draggedItem.id));
 
       const colorIndex = timeBlocks.length % PASTEL_COLORS.length;
-      setTimeBlocks([...timeBlocks, {
-        id: Date.now(),
-        todoId: newTodo.id,
-        text: newTodo.text,
-        startTime: slot.startTime,
-        endTime: slot.endTime,
-        colorIndex,
-        completed: draggedItem.completed // 체크 상태 유지
-      }]);
+
+      // 기존 Brain Dump 직접 추가 블록 제거하고 새로운 Todo 블록 생성
+      setTimeBlocks([
+        ...timeBlocks.filter(block => !(block.todoId === draggedItem.id && block.isDirectFromBrainDump)),
+        {
+          id: Date.now(),
+          todoId: newTodo.id,
+          text: newTodo.text,
+          startTime: slot.startTime,
+          endTime: slot.endTime,
+          colorIndex,
+          completed: draggedItem.completed,
+          isDirectFromBrainDump: false
+        }
+      ]);
     }
     setDraggedItem(null);
     setDragSource(null);
@@ -257,15 +313,67 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
       const newBrainDumpItem = {
         id: draggedItem.id,
         text: draggedItem.text,
-        completed: draggedItem.completed // 체크 상태 유지
+        completed: draggedItem.completed
       };
       setBrainDump([...brainDump, newBrainDumpItem]);
       setTodoList(todoList.filter(item => item.id !== draggedItem.id));
+
+      // Todo에서 온 타임블록은 완전히 제거
       setTimeBlocks(timeBlocks.filter(block => block.todoId !== draggedItem.id));
     }
     setDraggedItem(null);
     setDragSource(null);
   };
+
+  // 기존 함수를 토글 방식으로 변경
+  const addBrainDumpToTimePlan = (item: BrainDumpItem) => {
+    if (!timeBlocks) return;
+    if (!brainDump) return;
+
+    // 이미 시간표에 있는지 확인
+    const existingBlock = timeBlocks.find(block =>
+      block.todoId === item.id && block.isDirectFromBrainDump
+    );
+
+    if (existingBlock) {
+      // 이미 있으면 제거
+      setTimeBlocks(timeBlocks.filter(block => block.id !== existingBlock.id));
+      showSuccess('시간표에서 제거되었습니다!');
+      return;
+    }
+
+    // 없으면 추가
+    const slot = findAvailableSlot(timeBlocks, 60);
+    if (!slot) {
+      showError('타임 플랜에 사용 가능한 시간이 없습니다. 기존 일정을 조정해주세요.');
+      return;
+    }
+
+    const colorIndex = timeBlocks.length % PASTEL_COLORS.length;
+
+    setTimeBlocks([...timeBlocks, {
+      id: Date.now(),
+      todoId: item.id,
+      text: item.text,
+      startTime: slot.startTime,
+      endTime: slot.endTime,
+      colorIndex,
+      completed: item.completed,
+      isDirectFromBrainDump: true
+    }]);
+
+    showSuccess('시간표에 추가되었습니다!');
+  };
+
+  const brainDumpItemsInTimePlan = React.useMemo(() => {
+    if (!timeBlocks || !brainDump) return [];
+
+    return timeBlocks
+      .filter(block => block.isDirectFromBrainDump)
+      .map(block => block.todoId)
+      .filter(id => brainDump.some(item => item.id === id));
+  }, [timeBlocks, brainDump]);
+
 
   return (
     <div className="h-screen bg-gray-50 p-6 flex flex-col">
@@ -316,11 +424,13 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
                 <BrainDump
                   items={brainDump || []}
                   newItemText={newDumpText}
+                  itemsInTimePlan={brainDumpItemsInTimePlan}
                   onNewItemTextChange={setNewDumpText}
                   onAddItem={addBrainDump}
                   onDeleteItem={deleteBrainDump}
                   onToggleComplete={toggleBrainDumpComplete}
                   onMoveToTodo={moveBrainDumpToTodo}
+                  onAddToTimePlan={addBrainDumpToTimePlan} // 새로 추가
                   onDragStart={(e, item) => handleDragStart(e, item, 'brain-dump')}
                   onDragOver={handleDragOver}
                   onDrop={handleDropToBrainDump}

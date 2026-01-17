@@ -21,6 +21,7 @@ export interface TimeBlock {
   endTime: number;
   colorIndex: number;
   completed?: boolean;
+  isDirectFromBrainDump?: boolean; // Brain Dump에서 직접 추가된 블록인지 구분
 }
 
 export interface DailyData {

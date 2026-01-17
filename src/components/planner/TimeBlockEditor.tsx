@@ -12,20 +12,64 @@ export const TimeBlockEditor: React.FC<TimeBlockEditorProps> = ({
   onSave,
   onClose
 }) => {
-  const [startHour, setStartHour] = useState(Math.floor(block.startTime / 60));
-  const [startMin, setStartMin] = useState(block.startTime % 60);
-  const [duration, setDuration] = useState(block.endTime - block.startTime);
-
-  const handleSave = () => {
-    const newStart = startHour * 60 + startMin;
-    const newEnd = newStart + duration;
-    onSave(block.id, newStart, newEnd);
+  // 24시간 형식을 12시간 형식으로 변환
+  const convertTo12Hour = (hour24: number) => {
+    const period = hour24 >= 12 ? 'PM' : 'AM';
+    const hour12 = hour24 % 12 || 12;
+    return { hour12, period };
   };
 
-  // 종료 시간 계산
-  const endMinutes = startHour * 60 + startMin + duration;
-  const endHour = Math.floor(endMinutes / 60);
-  const endMin = endMinutes % 60;
+  // 12시간 형식을 24시간 형식으로 변환
+  const convertTo24Hour = (hour12: number, period: string) => {
+    if (period === 'AM') {
+      return hour12 === 12 ? 0 : hour12;
+    } else {
+      return hour12 === 12 ? 12 : hour12 + 12;
+    }
+  };
+
+  // 초기값 설정
+  const initialStartHour24 = Math.floor(block.startTime / 60);
+  const initialEndHour24 = Math.floor(block.endTime / 60);
+
+  const initialStart = convertTo12Hour(initialStartHour24);
+  const initialEnd = convertTo12Hour(initialEndHour24);
+
+  // State 관리
+  const [startHour12, setStartHour12] = useState(initialStart.hour12);
+  const [startPeriod, setStartPeriod] = useState(initialStart.period);
+  const [startMin, setStartMin] = useState(block.startTime % 60);
+
+  const [endHour12, setEndHour12] = useState(initialEnd.hour12);
+  const [endPeriod, setEndPeriod] = useState(initialEnd.period);
+  const [endMin, setEndMin] = useState(block.endTime % 60);
+
+  // 현재 설정된 시간을 24시간 형식으로 계산
+  const currentStartHour24 = convertTo24Hour(startHour12, startPeriod);
+  const currentEndHour24 = convertTo24Hour(endHour12, endPeriod);
+  const currentStartMinutes = currentStartHour24 * 60 + startMin;
+  const currentEndMinutes = currentEndHour24 * 60 + endMin;
+
+  // 소요 시간 계산
+  const totalMinutes = currentEndMinutes - currentStartMinutes;
+  const durationHours = Math.floor(totalMinutes / 60);
+  const durationMins = totalMinutes % 60;
+
+  const handleSave = () => {
+    // 종료 시간이 시작 시간보다 이전인 경우 방지
+    if (currentEndMinutes <= currentStartMinutes) {
+      alert('종료 시간은 시작 시간 이후여야 합니다.');
+      return;
+    }
+
+    onSave(block.id, currentStartMinutes, currentEndMinutes);
+  };
+
+  // 시간 옵션 생성 (1-12시)
+  const hourOptions = Array.from({ length: 12 }, (_, i) => i + 1);
+
+  // 분 옵션 생성 (0, 10, 20, 30, 40, 50)
+  const minuteOptions = [0, 10, 20, 30, 40, 50];
 
   return (
     <>
@@ -63,52 +107,80 @@ export const TimeBlockEditor: React.FC<TimeBlockEditorProps> = ({
                 시작 시간
               </label>
               <div className="flex items-center gap-2">
-                <input
-                  type="number"
-                  min="0"
-                  max="23"
-                  value={startHour}
-                  onChange={(e) => setStartHour(parseInt(e.target.value) || 0)}
+                <select
+                  value={startPeriod}
+                  onChange={(e) => setStartPeriod(e.target.value)}
+                  className="w-16 px-2 py-2 text-center border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="AM">오전</option>
+                  <option value="PM">오후</option>
+                </select>
+                <select
+                  value={startHour12}
+                  onChange={(e) => setStartHour12(parseInt(e.target.value))}
                   className="w-16 px-3 py-2 text-center border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
+                >
+                  {hourOptions.map(h => (
+                    <option key={h} value={h}>{h}</option>
+                  ))}
+                </select>
                 <span className="text-gray-400">:</span>
                 <select
                   value={startMin}
                   onChange={(e) => setStartMin(parseInt(e.target.value))}
                   className="w-16 px-3 py-2 text-center border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
-                  {[0, 10, 20, 30, 40, 50].map(m => (
+                  {minuteOptions.map(m => (
                     <option key={m} value={m}>{m.toString().padStart(2, '0')}</option>
                   ))}
                 </select>
               </div>
             </div>
 
-            {/* Duration */}
+            {/* End Time */}
             <div>
               <label className="block text-xs font-medium text-gray-500 mb-2">
-                소요 시간
+                종료 시간
               </label>
-              <div className="flex items-center gap-3">
-                <input
-                  type="number"
-                  min="10"
-                  max="480"
-                  step="10"
-                  value={duration}
-                  onChange={(e) => setDuration(parseInt(e.target.value) || 10)}
-                  className="w-20 px-3 py-2 text-center border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-                <span className="text-sm text-gray-500">분</span>
+              <div className="flex items-center gap-2">
+                <select
+                  value={endPeriod}
+                  onChange={(e) => setEndPeriod(e.target.value)}
+                  className="w-16 px-2 py-2 text-center border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="AM">오전</option>
+                  <option value="PM">오후</option>
+                </select>
+                <select
+                  value={endHour12}
+                  onChange={(e) => setEndHour12(parseInt(e.target.value))}
+                  className="w-16 px-3 py-2 text-center border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  {hourOptions.map(h => (
+                    <option key={h} value={h}>{h}</option>
+                  ))}
+                </select>
+                <span className="text-gray-400">:</span>
+                <select
+                  value={endMin}
+                  onChange={(e) => setEndMin(parseInt(e.target.value))}
+                  className="w-16 px-3 py-2 text-center border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  {minuteOptions.map(m => (
+                    <option key={m} value={m}>{m.toString().padStart(2, '0')}</option>
+                  ))}
+                </select>
               </div>
             </div>
 
-            {/* End Time Display */}
+            {/* Duration Display */}
             <div className="pt-3 border-t border-gray-100">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-500">종료 시간</span>
+                <span className="text-gray-500">소요 시간</span>
                 <span className="font-medium text-gray-900">
-                  {endHour.toString().padStart(2, '0')}:{endMin.toString().padStart(2, '0')}
+                  {durationHours > 0 && `${durationHours}시간 `}
+                  {durationMins > 0 && `${durationMins}분`}
+                  {totalMinutes <= 0 && '시간을 확인해주세요'}
                 </span>
               </div>
             </div>
