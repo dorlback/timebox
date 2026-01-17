@@ -83,6 +83,7 @@ export const TimePlan: React.FC<TimePlanProps> = ({
           onBlockMouseDown={onBlockMouseDown}
           onBlockEdit={onBlockEdit}
           showCurrentTime={isToday(date)}
+          date={date} // 👈 날짜 전달
         />
       </div>
     </div>

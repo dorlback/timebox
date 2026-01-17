@@ -10,6 +10,7 @@ interface TimeGridProps {
   onBlockMouseDown: (e: React.MouseEvent, block: TimeBlockType) => void;
   onBlockEdit: (block: TimeBlockType) => void;
   showCurrentTime?: boolean; // 오늘 날짜일 때만 true로 전달
+  date?: Date; // 날짜 변경 감지를 위한 prop
 }
 
 export const TimeGrid: React.FC<TimeGridProps> = ({
@@ -18,7 +19,8 @@ export const TimeGrid: React.FC<TimeGridProps> = ({
   resizingBlockId,
   onBlockMouseDown,
   onBlockEdit,
-  showCurrentTime = false
+  showCurrentTime = false,
+  date
 }) => {
   const hours = Array.from({ length: 24 }, (_, i) => i);
   const minuteMarkers = [10, 20, 30, 40, 50, 0];
@@ -57,10 +59,7 @@ export const TimeGrid: React.FC<TimeGridProps> = ({
           />
         ))}
 
-        {/* 현재 시간 표시 줄 - 오늘 날짜일 때만 */}
-        {showCurrentTime && (
-          <CurrentTimeIndicator pixelsPerMinute={pixelsPerMinute} />
-        )}
+        <CurrentTimeIndicator pixelsPerMinute={pixelsPerMinute} date={date} />
       </div>
     </div>
   );

@@ -3,19 +3,26 @@ import { getCurrentTimeInMinutes } from '@/utils/timeUtils';
 
 interface CurrentTimeIndicatorProps {
   pixelsPerMinute: number;
+  date?: Date; // 날짜가 변경될 때 감지하기 위한 prop
 }
 
-export const CurrentTimeIndicator: React.FC<CurrentTimeIndicatorProps> = ({ pixelsPerMinute }) => {
+export const CurrentTimeIndicator: React.FC<CurrentTimeIndicatorProps> = ({
+  pixelsPerMinute,
+  date
+}) => {
   const [currentMinutes, setCurrentMinutes] = useState(getCurrentTimeInMinutes());
 
   useEffect(() => {
+    // 컴포넌트 마운트 시 또는 날짜 변경 시 즉시 업데이트
+    setCurrentMinutes(getCurrentTimeInMinutes());
+
     // 매 분마다 현재 시간 업데이트
     const interval = setInterval(() => {
       setCurrentMinutes(getCurrentTimeInMinutes());
     }, 60000); // 1분마다 업데이트
 
     return () => clearInterval(interval);
-  }, []);
+  }, [date]); // date가 변경될 때마다 재실행
 
   const topPosition = currentMinutes * pixelsPerMinute;
   const currentHour = Math.floor(currentMinutes / 60);
