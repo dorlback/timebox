@@ -3,21 +3,20 @@ import LogoutButton from "@/components/auth/LogoutButton";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function Page() {
-
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
 
   return (
-    <div className="w-full h-screen flex items-center justify-center bg-white">
+    <div className="w-full h-screen flex items-center justify-center bg-background transition-colors">
       <div className="w-full max-w-md px-8">
-        {/* 로고/타이틀 영역 */}
         <div className="text-center mb-12">
-          <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-[#3B82F6] flex items-center justify-center">
+          <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-primary flex items-center justify-center">
             <svg
               className="w-8 h-8 text-white"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
+              aria-hidden="true"
             >
               <path
                 strokeLinecap="round"
@@ -27,22 +26,24 @@ export default async function Page() {
               />
             </svg>
           </div>
-          <h1 className="text-3xl mb-2" style={{ fontWeight: 600, color: '#1F2937' }}>
+          <h1 className="text-3xl mb-2 font-semibold text-foreground">
             환영합니다
           </h1>
-          <p className="text-gray-500">
-            구글 계정으로 로그인하세요
+          <p className="text-muted-foreground">
+            Google 계정으로 로그인하세요
           </p>
         </div>
 
         {user ? (
           <div>
+            <p className="text-center text-muted-foreground mb-4">
+              {user.email}로 로그인되어 있습니다
+            </p>
             <LogoutButton />
           </div>
         ) : (
           <div>
             <LoginButton />
-
           </div>
         )}
       </div>

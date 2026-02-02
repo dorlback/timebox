@@ -38,13 +38,13 @@ export const DateSelector: React.FC<DateSelectorProps> = ({
     <button
       onClick={onClick}
       ref={ref}
-      className="flex items-center gap-2 px-4 h-full hover:bg-gray-50 transition-colors group outline-none"
+      className="flex items-center gap-2 px-4 h-full hover:bg-muted transition-colors group outline-none"
     >
-      <span className="text-sm font-bold text-gray-800 tracking-tight">
+      <span className="text-sm font-bold text-foreground tracking-tight">
         {value}
       </span>
       <svg
-        className="text-[#3B82F6] group-hover:scale-110 transition-transform"
+        className="text-primary group-hover:scale-110 transition-transform"
         width="16"
         height="16"
         fill="none"
@@ -61,11 +61,11 @@ export const DateSelector: React.FC<DateSelectorProps> = ({
 
   return (
     <div className="flex items-center gap-2">
-      <div className="flex items-center bg-white border border-gray-200 rounded-lg shadow-sm h-10 overflow-hidden">
+      <div className="flex items-center bg-card border border-border rounded-lg shadow-sm h-10 overflow-hidden">
         {/* 어제 이동 버튼 */}
         <button
           onClick={goYesterday}
-          className="px-3 h-full hover:bg-gray-50 transition-colors border-r border-gray-100 text-gray-400 hover:text-gray-600"
+          className="px-3 h-full hover:bg-muted transition-colors border-r border-border text-muted-foreground hover:text-foreground"
           title="어제"
         >
           <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
@@ -89,7 +89,7 @@ export const DateSelector: React.FC<DateSelectorProps> = ({
         {/* 내일 이동 버튼 */}
         <button
           onClick={goTomorrow}
-          className="px-3 h-full hover:bg-gray-50 transition-colors border-l border-gray-100 text-gray-400 hover:text-gray-600"
+          className="px-3 h-full hover:bg-muted transition-colors border-l border-border text-muted-foreground hover:text-foreground"
           title="내일"
         >
           <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
@@ -101,7 +101,7 @@ export const DateSelector: React.FC<DateSelectorProps> = ({
       {/* 오늘 버튼 */}
       <button
         onClick={() => handleDateUpdate(new Date())}
-        className="px-4 h-10 text-xs font-bold text-[#3B82F6] bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors border border-blue-100"
+        className="px-4 h-10 text-xs font-bold text-primary bg-primary/10 hover:bg-primary/20 rounded-lg transition-colors border border-primary/20"
       >
         오늘
       </button>

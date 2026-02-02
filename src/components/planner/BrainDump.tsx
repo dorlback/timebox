@@ -33,11 +33,11 @@ export const BrainDump: React.FC<BrainDumpProps> = ({
 }) => {
   return (
     <div
-      className="p-4"
+      className="p-4 bg-card rounded-lg shadow border border-border transition-colors"
       onDragOver={onDragOver}
       onDrop={onDrop}
     >
-      <h2 className="font-semibold mb-3 text-gray-700">BRAIN DUMP</h2>
+      <h2 className="font-semibold mb-3 text-muted-foreground">BRAIN DUMP</h2>
       <div className="space-y-2 mb-3">
         {items.map((item) => {
           const isInTimePlan = itemsInTimePlan.includes(item.id);
@@ -48,8 +48,8 @@ export const BrainDump: React.FC<BrainDumpProps> = ({
               draggable
               onDragStart={(e) => onDragStart(e, item)}
               className={`flex items-center gap-2 p-2 rounded border cursor-move transition-colors ${isInTimePlan
-                ? 'bg-blue-50 border-blue-200 hover:bg-blue-100'
-                : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
+                ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/30'
+                : 'bg-muted/50 border-border hover:bg-muted'
                 }`}
             >
               <GripVertical size={16} className="text-gray-400" />
@@ -60,7 +60,7 @@ export const BrainDump: React.FC<BrainDumpProps> = ({
                 className="w-4 h-4"
                 onClick={(e) => e.stopPropagation()}
               />
-              <span className={`flex-1 text-sm ${item.completed ? 'line-through text-gray-400' : ''}`}>
+              <span className={`flex-1 text-sm ${item.completed ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
                 {item.text}
               </span>
 
@@ -105,11 +105,11 @@ export const BrainDump: React.FC<BrainDumpProps> = ({
           onChange={(e) => onNewItemTextChange(e.target.value)}
           onKeyPress={(e) => e.key === 'Enter' && onAddItem()}
           placeholder="새 항목 추가..."
-          className="flex-1 px-3 py-2 border border-gray-300 rounded text-sm"
+          className="flex-1 px-3 py-2 border border-input rounded text-sm bg-card text-foreground placeholder-muted-foreground"
         />
         <button
           onClick={onAddItem}
-          className="bg-blue-500 text-white px-3 py-2 rounded hover:bg-blue-600"
+          className="bg-primary text-primary-foreground px-3 py-2 rounded hover:opacity-90 transition-colors"
         >
           <Plus size={16} />
         </button>

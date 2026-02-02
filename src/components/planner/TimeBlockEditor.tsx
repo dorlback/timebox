@@ -81,15 +81,15 @@ export const TimeBlockEditor: React.FC<TimeBlockEditorProps> = ({
 
       {/* Modal */}
       <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-80">
-        <div className="bg-white rounded-lg shadow-xl border border-gray-200">
+        <div className="bg-card rounded-lg shadow-xl border border-border">
 
           {/* Header */}
-          <div className="px-5 py-4 border-b border-gray-100">
+          <div className="px-5 py-4 border-b border-border">
             <div className="flex items-center justify-between">
-              <h3 className="font-semibold text-gray-900">{block.text}</h3>
+              <h3 className="font-semibold text-foreground">{block.text}</h3>
               <button
                 onClick={onClose}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
+                className="text-muted-foreground hover:text-foreground transition-colors"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -103,14 +103,14 @@ export const TimeBlockEditor: React.FC<TimeBlockEditorProps> = ({
 
             {/* Start Time */}
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-2">
+              <label className="block text-xs font-medium text-muted-foreground mb-2">
                 시작 시간
               </label>
               <div className="flex items-center gap-2">
                 <select
                   value={startPeriod}
                   onChange={(e) => setStartPeriod(e.target.value)}
-                  className="w-16 px-2 py-2 text-center border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-16 px-2 py-2 text-center border border-border rounded-md bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                 >
                   <option value="AM">오전</option>
                   <option value="PM">오후</option>
@@ -118,7 +118,7 @@ export const TimeBlockEditor: React.FC<TimeBlockEditorProps> = ({
                 <select
                   value={startHour12}
                   onChange={(e) => setStartHour12(parseInt(e.target.value))}
-                  className="w-16 px-3 py-2 text-center border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-16 px-3 py-2 text-center border border-border rounded-md bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                 >
                   {hourOptions.map(h => (
                     <option key={h} value={h}>{h}</option>
@@ -128,7 +128,7 @@ export const TimeBlockEditor: React.FC<TimeBlockEditorProps> = ({
                 <select
                   value={startMin}
                   onChange={(e) => setStartMin(parseInt(e.target.value))}
-                  className="w-16 px-3 py-2 text-center border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-16 px-3 py-2 text-center border border-border rounded-md bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                 >
                   {minuteOptions.map(m => (
                     <option key={m} value={m}>{m.toString().padStart(2, '0')}</option>
@@ -139,14 +139,14 @@ export const TimeBlockEditor: React.FC<TimeBlockEditorProps> = ({
 
             {/* End Time */}
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-2">
+              <label className="block text-xs font-medium text-muted-foreground mb-2">
                 종료 시간
               </label>
               <div className="flex items-center gap-2">
                 <select
                   value={endPeriod}
                   onChange={(e) => setEndPeriod(e.target.value)}
-                  className="w-16 px-2 py-2 text-center border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-16 px-2 py-2 text-center border border-border rounded-md bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                 >
                   <option value="AM">오전</option>
                   <option value="PM">오후</option>
@@ -154,7 +154,7 @@ export const TimeBlockEditor: React.FC<TimeBlockEditorProps> = ({
                 <select
                   value={endHour12}
                   onChange={(e) => setEndHour12(parseInt(e.target.value))}
-                  className="w-16 px-3 py-2 text-center border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-16 px-3 py-2 text-center border border-border rounded-md bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                 >
                   {hourOptions.map(h => (
                     <option key={h} value={h}>{h}</option>
@@ -164,7 +164,7 @@ export const TimeBlockEditor: React.FC<TimeBlockEditorProps> = ({
                 <select
                   value={endMin}
                   onChange={(e) => setEndMin(parseInt(e.target.value))}
-                  className="w-16 px-3 py-2 text-center border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-16 px-3 py-2 text-center border border-border rounded-md bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                 >
                   {minuteOptions.map(m => (
                     <option key={m} value={m}>{m.toString().padStart(2, '0')}</option>
@@ -174,10 +174,10 @@ export const TimeBlockEditor: React.FC<TimeBlockEditorProps> = ({
             </div>
 
             {/* Duration Display */}
-            <div className="pt-3 border-t border-gray-100">
+            <div className="pt-3 border-t border-border">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-500">소요 시간</span>
-                <span className="font-medium text-gray-900">
+                <span className="text-muted-foreground">소요 시간</span>
+                <span className="font-medium text-foreground">
                   {durationHours > 0 && `${durationHours}시간 `}
                   {durationMins > 0 && `${durationMins}분`}
                   {totalMinutes <= 0 && '시간을 확인해주세요'}
@@ -187,16 +187,16 @@ export const TimeBlockEditor: React.FC<TimeBlockEditorProps> = ({
           </div>
 
           {/* Footer */}
-          <div className="px-5 py-4 bg-gray-50 flex gap-2 rounded-b-lg">
+          <div className="px-5 py-4 bg-muted/30 flex gap-2 rounded-b-lg">
             <button
               onClick={onClose}
-              className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-md hover:bg-gray-50 transition-colors"
+              className="flex-1 px-4 py-2 text-sm font-medium text-foreground bg-card border border-border rounded-md hover:bg-muted transition-colors"
             >
               취소
             </button>
             <button
               onClick={handleSave}
-              className="flex-1 px-4 py-2 text-sm font-medium text-white bg-blue-500 rounded-md hover:bg-blue-600 transition-colors"
+              className="flex-1 px-4 py-2 text-sm font-medium text-primary-foreground bg-primary rounded-md hover:opacity-90 transition-colors"
             >
               저장
             </button>

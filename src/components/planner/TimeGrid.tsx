@@ -28,18 +28,18 @@ export const TimeGrid: React.FC<TimeGridProps> = ({
 
   return (
     <div className="relative">
-      <div className="border-b border-gray-300 mb-2" style={{ height: '1px' }}></div>
+      <div className="border-b border-border mb-2" style={{ height: '1px' }}></div>
 
       <div id="time-grid" className="relative" style={{ height: '1440px' }}>
         {/* 시간 그리드 배경 */}
         {hours.map((hour) => (
-          <div key={hour} className="flex border-b border-gray-200" style={{ height: '60px' }}>
-            <div className="w-12 text-sm text-gray-600 pr-2 text-right pt-1">{hour}</div>
+          <div key={hour} className="flex border-b border-border" style={{ height: '60px' }}>
+            <div className="w-12 text-sm text-muted-foreground pr-2 text-right pt-1">{hour}</div>
             <div className="flex-1 relative">
               {minuteMarkers.map((_, idx) => (
                 <div
                   key={idx}
-                  className="absolute border-l border-gray-100"
+                  className="absolute border-l border-border/30"
                   style={{ left: `${idx * 16.666}%`, height: '100%' }}
                 ></div>
               ))}

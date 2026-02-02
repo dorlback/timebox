@@ -23,19 +23,19 @@ export const TodoList: React.FC<TodoListProps> = ({
 }) => {
   return (
     <div
-      className="bg-white rounded-lg shadow p-4"
+      className="bg-card rounded-lg shadow p-4 transition-colors border border-border"
       onDragOver={onDragOver}
       onDrop={onDrop}
     >
-      <h2 className="font-semibold mb-3 text-gray-700">TO DO LIST</h2>
-      <div className="text-xs text-gray-500 mb-2">최대 5개</div>
+      <h2 className="font-semibold mb-3 text-muted-foreground">TO DO LIST</h2>
+      <div className="text-xs text-muted-foreground mb-2">최대 5개</div>
       <div className="space-y-2">
         {items.map((item) => (
           <div
             key={item.id}
             draggable
             onDragStart={(e) => onDragStart(e, item)}
-            className="flex items-center gap-2 p-2 bg-gray-50 rounded border border-gray-200 cursor-move hover:bg-gray-100"
+            className="flex items-center gap-2 p-2 bg-muted/30 rounded border border-border cursor-move hover:bg-muted transition-colors"
           >
             <GripVertical size={16} className="text-gray-400" />
             <input
@@ -45,7 +45,7 @@ export const TodoList: React.FC<TodoListProps> = ({
               className="w-4 h-4"
               onClick={(e) => e.stopPropagation()}
             />
-            <span className={`flex-1 text-sm ${item.completed ? 'line-through text-gray-400' : ''}`}>
+            <span className={`flex-1 text-sm ${item.completed ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
               {item.text}
             </span>
             <button
@@ -64,7 +64,7 @@ export const TodoList: React.FC<TodoListProps> = ({
           </div>
         ))}
         {items.length === 0 && (
-          <div className="text-center text-gray-400 text-sm py-8 border-2 border-dashed border-gray-300 rounded">
+          <div className="text-center text-muted-foreground text-sm py-8 border-2 border-dashed border-border rounded">
             Brain Dump에서 항목을 드래그하세요
           </div>
         )}

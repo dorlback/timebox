@@ -1,19 +1,19 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { BrainDumpItem, TodoItem, TimeBlock } from '@/types/planner';
 import { useErrorToast } from '@/hooks/useErrorToast';
 import { useTimeBlockInteraction } from '@/hooks/useTimeBlockInteraction';
-import { findAvailableSlot, findAvailableSlotAfterNow, checkTimeConflict } from '@/utils/timeUtils';
+import { findAvailableSlotAfterNow, checkTimeConflict } from '@/utils/timeUtils';
 import { PASTEL_COLORS } from '@/utils/colorUtils';
 import { BrainDump } from './BrainDump';
 import { TodoList } from './TodoList';
 import { TimeBlockEditor } from './TimeBlockEditor';
 import { ErrorToast } from './ErrorToast';
 import { SuccessToast } from './SuccessToast';
-import { usePlannerTestData } from '@/hooks/usePlannerTestData';
 import { User } from '@/types/user';
 import { usePlannerData } from '@/hooks/usePlannerDate';
 import { useSuccessToast } from '@/hooks/useSuccessToast';
 import Link from "next/link";
+import DarkModeToggle from '@/components/DarkModeToggle';
 import { TimePlan } from './TimePlan';
 
 
@@ -35,8 +35,8 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
   } = usePlannerData(date, CurrentUser.id, showSuccess, showError);
 
   const [newDumpText, setNewDumpText] = useState('');
-  const [draggedItem, setDraggedItem] = useState<any>(null);
-  const [dragSource, setDragSource] = useState<string | null>(null);
+  const [draggedItem, setDraggedItem] = useState<BrainDumpItem | TodoItem | null>(null);
+  const [dragSource, setDragSource] = useState<'brain-dump' | 'todo-list' | null>(null);
   const [editingBlock, setEditingBlock] = useState<TimeBlock | null>(null);
 
   useEffect(() => {
@@ -44,27 +44,26 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
 
     const timer = setTimeout(() => {
       handleAutoSave();
-      console.log("자동 저장 완료!");
     }, 2000);
 
     return () => clearTimeout(timer);
-  }, [brainDump, todoList, timeBlocks]);
+  }, [brainDump, todoList, timeBlocks, loading, handleAutoSave]);
 
-  const handleDateChange = (year: number, month: number, day: number) => {
+  const handleDateChange = useCallback((year: number, month: number, day: number) => {
     const newDate = new Date(year, month - 1, day);
     setDate(newDate);
-  };
+  }, []);
 
-  const handleDayOfWeekClick = (targetDayIndex: number) => {
+  const handleDayOfWeekClick = useCallback((targetDayIndex: number) => {
     const currentDayIndex = date.getDay();
     const diff = targetDayIndex - currentDayIndex;
 
     const newDate = new Date(date);
     newDate.setDate(date.getDate() + diff);
     setDate(newDate);
-  };
+  }, [date]);
 
-  const updateBlockTime = (blockId: number, newStart: number, newEnd: number) => {
+  const updateBlockTime = useCallback((blockId: number, newStart: number, newEnd: number) => {
     if (!timeBlocks) return;
 
     setTimeBlocks(timeBlocks.map(block =>
@@ -72,7 +71,7 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
         ? { ...block, startTime: newStart, endTime: newEnd }
         : block
     ));
-  };
+  }, [timeBlocks, setTimeBlocks]);
 
   const {
     draggingBlock,
@@ -97,8 +96,7 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
     setEditingBlock(null);
   };
 
-  // Brain Dump 핸들러
-  const addBrainDump = () => {
+  const addBrainDump = useCallback(() => {
     if (newDumpText.trim()) {
       setBrainDump([...brainDump || [], {
         id: Date.now(),
@@ -107,29 +105,25 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
       }]);
       setNewDumpText('');
     }
-  };
+  }, [newDumpText, brainDump, setBrainDump]);
 
-  // Brain Dump 삭제
-  const deleteBrainDump = (id: number) => {
+  const deleteBrainDump = useCallback((id: number) => {
     setBrainDump((brainDump || []).filter(item => item.id !== id));
 
-    // Brain Dump에서 직접 추가된 타임블록도 제거
     if (timeBlocks) {
       setTimeBlocks(timeBlocks.filter(block =>
         !(block.todoId === id && block.isDirectFromBrainDump)
       ));
     }
-  };
+  }, [brainDump, timeBlocks, setBrainDump, setTimeBlocks]);
 
-  // Brain Dump 체크박스 토글 추가
-  const toggleBrainDumpComplete = (id: number) => {
+  const toggleBrainDumpComplete = useCallback((id: number) => {
     if (!brainDump) return;
 
     setBrainDump(brainDump.map(item =>
       item.id === id ? { ...item, completed: !item.completed } : item
     ));
 
-    // Brain Dump에서 직접 추가된 타임블록도 체크 상태 동기화
     if (!timeBlocks) return;
     const updatedItem = brainDump.find(item => item.id === id);
     if (updatedItem) {
@@ -139,7 +133,7 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
           : block
       ));
     }
-  };
+  }, [brainDump, timeBlocks, setBrainDump, setTimeBlocks]);
 
   // Todo 핸들러
   const deleteTodo = (id: number) => {
@@ -231,7 +225,7 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
   };
 
   // 드래그앤드롭 핸들러
-  const handleDragStart = (e: React.DragEvent, item: any, source: string) => {
+  const handleDragStart = (e: React.DragEvent, item: BrainDumpItem | TodoItem, source: 'brain-dump' | 'todo-list') => {
     setDraggedItem(item);
     setDragSource(source);
     e.dataTransfer.effectAllowed = 'move';
@@ -378,30 +372,33 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
 
 
   return (
-    <div className="h-screen bg-gray-50 p-6 flex flex-col">
+    <div className="h-screen bg-background p-6 flex flex-col transition-colors">
       {loading && (
-        <div className="absolute inset-0 bg-white/50 z-50 flex items-center justify-center">
+        <div className="absolute inset-0 bg-white/50 dark:bg-black/50 z-50 flex items-center justify-center">
           <div className="text-blue-500 font-bold">데이터 불러오는 중...</div>
         </div>
       )}
 
       <div className="max-w-7xl mx-auto w-full flex flex-col flex-grow overflow-hidden">
-        <div className="flex items-center justify-between px-4 py-2 mb-6 drop-shadow border border-gray-200 bg-white rounded-full flex-shrink-0">
+        <div className="flex items-center justify-between px-4 py-2 mb-6 drop-shadow border border-border bg-card rounded-full flex-shrink-0">
           <Link href="/">
-            <h1 className="text-sm font-bold tracking-tight text-gray-400 uppercase">
-              Daily <span className="text-gray-900">Time Box</span>
+            <h1 className="text-sm font-bold tracking-tight text-muted-foreground uppercase">
+              Daily <span className="text-foreground">Time Box</span>
             </h1>
           </Link>
 
-          <button
-            onClick={handleSave}
-            className="flex items-center gap-2 bg-[#3B82F6] hover:bg-[#2563EB] text-white text-xs font-semibold px-5 py-2 rounded-full transition-all shadow-sm active:scale-95"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" /><polyline points="17 21 17 13 7 13 7 21" /><polyline points="7 3 7 8 15 8" />
-            </svg>
-            저장
-          </button>
+          <div className="flex items-center gap-3">
+            <DarkModeToggle />
+            <button
+              onClick={handleSave}
+              className="flex items-center gap-2 bg-primary hover:opacity-90 text-primary-foreground text-xs font-semibold px-5 py-2 rounded-full transition-all shadow-sm active:scale-95"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" /><polyline points="17 21 17 13 7 13 7 21" /><polyline points="7 3 7 8 15 8" />
+              </svg>
+              저장
+            </button>
+          </div>
         </div>
 
         <ErrorToast message={errorMessage} />
@@ -410,7 +407,7 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
         <div className="grid grid-cols-3 gap-6 flex-grow overflow-hidden">
           <div className="flex flex-col h-full overflow-hidden">
             <div className="flex-grow overflow-y-auto space-y-6 pr-2">
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+              <div className="bg-card rounded-lg shadow-sm">
                 <TodoList
                   items={todoList || []}
                   onToggleComplete={toggleTodoComplete}
@@ -422,26 +419,24 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
                 />
               </div>
 
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-                <BrainDump
-                  items={brainDump || []}
-                  newItemText={newDumpText}
-                  itemsInTimePlan={brainDumpItemsInTimePlan}
-                  onNewItemTextChange={setNewDumpText}
-                  onAddItem={addBrainDump}
-                  onDeleteItem={deleteBrainDump}
-                  onToggleComplete={toggleBrainDumpComplete}
-                  onMoveToTodo={moveBrainDumpToTodo}
-                  onAddToTimePlan={addBrainDumpToTimePlan}
-                  onDragStart={(e, item) => handleDragStart(e, item, 'brain-dump')}
-                  onDragOver={handleDragOver}
-                  onDrop={handleDropToBrainDump}
-                />
-              </div>
+              <BrainDump
+                items={brainDump || []}
+                itemsInTimePlan={brainDumpItemsInTimePlan}
+                newItemText={newDumpText}
+                onNewItemTextChange={setNewDumpText}
+                onAddItem={addBrainDump}
+                onDeleteItem={deleteBrainDump}
+                onToggleComplete={toggleBrainDumpComplete}
+                onMoveToTodo={moveBrainDumpToTodo}
+                onAddToTimePlan={addBrainDumpToTimePlan}
+                onDragStart={(e, item) => handleDragStart(e, item, 'brain-dump')}
+                onDragOver={handleDragOver}
+                onDrop={handleDropToBrainDump}
+              />
             </div>
           </div>
 
-          <div className="col-span-2 h-full overflow-hidden rounded-lg shadow border border-gray-200">
+          <div className="col-span-2 h-full overflow-hidden rounded-lg shadow">
             <TimePlan
               date={date}
               timeBlocks={timeBlocks || []}

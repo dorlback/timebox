@@ -62,9 +62,9 @@ export const TimePlan: React.FC<TimePlanProps> = ({
 
 
   return (
-    <div className="h-full flex flex-col bg-white col-span-2 rounded-lg shadow p-4">
+    <div className="h-full flex flex-col bg-card col-span-2 rounded-lg shadow p-4 transition-colors border border-border">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="font-semibold text-gray-700">TIME PLAN</h2>
+        <h2 className="font-semibold text-muted-foreground">TIME PLAN</h2>
         <DateSelector
           date={date}
           onDateChange={onDateChange}

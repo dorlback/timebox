@@ -7,7 +7,7 @@ import { createClient } from '@/lib/supabase/client';
 /**
  * 특정 날짜의 플래너 데이터를 관리하고 DB와 동기화하는 커스텀 훅
  */
-export const usePlannerData = (currentDate: Date, userId: string, showSuccess: any, showError: any) => {
+export const usePlannerData = (currentDate: Date, userId: string, showSuccess: (msg: string) => void, showError: (msg: string) => void) => {
   // 1. 전체 날짜 데이터를 관리하는 상태 (날짜 키 기준)
   const [dailyData, setDailyData] = useState<Record<string, DailyData>>({});
   const [loading, setLoading] = useState<boolean>(false);
@@ -25,28 +25,34 @@ export const usePlannerData = (currentDate: Date, userId: string, showSuccess: a
 
     const fetchPlannerData = async () => {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('timebox')
-        .select('payload')
-        .eq('user_id', userId)
-        .eq('planned_date', dateKey)
-        .single();
+      try {
+        const { data, error } = await supabase
+          .from('timebox')
+          .select('payload')
+          .eq('user_id', userId)
+          .eq('planned_date', dateKey)
+          .single();
 
-      if (data?.payload) {
-        setDailyData(prev => ({
-          ...prev,
-          [dateKey]: data.payload as DailyData
-        }));
-        console.log('데이터가 있는 경우 데이터 로드 성공');
-      } else {
-        // 데이터가 없는 경우 기본 구조 생성
-        console.log('데이터가 없는 경우 기본 구조 생성');
-        setDailyData(prev => ({
-          ...prev,
-          [dateKey]: { brainDump: [], todoList: [], timeBlocks: [] }
-        }));
+        if (error && error.code !== 'PGRST116') {
+          showError('데이터를 불러오는 중 오류가 발생했습니다.');
+        }
+
+        if (data?.payload) {
+          setDailyData(prev => ({
+            ...prev,
+            [dateKey]: data.payload as DailyData
+          }));
+        } else {
+          setDailyData(prev => ({
+            ...prev,
+            [dateKey]: { brainDump: [], todoList: [], timeBlocks: [] }
+          }));
+        }
+      } catch (err) {
+        showError('데이터를 불러오는 중 오류가 발생했습니다.');
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     fetchPlannerData();
@@ -59,22 +65,20 @@ export const usePlannerData = (currentDate: Date, userId: string, showSuccess: a
     timeBlocks: []
   };
 
-  // 4. [저장] 현재 상태를 DB에 Upsert
   const handleSave = useCallback(async () => {
     if (!userId) {
-      console.warn("로그인이 필요합니다.");
+      showError('로그인이 필요합니다.');
       return;
     }
     await savePlannerData(userId, dateKey, currentData, false, showSuccess, showError);
-  }, [userId, dateKey, currentData]);
+  }, [userId, dateKey, currentData, showSuccess, showError]);
 
   const handleAutoSave = useCallback(async () => {
     if (!userId) {
-      console.warn("로그인이 필요합니다.");
       return;
     }
     await savePlannerData(userId, dateKey, currentData, true, showSuccess, showError);
-  }, [userId, dateKey, currentData]);
+  }, [userId, dateKey, currentData, showSuccess, showError]);
 
   // --- 상태 업데이트 함수들 ---
 
