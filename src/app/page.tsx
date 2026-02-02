@@ -3,16 +3,29 @@ import Link from "next/link";
 import { ArrowRight, Calendar, Clock, Target, Zap } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import NavBar from "@/components/NavBar";
+import { User } from "@/types/user";
 
 export default async function HomePage() {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user: authUser } } = await supabase.auth.getUser()
+
+  // Supabase 유저를 커스텀 User 타입 구조의 일반 객체로 변환 (타입 불일치 및 직렬화 에러 해결)
+  const user = authUser ? {
+    id: authUser.id,
+    email: authUser.email ?? '',
+    displayName: (authUser as any).user_metadata?.full_name ?? '익명 유저',
+    avatarUrl: (authUser as any).user_metadata?.avatar_url ?? '',
+    phone: authUser.phone ?? '',
+    isAdmin: false,
+    createdAt: new Date(authUser.created_at),
+    updatedAt: new Date(authUser.created_at)
+  } : null;
 
   const startHref = user ? "/timebox" : "/login";
 
   return (
     <div className="min-h-screen bg-background transition-colors">
-      <NavBar user={user} />
+      <NavBar user={user as any} />
 
       {/* Hero Section with Gradient Background */}
       <div className="relative overflow-hidden">
