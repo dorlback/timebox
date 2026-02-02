@@ -4,11 +4,13 @@ import { getCurrentTimeInMinutes } from '@/utils/timeUtils';
 interface CurrentTimeIndicatorProps {
   pixelsPerMinute: number;
   date?: Date; // 날짜가 변경될 때 감지하기 위한 prop
+  isMobile?: boolean;
 }
 
 export const CurrentTimeIndicator: React.FC<CurrentTimeIndicatorProps> = ({
   pixelsPerMinute,
-  date
+  date,
+  isMobile = false
 }) => {
   const [currentMinutes, setCurrentMinutes] = useState(getCurrentTimeInMinutes());
 
@@ -35,14 +37,14 @@ export const CurrentTimeIndicator: React.FC<CurrentTimeIndicatorProps> = ({
       style={{ top: `${topPosition}px` }}
     >
       {/* 시간 표시 레이블 */}
-      <div className="absolute -left-1 -top-2.5 bg-red-500 text-white text-xs font-semibold px-2 py-0.5 rounded shadow-md">
+      <div className={`absolute ${isMobile ? 'left-0' : '-left-1'} -top-2.5 bg-red-500 text-white text-[10px] font-semibold px-1.5 py-0.5 rounded shadow-sm z-40`}>
         {timeString}
       </div>
 
       {/* 빨간 선 */}
       <div className="w-full h-0.5 bg-red-500 shadow-sm">
         {/* 선 끝의 원형 점 */}
-        <div className="absolute -right-1 -top-1 w-2 h-2 bg-red-500 rounded-full shadow-md" />
+        <div className={`absolute ${isMobile ? 'right-0' : '-right-1'} -top-1 w-2 h-2 bg-red-500 rounded-full shadow-md`} />
       </div>
     </div>
   );

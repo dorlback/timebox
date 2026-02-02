@@ -36,7 +36,7 @@ export const TimeGrid: React.FC<TimeGridProps> = ({
         {/* 시간 그리드 배경 */}
         {hours.map((hour) => (
           <div key={hour} className="flex border-b border-border" style={{ height: '60px' }}>
-            <div className="w-12 text-sm text-muted-foreground pr-2 text-right pt-1">{hour}</div>
+            <div className={`${isMobile ? 'w-8 text-[10px]' : 'w-12 text-sm'} text-muted-foreground pr-1 text-right pt-1 transition-all`}>{hour}</div>
             <div className="flex-1 relative">
               {minuteMarkers.map((_, idx) => (
                 <div
@@ -62,7 +62,7 @@ export const TimeGrid: React.FC<TimeGridProps> = ({
           />
         ))}
 
-        <CurrentTimeIndicator pixelsPerMinute={pixelsPerMinute} date={date} />
+        <CurrentTimeIndicator pixelsPerMinute={pixelsPerMinute} date={date} isMobile={isMobile} />
       </div>
     </div>
   );

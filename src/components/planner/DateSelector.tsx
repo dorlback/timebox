@@ -9,11 +9,13 @@ import "react-datepicker/dist/react-datepicker.css";
 interface DateSelectorProps {
   date: Date;
   onDateChange: (year: number, month: number, day: number) => void;
+  isMobile?: boolean;
 }
 
 export const DateSelector: React.FC<DateSelectorProps> = ({
   date,
-  onDateChange
+  onDateChange,
+  isMobile = false
 }) => {
 
   // 공통 날짜 업데이트 로직
@@ -40,7 +42,7 @@ export const DateSelector: React.FC<DateSelectorProps> = ({
       ref={ref}
       className="flex items-center gap-2 px-4 h-full hover:bg-muted transition-colors group outline-none"
     >
-      <span className="text-sm font-bold text-foreground tracking-tight">
+      <span className={`${isMobile ? 'text-xs' : 'text-sm'} font-bold text-foreground tracking-tight`}>
         {value}
       </span>
       <svg
@@ -60,15 +62,15 @@ export const DateSelector: React.FC<DateSelectorProps> = ({
   CustomInput.displayName = "CustomInput";
 
   return (
-    <div className="flex items-center gap-2">
-      <div className="flex items-center bg-card border border-border rounded-lg shadow-sm h-10 overflow-hidden">
+    <div className={`flex items-center ${isMobile ? 'gap-1' : 'gap-2'}`}>
+      <div className={`flex items-center bg-card border border-border rounded-lg shadow-sm h-10 overflow-hidden ${isMobile ? 'scale-90 origin-right' : ''}`}>
         {/* 어제 이동 버튼 */}
         <button
           onClick={goYesterday}
-          className="px-3 h-full hover:bg-muted transition-colors border-r border-border text-muted-foreground hover:text-foreground"
+          className={`${isMobile ? 'px-2' : 'px-3'} h-full hover:bg-muted transition-colors border-r border-border text-muted-foreground hover:text-foreground`}
           title="어제"
         >
-          <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+          <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
             <path d="M15 18l-6-6 6-6" />
           </svg>
         </button>
@@ -78,33 +80,32 @@ export const DateSelector: React.FC<DateSelectorProps> = ({
           selected={date}
           onChange={handleDateUpdate}
           locale={ko}
-          dateFormat="yyyy년 MM월 dd일 (eee)"
+          dateFormat={isMobile ? "MM/dd (eee)" : "yyyy년 MM월 dd일 (eee)"}
           customInput={<CustomInput />}
-          // 팝업 위치 조절 (필요 시)
           popperPlacement="bottom-start"
-          // 팝업이 다른 요소에 가려진다면 아래 설정 추가
           portalId="root-portal"
         />
 
         {/* 내일 이동 버튼 */}
         <button
           onClick={goTomorrow}
-          className="px-3 h-full hover:bg-muted transition-colors border-l border-border text-muted-foreground hover:text-foreground"
+          className={`${isMobile ? 'px-2' : 'px-3'} h-full hover:bg-muted transition-colors border-l border-border text-muted-foreground hover:text-foreground`}
           title="내일"
         >
-          <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+          <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
             <path d="M9 18l6-6-6-6" />
           </svg>
         </button>
       </div>
 
-      {/* 오늘 버튼 */}
-      <button
-        onClick={() => handleDateUpdate(new Date())}
-        className="px-4 h-10 text-xs font-bold text-primary bg-primary/10 hover:bg-primary/20 rounded-lg transition-colors border border-primary/20"
-      >
-        오늘
-      </button>
+      {!isMobile && (
+        <button
+          onClick={() => handleDateUpdate(new Date())}
+          className="px-4 h-10 text-xs font-bold text-primary bg-primary/10 hover:bg-primary/20 rounded-lg transition-colors border border-primary/20"
+        >
+          오늘
+        </button>
+      )}
     </div>
   );
 };

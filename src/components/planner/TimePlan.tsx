@@ -64,19 +64,20 @@ export const TimePlan: React.FC<TimePlanProps> = ({
 
 
   return (
-    <div className="h-full flex flex-col bg-card col-span-2 rounded-lg shadow p-4 transition-colors border border-border">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="font-semibold text-muted-foreground">TIME PLAN</h2>
+    <div className={`h-full flex flex-col bg-card col-span-2 transition-colors ${isMobile ? 'p-2' : 'rounded-lg shadow p-4 border border-border'
+      }`}>
+      <div className="flex justify-between items-center mb-2">
+        <h2 className={`font-semibold text-muted-foreground ${isMobile ? 'text-sm' : ''}`}>TIME PLAN</h2>
         <DateSelector
           date={date}
           onDateChange={onDateChange}
+          isMobile={isMobile}
         />
       </div>
 
       <div
         ref={scrollContainerRef}
-        className="overflow-auto"
-      // style={{ maxHeight: '700px' }}
+        className="flex-1 overflow-y-auto overflow-x-hidden bg-background rounded-lg border border-border/50"
       >
         <TimeGrid
           timeBlocks={timeBlocks}
@@ -90,6 +91,5 @@ export const TimePlan: React.FC<TimePlanProps> = ({
         />
       </div>
     </div>
-
   );
 };

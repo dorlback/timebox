@@ -408,10 +408,10 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
           <div className="relative h-screen overflow-hidden pb-20">
             {/* 좌측 뷰 (할일/브레인덤프) */}
             <div
-              className={`absolute inset-0 transition-transform duration-300 ease-in-out ${activeView === 'left' ? 'translate-x-0' : '-translate-x-full'
+              className={`absolute top-0 left-0 right-0 bottom-24 transition-transform duration-300 ease-in-out ${activeView === 'left' ? 'translate-x-0' : '-translate-x-full'
                 }`}
             >
-              <div className="h-full overflow-y-auto p-4 space-y-4 pt-6 pb-20">
+              <div className="h-full overflow-y-auto p-4 space-y-4">
                 <div className="bg-card rounded-ios-lg shadow-ios">
                   <TodoList
                     items={todoList || []}
@@ -445,10 +445,10 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
 
             {/* 우측 뷰 (타임플랜) */}
             <div
-              className={`absolute inset-0 transition-transform duration-300 ease-in-out ${activeView === 'right' ? 'translate-x-0' : 'translate-x-full'
+              className={`absolute top-0 left-0 right-0 bottom-24 transition-transform duration-300 ease-in-out ${activeView === 'right' ? 'translate-x-0' : 'translate-x-full'
                 }`}
             >
-              <div className="h-full overflow-hidden pt-2 pb-20">
+              <div className="h-full overflow-hidden">
                 <TimePlan
                   date={date}
                   timeBlocks={timeBlocks || []}

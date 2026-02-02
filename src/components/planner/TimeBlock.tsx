@@ -31,7 +31,7 @@ export const TimeBlock: React.FC<TimeBlockProps> = ({
 
   return (
     <div
-      className={`absolute left-12 right-0 rounded px-2 py-1 transition-all ${isCompleted
+      className={`absolute ${isMobile ? 'left-8 right-1' : 'left-12 right-0'} rounded px-2 py-1 transition-all ${isCompleted
         ? 'bg-gray-200 border-2 border-gray-400'
         : `${color.bg} border-2 ${color.border}`
         } ${isDragging ? 'opacity-70 shadow-lg cursor-move' : ''} ${isResizing ? 'opacity-70 shadow-lg' : ''
