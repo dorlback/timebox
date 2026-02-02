@@ -13,14 +13,21 @@ import { User } from '@/types/user';
 import { usePlannerData } from '@/hooks/usePlannerDate';
 import { useSuccessToast } from '@/hooks/useSuccessToast';
 import Link from "next/link";
+import { useDarkMode } from '@/hooks/useDarkMode';
+import { Moon, Sun } from 'lucide-react';
 import DarkModeToggle from '@/components/DarkModeToggle';
 import { TimePlan } from './TimePlan';
 
 
 const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
+  const { isDark, toggleDark, mounted } = useDarkMode();
   const [date, setDate] = useState(new Date());
   const { errorMessage, showError } = useErrorToast();
   const { successMessage, showSuccess } = useSuccessToast();
+
+  // 모바일 화면 전환 상태
+  const [activeView, setActiveView] = useState<'left' | 'right'>('left');
+  const [isMobile, setIsMobile] = useState(false);
 
   const {
     brainDump,
@@ -38,6 +45,17 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
   const [draggedItem, setDraggedItem] = useState<BrainDumpItem | TodoItem | null>(null);
   const [dragSource, setDragSource] = useState<'brain-dump' | 'todo-list' | null>(null);
   const [editingBlock, setEditingBlock] = useState<TimeBlock | null>(null);
+
+  // 모바일 뷰포트 감지
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   useEffect(() => {
     if (loading) return;
@@ -372,81 +390,158 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
 
 
   return (
-    <div className="h-screen bg-background p-6 flex flex-col transition-colors">
+    <div className="min-h-screen bg-background transition-colors">
       {loading && (
         <div className="absolute inset-0 bg-white/50 dark:bg-black/50 z-50 flex items-center justify-center">
           <div className="text-blue-500 font-bold">데이터 불러오는 중...</div>
         </div>
       )}
 
-      <div className="max-w-7xl mx-auto w-full flex flex-col flex-grow overflow-hidden">
-        <div className="flex items-center justify-between px-4 py-2 mb-6 drop-shadow border border-border bg-card rounded-full flex-shrink-0">
-          <Link href="/">
-            <h1 className="text-sm font-bold tracking-tight text-muted-foreground uppercase">
-              Daily <span className="text-foreground">Time Box</span>
-            </h1>
-          </Link>
+      {/* 모바일 UI */}
+      {isMobile && (
+        <>
+          <ErrorToast message={errorMessage} />
+          <SuccessToast message={successMessage} />
 
-          <div className="flex items-center gap-3">
-            <DarkModeToggle />
-            <button
-              onClick={handleSave}
-              className="flex items-center gap-2 bg-primary hover:opacity-90 text-primary-foreground text-xs font-semibold px-5 py-2 rounded-full transition-all shadow-sm active:scale-95"
+          <div className="relative h-screen overflow-hidden pb-20">
+            {/* 좌측 뷰 (할일/브레인덤프) */}
+            <div
+              className={`absolute inset-0 transition-transform duration-300 ease-in-out ${activeView === 'left' ? 'translate-x-0' : '-translate-x-full'
+                }`}
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" /><polyline points="17 21 17 13 7 13 7 21" /><polyline points="7 3 7 8 15 8" />
-              </svg>
-              저장
-            </button>
-          </div>
-        </div>
+              <div className="h-full overflow-y-auto p-4 space-y-4 pt-6 pb-20">
+                <div className="bg-card rounded-ios-lg shadow-ios">
+                  <TodoList
+                    items={todoList || []}
+                    onToggleComplete={toggleTodoComplete}
+                    onDeleteItem={deleteTodo}
+                    onMoveToBrainDump={moveTodoToBrainDump}
+                    onDragStart={(e, item) => handleDragStart(e, item, 'todo-list')}
+                    onDragOver={handleDragOver}
+                    onDrop={handleDropToTodo}
+                  />
+                </div>
 
-        <ErrorToast message={errorMessage} />
-        <SuccessToast message={successMessage} />
-
-        <div className="grid grid-cols-3 gap-6 flex-grow overflow-hidden">
-          <div className="flex flex-col h-full overflow-hidden">
-            <div className="flex-grow overflow-y-auto space-y-6 pr-2">
-              <div className="bg-card rounded-lg shadow-sm">
-                <TodoList
-                  items={todoList || []}
-                  onToggleComplete={toggleTodoComplete}
-                  onDeleteItem={deleteTodo}
-                  onMoveToBrainDump={moveTodoToBrainDump}
-                  onDragStart={(e, item) => handleDragStart(e, item, 'todo-list')}
+                <BrainDump
+                  items={brainDump || []}
+                  itemsInTimePlan={brainDumpItemsInTimePlan}
+                  newItemText={newDumpText}
+                  onNewItemTextChange={setNewDumpText}
+                  onAddItem={addBrainDump}
+                  onDeleteItem={deleteBrainDump}
+                  onToggleComplete={toggleBrainDumpComplete}
+                  onMoveToTodo={moveBrainDumpToTodo}
+                  onAddToTimePlan={addBrainDumpToTimePlan}
+                  onDragStart={(e, item) => handleDragStart(e, item, 'brain-dump')}
                   onDragOver={handleDragOver}
-                  onDrop={handleDropToTodo}
+                  onDrop={handleDropToBrainDump}
                 />
               </div>
-
-              <BrainDump
-                items={brainDump || []}
-                itemsInTimePlan={brainDumpItemsInTimePlan}
-                newItemText={newDumpText}
-                onNewItemTextChange={setNewDumpText}
-                onAddItem={addBrainDump}
-                onDeleteItem={deleteBrainDump}
-                onToggleComplete={toggleBrainDumpComplete}
-                onMoveToTodo={moveBrainDumpToTodo}
-                onAddToTimePlan={addBrainDumpToTimePlan}
-                onDragStart={(e, item) => handleDragStart(e, item, 'brain-dump')}
-                onDragOver={handleDragOver}
-                onDrop={handleDropToBrainDump}
-              />
             </div>
-          </div>
 
-          <div className="col-span-2 h-full overflow-hidden rounded-lg shadow">
-            <TimePlan
-              date={date}
-              timeBlocks={timeBlocks || []}
-              draggingBlockId={draggingBlock}
-              resizingBlockId={resizingBlock}
-              onDateChange={handleDateChange}
-              onDayOfWeekClick={handleDayOfWeekClick}
-              onBlockMouseDown={handleBlockMouseDown}
-              onBlockEdit={setEditingBlock}
-            />
+            {/* 우측 뷰 (타임플랜) */}
+            <div
+              className={`absolute inset-0 transition-transform duration-300 ease-in-out ${activeView === 'right' ? 'translate-x-0' : 'translate-x-full'
+                }`}
+            >
+              <div className="h-full overflow-hidden pt-2 pb-20">
+                <TimePlan
+                  date={date}
+                  timeBlocks={timeBlocks || []}
+                  draggingBlockId={draggingBlock}
+                  resizingBlockId={resizingBlock}
+                  onDateChange={handleDateChange}
+                  onDayOfWeekClick={handleDayOfWeekClick}
+                  onBlockMouseDown={handleBlockMouseDown}
+                  onBlockEdit={setEditingBlock}
+                />
+              </div>
+            </div>
+
+            {/* 하단 네비게이션 바 (iOS 스타일) */}
+            <nav className="fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-md border-t border-border z-50">
+              <div className="relative flex items-center justify-around h-16 px-2">
+                {/* 1. 홈 버튼 */}
+                <Link href="/">
+                  <button className="flex flex-col items-center justify-center gap-0.5 px-3 py-1 rounded-lg transition-all text-muted-foreground hover:text-primary">
+                    <div className="min-h-[22px] flex items-center justify-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                      </svg>
+                    </div>
+                    <span className="text-[10px] font-medium">홈</span>
+                  </button>
+                </Link>
+
+                {/* 2. 다크모드 버튼 */}
+                <button
+                  onClick={toggleDark}
+                  className="flex flex-col items-center justify-center gap-0.5 px-3 py-1 rounded-lg transition-all text-muted-foreground hover:text-primary"
+                >
+                  <div className="min-h-[22px] flex items-center justify-center">
+                    {isDark ? (
+                      <Sun size={22} aria-hidden="true" />
+                    ) : (
+                      <Moon size={22} aria-hidden="true" />
+                    )}
+                  </div>
+                  <span className="text-[10px] font-medium">테마</span>
+                </button>
+
+                {/* 3. 가운데: 원형 전환 버튼 (큰 원형, 상단 돌출) */}
+                <button
+                  onClick={() => setActiveView(activeView === 'left' ? 'right' : 'left')}
+                  className="absolute left-1/2 -translate-x-1/2 -top-7 w-14 h-14 bg-primary text-primary-foreground rounded-full shadow-lg hover:shadow-xl active:scale-95 transition-all flex items-center justify-center"
+                  style={{
+                    boxShadow: '0 4px 14px 0 rgba(59, 130, 246, 0.4)'
+                  }}
+                >
+                  {activeView === 'left' ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                      <line x1="16" y1="2" x2="16" y2="6"></line>
+                      <line x1="8" y1="2" x2="8" y2="6"></line>
+                      <line x1="3" y1="10" x2="21" y2="10"></line>
+                    </svg>
+                  ) : (
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M9 11l3 3L22 4"></path>
+                      <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                    </svg>
+                  )}
+                </button>
+
+                {/* 4. 로그아웃 버튼 */}
+                <Link href="/login">
+                  <button className="flex flex-col items-center justify-center gap-0.5 px-3 py-1 rounded-lg transition-all text-muted-foreground hover:text-primary">
+                    <div className="min-h-[22px] flex items-center justify-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                        <polyline points="16 17 21 12 16 7"></polyline>
+                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                      </svg>
+                    </div>
+                    <span className="text-[10px] font-medium">로그아웃</span>
+                  </button>
+                </Link>
+
+                {/* 5. 저장 버튼 */}
+                <button
+                  onClick={handleSave}
+                  className="flex flex-col items-center justify-center gap-0.5 px-3 py-1 rounded-lg transition-all text-muted-foreground hover:text-primary"
+                >
+                  <div className="min-h-[22px] flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                      <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                      <polyline points="7 3 7 8 15 8"></polyline>
+                    </svg>
+                  </div>
+                  <span className="text-[10px] font-medium">저장</span>
+                </button>
+              </div>
+            </nav>
           </div>
 
           {editingBlock && (
@@ -456,8 +551,93 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
               onClose={() => setEditingBlock(null)}
             />
           )}
+        </>
+      )}
+
+      {/* 데스크톱 UI (기존) */}
+      {!isMobile && (
+        <div className="h-screen p-6 flex flex-col">
+          <div className="max-w-7xl mx-auto w-full flex flex-col flex-grow overflow-hidden">
+            <div className="flex items-center justify-between px-4 py-2 mb-6 drop-shadow border border-border bg-card rounded-full flex-shrink-0">
+              <Link href="/">
+                <h1 className="text-sm font-bold tracking-tight text-muted-foreground uppercase">
+                  Daily <span className="text-foreground">Time Box</span>
+                </h1>
+              </Link>
+
+              <div className="flex items-center gap-3">
+                <DarkModeToggle />
+                <button
+                  onClick={handleSave}
+                  className="flex items-center gap-2 bg-primary hover:opacity-90 text-primary-foreground text-xs font-semibold px-5 py-2 rounded-full transition-all shadow-sm active:scale-95"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" /><polyline points="17 21 17 13 7 13 7 21" /><polyline points="7 3 7 8 15 8" />
+                  </svg>
+                  저장
+                </button>
+              </div>
+            </div>
+
+            <ErrorToast message={errorMessage} />
+            <SuccessToast message={successMessage} />
+
+            <div className="grid grid-cols-3 gap-6 flex-grow overflow-hidden">
+              <div className="flex flex-col h-full overflow-hidden">
+                <div className="flex-grow overflow-y-auto space-y-6 pr-2">
+                  <div className="bg-card rounded-lg shadow-sm">
+                    <TodoList
+                      items={todoList || []}
+                      onToggleComplete={toggleTodoComplete}
+                      onDeleteItem={deleteTodo}
+                      onMoveToBrainDump={moveTodoToBrainDump}
+                      onDragStart={(e, item) => handleDragStart(e, item, 'todo-list')}
+                      onDragOver={handleDragOver}
+                      onDrop={handleDropToTodo}
+                    />
+                  </div>
+
+                  <BrainDump
+                    items={brainDump || []}
+                    itemsInTimePlan={brainDumpItemsInTimePlan}
+                    newItemText={newDumpText}
+                    onNewItemTextChange={setNewDumpText}
+                    onAddItem={addBrainDump}
+                    onDeleteItem={deleteBrainDump}
+                    onToggleComplete={toggleBrainDumpComplete}
+                    onMoveToTodo={moveBrainDumpToTodo}
+                    onAddToTimePlan={addBrainDumpToTimePlan}
+                    onDragStart={(e, item) => handleDragStart(e, item, 'brain-dump')}
+                    onDragOver={handleDragOver}
+                    onDrop={handleDropToBrainDump}
+                  />
+                </div>
+              </div>
+
+              <div className="col-span-2 h-full overflow-hidden rounded-lg shadow">
+                <TimePlan
+                  date={date}
+                  timeBlocks={timeBlocks || []}
+                  draggingBlockId={draggingBlock}
+                  resizingBlockId={resizingBlock}
+                  onDateChange={handleDateChange}
+                  onDayOfWeekClick={handleDayOfWeekClick}
+                  onBlockMouseDown={handleBlockMouseDown}
+                  onBlockEdit={setEditingBlock}
+                />
+              </div>
+
+              {editingBlock && (
+                <TimeBlockEditor
+                  block={editingBlock}
+                  onSave={handleBlockEditorSave}
+                  onClose={() => setEditingBlock(null)}
+                />
+              )}
+            </div>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };
