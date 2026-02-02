@@ -15,6 +15,8 @@ interface BrainDumpProps {
   onDragStart: (e: React.DragEvent, item: BrainDumpItem) => void;
   onDragOver: (e: React.DragEvent) => void;
   onDrop: (e: React.DragEvent) => void;
+  isMobile?: boolean;
+  onOpenAddModal?: () => void;
 }
 
 export const BrainDump: React.FC<BrainDumpProps> = ({
@@ -29,7 +31,9 @@ export const BrainDump: React.FC<BrainDumpProps> = ({
   onAddToTimePlan,
   onDragStart,
   onDragOver,
-  onDrop
+  onDrop,
+  isMobile = false,
+  onOpenAddModal
 }) => {
   return (
     <div
@@ -37,7 +41,18 @@ export const BrainDump: React.FC<BrainDumpProps> = ({
       onDragOver={onDragOver}
       onDrop={onDrop}
     >
-      <h2 className="font-semibold mb-3 text-muted-foreground">BRAIN DUMP</h2>
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="font-semibold text-muted-foreground">BRAIN DUMP</h2>
+        {isMobile && onOpenAddModal && (
+          <button
+            onClick={onOpenAddModal}
+            className="p-2 rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
+            aria-label="새 항목 추가"
+          >
+            <Plus size={18} />
+          </button>
+        )}
+      </div>
       <div className="space-y-2 mb-3">
         {items.map((item) => {
           const isInTimePlan = itemsInTimePlan.includes(item.id);
@@ -98,22 +113,24 @@ export const BrainDump: React.FC<BrainDumpProps> = ({
           );
         })}
       </div>
-      <div className="flex gap-2">
-        <input
-          type="text"
-          value={newItemText}
-          onChange={(e) => onNewItemTextChange(e.target.value)}
-          onKeyPress={(e) => e.key === 'Enter' && onAddItem()}
-          placeholder="새 항목 추가..."
-          className="flex-1 px-3 py-2 border border-input rounded text-sm bg-card text-foreground placeholder-muted-foreground"
-        />
-        <button
-          onClick={onAddItem}
-          className="bg-primary text-primary-foreground px-3 py-2 rounded hover:opacity-90 transition-colors"
-        >
-          <Plus size={16} />
-        </button>
-      </div>
+      {!isMobile && (
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={newItemText}
+            onChange={(e) => onNewItemTextChange(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && onAddItem()}
+            placeholder="새 항목 추가..."
+            className="flex-1 px-3 py-2 border border-input rounded text-sm bg-card text-foreground placeholder-muted-foreground"
+          />
+          <button
+            onClick={onAddItem}
+            className="bg-primary text-primary-foreground px-3 py-2 rounded hover:opacity-90 transition-colors"
+          >
+            <Plus size={16} />
+          </button>
+        </div>
+      )}
     </div>
   );
 };

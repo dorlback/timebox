@@ -17,6 +17,7 @@ import { useDarkMode } from '@/hooks/useDarkMode';
 import { Moon, Sun } from 'lucide-react';
 import DarkModeToggle from '@/components/DarkModeToggle';
 import { TimePlan } from './TimePlan';
+import { BrainDumpAddModal } from './BrainDumpAddModal';
 
 
 const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
@@ -28,6 +29,7 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
   // 모바일 화면 전환 상태
   const [activeView, setActiveView] = useState<'left' | 'right'>('left');
   const [isMobile, setIsMobile] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   const {
     brainDump,
@@ -435,6 +437,8 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
                   onDragStart={(e, item) => handleDragStart(e, item, 'brain-dump')}
                   onDragOver={handleDragOver}
                   onDrop={handleDropToBrainDump}
+                  isMobile={true}
+                  onOpenAddModal={() => setIsAddModalOpen(true)}
                 />
               </div>
             </div>
@@ -454,6 +458,7 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
                   onDayOfWeekClick={handleDayOfWeekClick}
                   onBlockMouseDown={handleBlockMouseDown}
                   onBlockEdit={setEditingBlock}
+                  isMobile={true}
                 />
               </div>
             </div>
@@ -542,6 +547,21 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
                 </button>
               </div>
             </nav>
+
+            {/* Brain Dump 추가 모달 */}
+            <BrainDumpAddModal
+              isOpen={isAddModalOpen}
+              onClose={() => setIsAddModalOpen(false)}
+              onAdd={(text) => {
+                if (!brainDump) return;
+                const newItem: BrainDumpItem = {
+                  id: Date.now(),
+                  text: text,
+                  completed: false
+                };
+                setBrainDump([...brainDump, newItem]);
+              }}
+            />
           </div>
 
           {editingBlock && (

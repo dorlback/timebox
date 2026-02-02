@@ -9,6 +9,7 @@ interface TimeBlockProps {
   isResizing: boolean;
   onMouseDown: (e: React.MouseEvent, block: TimeBlockType) => void;
   onEdit: (block: TimeBlockType) => void;
+  isMobile?: boolean;
 }
 
 export const TimeBlock: React.FC<TimeBlockProps> = ({
@@ -16,7 +17,8 @@ export const TimeBlock: React.FC<TimeBlockProps> = ({
   isDragging,
   isResizing,
   onMouseDown,
-  onEdit
+  onEdit,
+  isMobile = false
 }) => {
   const top = block.startTime * 1;
   const height = (block.endTime - block.startTime) * 1;
@@ -87,18 +89,20 @@ export const TimeBlock: React.FC<TimeBlockProps> = ({
               {formatTimeDisplay(block.endTime)}
               <span className="ml-2">({duration}분)</span>
             </span>
-            <button
-              className={`edit-button text-white px-2 py-1 rounded text-xs ${isCompleted
-                ? 'bg-gray-400 hover:bg-gray-500'
-                : 'bg-blue-500 hover:bg-blue-600'
-                }`}
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit(block);
-              }}
-            >
-              수정
-            </button>
+            {!isMobile && (
+              <button
+                className={`edit-button text-white px-2 py-1 rounded text-xs ${isCompleted
+                  ? 'bg-gray-400 hover:bg-gray-500'
+                  : 'bg-blue-500 hover:bg-blue-600'
+                  }`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit(block);
+                }}
+              >
+                수정
+              </button>
+            )}
           </div>
         </>
       )}

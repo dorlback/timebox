@@ -12,6 +12,7 @@ interface TimePlanProps {
   onDayOfWeekClick: (dayIndex: number) => void;
   onBlockMouseDown: (e: React.MouseEvent, block: TimeBlock) => void;
   onBlockEdit: (block: TimeBlock) => void;
+  isMobile?: boolean;
 }
 
 export const TimePlan: React.FC<TimePlanProps> = ({
@@ -22,7 +23,8 @@ export const TimePlan: React.FC<TimePlanProps> = ({
   onDateChange,
   onDayOfWeekClick,
   onBlockMouseDown,
-  onBlockEdit
+  onBlockEdit,
+  isMobile = false
 }) => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -84,6 +86,7 @@ export const TimePlan: React.FC<TimePlanProps> = ({
           onBlockEdit={onBlockEdit}
           showCurrentTime={isToday(date)}
           date={date} // 👈 날짜 전달
+          isMobile={isMobile}
         />
       </div>
     </div>
