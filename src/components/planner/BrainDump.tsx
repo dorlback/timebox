@@ -17,6 +17,7 @@ interface BrainDumpProps {
   onDrop: (e: React.DragEvent) => void;
   isMobile?: boolean;
   onOpenAddModal?: () => void;
+  onItemDoubleClick?: (item: BrainDumpItem) => void;
 }
 
 export const BrainDump: React.FC<BrainDumpProps> = ({
@@ -33,7 +34,8 @@ export const BrainDump: React.FC<BrainDumpProps> = ({
   onDragOver,
   onDrop,
   isMobile = false,
-  onOpenAddModal
+  onOpenAddModal,
+  onItemDoubleClick
 }) => {
   return (
     <div
@@ -56,12 +58,26 @@ export const BrainDump: React.FC<BrainDumpProps> = ({
       <div className="space-y-2 mb-3">
         {items.map((item) => {
           const isInTimePlan = itemsInTimePlan.includes(item.id);
+          let touchTimer: NodeJS.Timeout;
+
+          const handleTouchStart = () => {
+            touchTimer = setTimeout(() => {
+              onItemDoubleClick?.(item);
+            }, 600);
+          };
+
+          const handleTouchEnd = () => {
+            clearTimeout(touchTimer);
+          };
 
           return (
             <div
               key={item.id}
               draggable
               onDragStart={(e) => onDragStart(e, item)}
+              onClick={() => !isMobile && onItemDoubleClick?.(item)}
+              onTouchStart={handleTouchStart}
+              onTouchEnd={handleTouchEnd}
               className={`flex items-center gap-2 p-2 rounded border cursor-move transition-colors ${isInTimePlan
                 ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/30'
                 : 'bg-muted/50 border-border hover:bg-muted'
@@ -87,7 +103,7 @@ export const BrainDump: React.FC<BrainDumpProps> = ({
               )}
 
               <button
-                onClick={() => onAddToTimePlan(item)}
+                onClick={(e) => { e.stopPropagation(); onAddToTimePlan(item); }}
                 className={`${isInTimePlan
                   ? 'text-red-500 hover:text-red-700'
                   : 'text-green-500 hover:text-green-700'
@@ -97,15 +113,15 @@ export const BrainDump: React.FC<BrainDumpProps> = ({
                 {isInTimePlan ? <Clock size={14} /> : <Clock size={14} />}
               </button>
               <button
-                onClick={() => onMoveToTodo(item)}
+                onClick={(e) => { e.stopPropagation(); onMoveToTodo(item); }}
                 className="text-blue-500 hover:text-blue-700"
                 title="Todo List로 이동"
               >
                 <ArrowUp size={14} />
               </button>
               <button
-                onClick={() => onDeleteItem(item.id)}
-                className="text-red-400 hover:text-red-600"
+                onClick={(e) => { e.stopPropagation(); onDeleteItem(item.id); }}
+                className="text-red-400 hover:text-red-600 p-1"
               >
                 <Trash2 size={14} />
               </button>

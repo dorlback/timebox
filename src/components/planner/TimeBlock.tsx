@@ -29,6 +29,16 @@ export const TimeBlock: React.FC<TimeBlockProps> = ({
   const duration = block.endTime - block.startTime;
   const showContent = duration >= 50;
 
+  let touchTimer: NodeJS.Timeout;
+  const handleTouchStart = () => {
+    touchTimer = setTimeout(() => {
+      onEdit(block);
+    }, 600);
+  };
+  const handleTouchEnd = () => {
+    clearTimeout(touchTimer);
+  };
+
   return (
     <div
       className={`absolute ${isMobile ? 'left-8 right-1' : 'left-12 right-0'} rounded px-2 py-1 transition-all ${isCompleted
@@ -42,10 +52,14 @@ export const TimeBlock: React.FC<TimeBlockProps> = ({
         cursor: isDragging ? 'move' : 'default'
       }}
       onMouseDown={(e) => onMouseDown(e, block)}
-      onDoubleClick={(e) => {
-        e.stopPropagation();
-        onEdit(block);
+      onClick={(e) => {
+        // 드래그/리사이즈 중이 아니었을 때만 클릭으로 처리
+        if (!isMobile) {
+          onEdit(block);
+        }
       }}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
       onMouseMove={(e) => {
         if (isDragging || isResizing) return;
         const rect = e.currentTarget.getBoundingClientRect();
@@ -89,20 +103,6 @@ export const TimeBlock: React.FC<TimeBlockProps> = ({
               {formatTimeDisplay(block.endTime)}
               <span className="ml-2">({duration}분)</span>
             </span>
-            {!isMobile && (
-              <button
-                className={`edit-button text-white px-2 py-1 rounded text-xs ${isCompleted
-                  ? 'bg-gray-400 hover:bg-gray-500'
-                  : 'bg-blue-500 hover:bg-blue-600'
-                  }`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onEdit(block);
-                }}
-              >
-                수정
-              </button>
-            )}
           </div>
         </>
       )}

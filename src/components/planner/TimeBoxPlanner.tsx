@@ -18,6 +18,7 @@ import { Moon, Sun } from 'lucide-react';
 import DarkModeToggle from '@/components/DarkModeToggle';
 import { TimePlan } from './TimePlan';
 import { BrainDumpAddModal } from './BrainDumpAddModal';
+import { ItemDetailModal } from './ItemDetailModal';
 
 
 const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
@@ -30,6 +31,16 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
   const [activeView, setActiveView] = useState<'left' | 'right'>('left');
   const [isMobile, setIsMobile] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<{
+    id: number;
+    text: string;
+    completed?: boolean;
+    notes?: string;
+    startTime?: number;
+    endTime?: number;
+    type: 'brain-dump' | 'todo-list' | 'time-block';
+  } | null>(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
   const {
     brainDump,
@@ -174,6 +185,45 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
         block.todoId === id ? { ...block, completed: !updatedTodo.completed } : block
       ));
     }
+  };
+
+  const handleItemDetailSave = (updatedItem: any) => {
+    if (!updatedItem) return;
+
+    if (updatedItem.type === 'time-block') {
+      const hasConflict = checkTimeConflict(timeBlocks || [], updatedItem.id, updatedItem.startTime, updatedItem.endTime);
+      if (hasConflict) {
+        showError('다른 일정과 시간이 겹칩니다. 시간을 다시 설정해주세요.');
+        return;
+      }
+
+      setTimeBlocks((prev: TimeBlock[] | null) =>
+        (prev || []).map((block: TimeBlock) =>
+          block.id === updatedItem.id
+            ? { ...block, text: updatedItem.text, notes: updatedItem.notes, startTime: updatedItem.startTime, endTime: updatedItem.endTime }
+            : block
+        )
+      );
+    } else if (updatedItem.type === 'brain-dump') {
+      setBrainDump((prev: BrainDumpItem[] | null) =>
+        (prev || []).map((item: BrainDumpItem) => item.id === updatedItem.id ? { ...item, text: updatedItem.text, notes: updatedItem.notes } : item)
+      );
+      // 타임플랜에 등록된 브레인덤프 연동 블록도 업데이트
+      setTimeBlocks((prev: TimeBlock[] | null) =>
+        (prev || []).map((block: TimeBlock) => block.todoId === updatedItem.id && block.isDirectFromBrainDump ? { ...block, text: updatedItem.text, notes: updatedItem.notes } : block)
+      );
+    } else if (updatedItem.type === 'todo-list') {
+      setTodoList((prev: TodoItem[] | null) =>
+        (prev || []).map((item: TodoItem) => item.id === updatedItem.id ? { ...item, text: updatedItem.text, notes: updatedItem.notes } : item)
+      );
+      // 연동된 타임블록들도 텍스트/메모 업데이트
+      setTimeBlocks((prev: TimeBlock[] | null) =>
+        (prev || []).map((block: TimeBlock) => block.todoId === updatedItem.id ? { ...block, text: updatedItem.text, notes: updatedItem.notes } : block)
+      );
+    }
+
+    setIsDetailModalOpen(false);
+    setSelectedItem(null);
   };
 
   // 이동 핸들러 - 체크 상태 유지 + 현재 시간 이후 배치
@@ -421,6 +471,10 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
                     onDragStart={(e, item) => handleDragStart(e, item, 'todo-list')}
                     onDragOver={handleDragOver}
                     onDrop={handleDropToTodo}
+                    onItemDoubleClick={(item) => {
+                      setSelectedItem({ ...item, type: 'todo-list' });
+                      setIsDetailModalOpen(true);
+                    }}
                   />
                 </div>
 
@@ -439,6 +493,10 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
                   onDrop={handleDropToBrainDump}
                   isMobile={true}
                   onOpenAddModal={() => setIsAddModalOpen(true)}
+                  onItemDoubleClick={(item) => {
+                    setSelectedItem({ ...item, type: 'brain-dump' });
+                    setIsDetailModalOpen(true);
+                  }}
                 />
               </div>
             </div>
@@ -457,7 +515,10 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
                   onDateChange={handleDateChange}
                   onDayOfWeekClick={handleDayOfWeekClick}
                   onBlockMouseDown={handleBlockMouseDown}
-                  onBlockEdit={setEditingBlock}
+                  onBlockEdit={(block) => {
+                    setSelectedItem({ ...block, type: 'time-block' });
+                    setIsDetailModalOpen(true);
+                  }}
                   isMobile={true}
                 />
               </div>
@@ -614,6 +675,10 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
                       onDragStart={(e, item) => handleDragStart(e, item, 'todo-list')}
                       onDragOver={handleDragOver}
                       onDrop={handleDropToTodo}
+                      onItemDoubleClick={(item) => {
+                        setSelectedItem({ ...item, type: 'todo-list' });
+                        setIsDetailModalOpen(true);
+                      }}
                     />
                   </div>
 
@@ -630,6 +695,10 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
                     onDragStart={(e, item) => handleDragStart(e, item, 'brain-dump')}
                     onDragOver={handleDragOver}
                     onDrop={handleDropToBrainDump}
+                    onItemDoubleClick={(item) => {
+                      setSelectedItem({ ...item, type: 'brain-dump' });
+                      setIsDetailModalOpen(true);
+                    }}
                   />
                 </div>
               </div>
@@ -643,7 +712,10 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
                   onDateChange={handleDateChange}
                   onDayOfWeekClick={handleDayOfWeekClick}
                   onBlockMouseDown={handleBlockMouseDown}
-                  onBlockEdit={setEditingBlock}
+                  onBlockEdit={(block) => {
+                    setSelectedItem({ ...block, type: 'time-block' });
+                    setIsDetailModalOpen(true);
+                  }}
                 />
               </div>
 
@@ -657,6 +729,36 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* 공통 모달 (데스크톱/모바일 전체) */}
+      {isDetailModalOpen && (
+        <ItemDetailModal
+          isOpen={isDetailModalOpen}
+          onClose={() => {
+            setIsDetailModalOpen(false);
+            setSelectedItem(null);
+          }}
+          item={selectedItem}
+          onSave={handleItemDetailSave}
+          onDelete={(id: number) => {
+            if (selectedItem?.type === 'brain-dump') {
+              deleteBrainDump(id);
+            } else if (selectedItem?.type === 'todo-list') {
+              deleteTodo(id);
+            } else if (selectedItem?.type === 'time-block') {
+              setTimeBlocks((prev: TimeBlock[] | null) => (prev || []).filter((b: TimeBlock) => b.id !== id));
+            }
+          }}
+        />
+      )}
+
+      {editingBlock && !isMobile && (
+        <TimeBlockEditor
+          block={editingBlock}
+          onSave={handleBlockEditorSave}
+          onClose={() => setEditingBlock(null)}
+        />
       )}
     </div>
   );

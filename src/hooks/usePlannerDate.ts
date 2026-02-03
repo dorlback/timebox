@@ -82,25 +82,43 @@ export const usePlannerData = (currentDate: Date, userId: string, showSuccess: (
 
   // --- 상태 업데이트 함수들 ---
 
-  const setBrainDump = useCallback((newBrainDump: BrainDumpItem[]) => {
-    setDailyData(prev => ({
-      ...prev,
-      [dateKey]: { ...prev[dateKey], brainDump: newBrainDump }
-    }));
+  const setBrainDump = useCallback((newBrainDump: BrainDumpItem[] | ((prev: BrainDumpItem[]) => BrainDumpItem[])) => {
+    setDailyData(prev => {
+      const currentItems = prev[dateKey]?.brainDump || [];
+      const updatedItems = typeof newBrainDump === 'function'
+        ? (newBrainDump as (p: BrainDumpItem[]) => BrainDumpItem[])(currentItems)
+        : newBrainDump;
+      return {
+        ...prev,
+        [dateKey]: { ...prev[dateKey], brainDump: updatedItems }
+      };
+    });
   }, [dateKey]);
 
-  const setTodoList = useCallback((newTodoList: TodoItem[]) => {
-    setDailyData(prev => ({
-      ...prev,
-      [dateKey]: { ...prev[dateKey], todoList: newTodoList }
-    }));
+  const setTodoList = useCallback((newTodoList: TodoItem[] | ((prev: TodoItem[]) => TodoItem[])) => {
+    setDailyData(prev => {
+      const currentItems = prev[dateKey]?.todoList || [];
+      const updatedItems = typeof newTodoList === 'function'
+        ? (newTodoList as (p: TodoItem[]) => TodoItem[])(currentItems)
+        : newTodoList;
+      return {
+        ...prev,
+        [dateKey]: { ...prev[dateKey], todoList: updatedItems }
+      };
+    });
   }, [dateKey]);
 
-  const setTimeBlocks = useCallback((newTimeBlocks: TimeBlock[]) => {
-    setDailyData(prev => ({
-      ...prev,
-      [dateKey]: { ...prev[dateKey], timeBlocks: newTimeBlocks }
-    }));
+  const setTimeBlocks = useCallback((newTimeBlocks: TimeBlock[] | ((prev: TimeBlock[]) => TimeBlock[])) => {
+    setDailyData(prev => {
+      const currentItems = prev[dateKey]?.timeBlocks || [];
+      const updatedItems = typeof newTimeBlocks === 'function'
+        ? (newTimeBlocks as (p: TimeBlock[]) => TimeBlock[])(currentItems)
+        : newTimeBlocks;
+      return {
+        ...prev,
+        [dateKey]: { ...prev[dateKey], timeBlocks: updatedItems }
+      };
+    });
   }, [dateKey]);
 
   return {

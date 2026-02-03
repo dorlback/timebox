@@ -5,12 +5,14 @@ export interface BrainDumpItem {
   id: number;
   text: string;
   completed: boolean;
+  notes?: string; // 상세 메모 추가
 }
 
 export interface TodoItem {
   id: number;
   text: string;
   completed: boolean;
+  notes?: string; // 상세 메모 추가
 }
 
 export interface TimeBlock {
@@ -22,6 +24,7 @@ export interface TimeBlock {
   colorIndex: number;
   completed?: boolean;
   isDirectFromBrainDump?: boolean; // Brain Dump에서 직접 추가된 블록인지 구분
+  notes?: string; // 상세 메모 추가
 }
 
 export interface DailyData {

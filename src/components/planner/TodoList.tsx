@@ -10,6 +10,7 @@ interface TodoListProps {
   onDragStart: (e: React.DragEvent, item: TodoItem) => void;
   onDragOver: (e: React.DragEvent) => void;
   onDrop: (e: React.DragEvent) => void;
+  onItemDoubleClick?: (item: TodoItem) => void;
 }
 
 export const TodoList: React.FC<TodoListProps> = ({
@@ -19,7 +20,8 @@ export const TodoList: React.FC<TodoListProps> = ({
   onMoveToBrainDump,
   onDragStart,
   onDragOver,
-  onDrop
+  onDrop,
+  onItemDoubleClick
 }) => {
   return (
     <div
@@ -30,39 +32,56 @@ export const TodoList: React.FC<TodoListProps> = ({
       <h2 className="font-semibold mb-3 text-muted-foreground">TO DO LIST</h2>
       <div className="text-xs text-muted-foreground mb-2">최대 5개</div>
       <div className="space-y-2">
-        {items.map((item) => (
-          <div
-            key={item.id}
-            draggable
-            onDragStart={(e) => onDragStart(e, item)}
-            className="flex items-center gap-2 p-2 bg-muted/30 rounded border border-border cursor-move hover:bg-muted transition-colors"
-          >
-            <GripVertical size={16} className="text-gray-400" />
-            <input
-              type="checkbox"
-              checked={item.completed}
-              onChange={() => onToggleComplete(item.id)}
-              className="w-4 h-4"
-              onClick={(e) => e.stopPropagation()}
-            />
-            <span className={`flex-1 text-sm ${item.completed ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
-              {item.text}
-            </span>
-            <button
-              onClick={() => onMoveToBrainDump(item)}
-              className="text-orange-500 hover:text-orange-700"
-              title="Brain Dump로 이동"
+        {items.map((item) => {
+          let touchTimer: NodeJS.Timeout;
+
+          const handleTouchStart = () => {
+            touchTimer = setTimeout(() => {
+              onItemDoubleClick?.(item);
+            }, 600);
+          };
+
+          const handleTouchEnd = () => {
+            clearTimeout(touchTimer);
+          };
+
+          return (
+            <div
+              key={item.id}
+              draggable
+              onDragStart={(e) => onDragStart(e, item)}
+              onClick={() => onItemDoubleClick?.(item)} // PC에서는 클릭
+              onTouchStart={handleTouchStart}
+              onTouchEnd={handleTouchEnd}
+              className="flex items-center gap-2 p-2 bg-muted/30 rounded border border-border cursor-move hover:bg-muted transition-colors"
             >
-              <ArrowDown size={14} />
-            </button>
-            <button
-              onClick={() => onDeleteItem(item.id)}
-              className="text-red-400 hover:text-red-600"
-            >
-              <Trash2 size={14} />
-            </button>
-          </div>
-        ))}
+              <GripVertical size={16} className="text-gray-400" />
+              <input
+                type="checkbox"
+                checked={item.completed}
+                onChange={() => onToggleComplete(item.id)}
+                className="w-4 h-4"
+                onClick={(e) => e.stopPropagation()}
+              />
+              <span className={`flex-1 text-sm ${item.completed ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
+                {item.text}
+              </span>
+              <button
+                onClick={(e) => { e.stopPropagation(); onMoveToBrainDump(item); }}
+                className="text-orange-500 hover:text-orange-700"
+                title="Brain Dump로 이동"
+              >
+                <ArrowDown size={14} />
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); onDeleteItem(item.id); }}
+                className="text-red-400 hover:text-red-600 p-1"
+              >
+                <Trash2 size={14} />
+              </button>
+            </div>
+          );
+        })}
         {items.length === 0 && (
           <div className="text-center text-muted-foreground text-sm py-8 border-2 border-dashed border-border rounded">
             Brain Dump에서 항목을 드래그하세요
