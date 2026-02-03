@@ -48,7 +48,7 @@ export const BrainDump: React.FC<BrainDumpProps> = ({
         {isMobile && onOpenAddModal && (
           <button
             onClick={onOpenAddModal}
-            className="p-2 rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
+            className="p-2 flex justify-center items-center rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
             aria-label="새 항목 추가"
           >
             <Plus size={18} />

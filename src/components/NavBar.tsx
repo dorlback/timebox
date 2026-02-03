@@ -23,7 +23,9 @@ export default function NavBar({ user }: NavBarProps) {
       <div className="flex items-center gap-3">
         <DarkModeToggle />
         {user ? (
-          <span className="text-sm text-muted-foreground">{user.email}</span>
+          <Link href="/login" >
+            <span className="text-sm text-muted-foreground">{user.email}</span>
+          </Link>
         ) : (
           <Link href="/login" className="text-sm text-primary hover:text-blue-700 dark:hover:text-blue-300 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 rounded transition-all">
             로그인

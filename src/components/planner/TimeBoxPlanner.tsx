@@ -453,7 +453,7 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
 
 
   return (
-    <div className="min-h-screen bg-background transition-colors">
+    <div className="h-screen bg-background transition-colors">
       {loading && (
         <div className="absolute inset-0 bg-white/50 dark:bg-black/50 z-50 flex items-center justify-center">
           <div className="text-blue-500 font-bold">데이터 불러오는 중...</div>
@@ -465,82 +465,98 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
         <>
           <ErrorToast message={errorMessage} />
           <SuccessToast message={successMessage} />
+          <div className="h-screen flex flex-col">
+            <div className="relative flex-1 overflow-hidden">
+              {/* 좌측 뷰 (할일/브레인덤프) */}
+              <div
+                className={`absolute h-full top-0 left-0 right-0 transition-transform duration-300 ease-in-out ${activeView === 'left' ? 'translate-x-0' : '-translate-x-full'
+                  }`}
+              >
+                <div className="h-full overflow-y-auto p-4 space-y-4">
+                  <div className="bg-card rounded-ios-lg shadow-ios">
+                    <TodoList
+                      items={todoList || []}
+                      onToggleComplete={toggleTodoComplete}
+                      onDeleteItem={deleteTodo}
+                      onMoveToBrainDump={moveTodoToBrainDump}
+                      onDragStart={(e, item) => handleDragStart(e, item, 'todo-list')}
+                      onDragOver={handleDragOver}
+                      onDrop={handleDropToTodo}
+                      onItemDoubleClick={(item) => {
+                        setSelectedItem({ ...item, type: 'todo-list' });
+                        setIsDetailModalOpen(true);
+                      }}
+                    />
+                  </div>
 
-          <div className="relative h-screen overflow-hidden pb-20">
-            {/* 좌측 뷰 (할일/브레인덤프) */}
-            <div
-              className={`absolute top-0 left-0 right-0 bottom-24 transition-transform duration-300 ease-in-out ${activeView === 'left' ? 'translate-x-0' : '-translate-x-full'
-                }`}
-            >
-              <div className="h-full overflow-y-auto p-4 space-y-4">
-                <div className="bg-card rounded-ios-lg shadow-ios">
-                  <TodoList
-                    items={todoList || []}
-                    onToggleComplete={toggleTodoComplete}
-                    onDeleteItem={deleteTodo}
-                    onMoveToBrainDump={moveTodoToBrainDump}
-                    onDragStart={(e, item) => handleDragStart(e, item, 'todo-list')}
+                  <BrainDump
+                    items={brainDump || []}
+                    itemsInTimePlan={brainDumpItemsInTimePlan}
+                    newItemText={newDumpText}
+                    onNewItemTextChange={setNewDumpText}
+                    onAddItem={addBrainDump}
+                    onDeleteItem={deleteBrainDump}
+                    onToggleComplete={toggleBrainDumpComplete}
+                    onMoveToTodo={moveBrainDumpToTodo}
+                    onAddToTimePlan={addBrainDumpToTimePlan}
+                    onDragStart={(e, item) => handleDragStart(e, item, 'brain-dump')}
                     onDragOver={handleDragOver}
-                    onDrop={handleDropToTodo}
+                    onDrop={handleDropToBrainDump}
+                    isMobile={true}
+                    onOpenAddModal={() => setIsAddModalOpen(true)}
                     onItemDoubleClick={(item) => {
-                      setSelectedItem({ ...item, type: 'todo-list' });
+                      setSelectedItem({ ...item, type: 'brain-dump' });
                       setIsDetailModalOpen(true);
                     }}
                   />
                 </div>
-
-                <BrainDump
-                  items={brainDump || []}
-                  itemsInTimePlan={brainDumpItemsInTimePlan}
-                  newItemText={newDumpText}
-                  onNewItemTextChange={setNewDumpText}
-                  onAddItem={addBrainDump}
-                  onDeleteItem={deleteBrainDump}
-                  onToggleComplete={toggleBrainDumpComplete}
-                  onMoveToTodo={moveBrainDumpToTodo}
-                  onAddToTimePlan={addBrainDumpToTimePlan}
-                  onDragStart={(e, item) => handleDragStart(e, item, 'brain-dump')}
-                  onDragOver={handleDragOver}
-                  onDrop={handleDropToBrainDump}
-                  isMobile={true}
-                  onOpenAddModal={() => setIsAddModalOpen(true)}
-                  onItemDoubleClick={(item) => {
-                    setSelectedItem({ ...item, type: 'brain-dump' });
-                    setIsDetailModalOpen(true);
-                  }}
-                />
               </div>
-            </div>
 
-            {/* 우측 뷰 (타임플랜) */}
-            <div
-              className={`absolute top-0 left-0 right-0 bottom-1 transition-transform duration-300 ease-in-out ${activeView === 'right' ? 'translate-x-0' : 'translate-x-full'
-                }`}
-            >
+              {/* 우측 뷰 (타임플랜) */}
               <div
-                className="h-[calc(100vh-80px)]"
-                onClick={handleGridBackgroundClick}
+                className={`absolute h-full top-0 left-0 right-0 transition-transform duration-300 ease-in-out ${activeView === 'right' ? 'translate-x-0' : 'translate-x-full'
+                  }`}
               >
-                <TimePlan
-                  date={date}
-                  timeBlocks={timeBlocks || []}
-                  draggingBlockId={draggingBlock}
-                  resizingBlockId={resizingBlock}
-                  onDateChange={handleDateChange}
-                  onDayOfWeekClick={handleDayOfWeekClick}
-                  onBlockMouseDown={handleBlockMouseDown}
-                  onBlockEdit={(block) => {
-                    setSelectedItem({ ...block, type: 'time-block' });
-                    setIsDetailModalOpen(true);
-                  }}
-                  isMobile={true}
-                  activeBlockId={activeBlockId}
-                />
+                {/* 여기 */}
+                <div
+                  className="h-full"
+                  onClick={handleGridBackgroundClick}
+                >
+                  <TimePlan
+                    date={date}
+                    timeBlocks={timeBlocks || []}
+                    draggingBlockId={draggingBlock}
+                    resizingBlockId={resizingBlock}
+                    onDateChange={handleDateChange}
+                    onDayOfWeekClick={handleDayOfWeekClick}
+                    onBlockMouseDown={handleBlockMouseDown}
+                    onBlockEdit={(block) => {
+                      setSelectedItem({ ...block, type: 'time-block' });
+                      setIsDetailModalOpen(true);
+                    }}
+                    isMobile={true}
+                    activeBlockId={activeBlockId}
+                  />
+                </div>
               </div>
-            </div>
 
+              {/* Brain Dump 추가 모달 */}
+              <BrainDumpAddModal
+                isOpen={isAddModalOpen}
+                onClose={() => setIsAddModalOpen(false)}
+                onAdd={(text) => {
+                  if (!brainDump) return;
+                  const newItem: BrainDumpItem = {
+                    id: Date.now(),
+                    text: text,
+                    completed: false
+                  };
+                  setBrainDump([...brainDump, newItem]);
+                }}
+              />
+            </div>
             {/* 하단 네비게이션 바 (iOS 스타일) */}
-            <nav className="fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-md border-t border-border z-50">
+            <nav className="h-[70px] bottom-0 left-0 right-0 bg-card/95 backdrop-blur-md border-t border-border z-50">
               <div className="relative flex items-center justify-around h-16 px-2">
                 {/* 1. 홈 버튼 */}
                 <Link href="/">
@@ -624,20 +640,6 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
               </div>
             </nav>
 
-            {/* Brain Dump 추가 모달 */}
-            <BrainDumpAddModal
-              isOpen={isAddModalOpen}
-              onClose={() => setIsAddModalOpen(false)}
-              onAdd={(text) => {
-                if (!brainDump) return;
-                const newItem: BrainDumpItem = {
-                  id: Date.now(),
-                  text: text,
-                  completed: false
-                };
-                setBrainDump([...brainDump, newItem]);
-              }}
-            />
           </div>
 
           {editingBlock && (

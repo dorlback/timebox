@@ -64,10 +64,9 @@ export const TimePlan: React.FC<TimePlanProps> = ({
     );
   };
 
-
   return (
     <div className="flex flex-col h-full bg-card/30 backdrop-blur-sm rounded-xl border border-border overflow-hidden">
-      <div className="p-4 border-b border-border bg-card/50">
+      <div className={`border-b border-border bg-card/50 ${isMobile ? 'p-2' : 'p-4'} `}>
         <DateSelector date={date} onDateChange={onDateChange} isMobile={isMobile} />
       </div>
 
@@ -84,6 +83,6 @@ export const TimePlan: React.FC<TimePlanProps> = ({
           activeBlockId={activeBlockId}
         />
       </div>
-    </div>
+    </div >
   );
 };
