@@ -58,26 +58,12 @@ export const BrainDump: React.FC<BrainDumpProps> = ({
       <div className="space-y-2 mb-3">
         {items.map((item) => {
           const isInTimePlan = itemsInTimePlan.includes(item.id);
-          let touchTimer: NodeJS.Timeout;
-
-          const handleTouchStart = () => {
-            touchTimer = setTimeout(() => {
-              onItemDoubleClick?.(item);
-            }, 600);
-          };
-
-          const handleTouchEnd = () => {
-            clearTimeout(touchTimer);
-          };
-
           return (
             <div
               key={item.id}
               draggable
               onDragStart={(e) => onDragStart(e, item)}
-              onClick={() => !isMobile && onItemDoubleClick?.(item)}
-              onTouchStart={handleTouchStart}
-              onTouchEnd={handleTouchEnd}
+              onDoubleClick={() => onItemDoubleClick?.(item)}
               className={`flex items-center gap-2 p-2 rounded border cursor-move transition-colors ${isInTimePlan
                 ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/30'
                 : 'bg-muted/50 border-border hover:bg-muted'

@@ -107,8 +107,19 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
   const {
     draggingBlock,
     resizingBlock,
+    activeBlockId,
+    setActiveBlockId,
     handleBlockMouseDown
   } = useTimeBlockInteraction(timeBlocks || [], updateBlockTime);
+
+  // 배경 클릭 시 편집 모드 해제
+  const handleGridBackgroundClick = (e: React.MouseEvent) => {
+    // 클릭된 요소가 타임블록 내부 요소가 아니면 해제
+    const target = e.target as HTMLElement;
+    if (!target.closest('.time-block-container')) {
+      setActiveBlockId(null);
+    }
+  };
 
   const handleBlockEditorSave = (blockId: number, newStart: number, newEnd: number) => {
     const hasConflict = checkTimeConflict(timeBlocks || [], blockId, newStart, newEnd);
@@ -503,10 +514,13 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
 
             {/* 우측 뷰 (타임플랜) */}
             <div
-              className={`absolute top-0 left-0 right-0 bottom-24 transition-transform duration-300 ease-in-out ${activeView === 'right' ? 'translate-x-0' : 'translate-x-full'
+              className={`absolute top-0 left-0 right-0 bottom-1 transition-transform duration-300 ease-in-out ${activeView === 'right' ? 'translate-x-0' : 'translate-x-full'
                 }`}
             >
-              <div className="h-full overflow-hidden">
+              <div
+                className="h-[calc(100vh-80px)]"
+                onClick={handleGridBackgroundClick}
+              >
                 <TimePlan
                   date={date}
                   timeBlocks={timeBlocks || []}
@@ -520,6 +534,7 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
                     setIsDetailModalOpen(true);
                   }}
                   isMobile={true}
+                  activeBlockId={activeBlockId}
                 />
               </div>
             </div>
@@ -718,21 +733,12 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
                   }}
                 />
               </div>
-
-              {editingBlock && (
-                <TimeBlockEditor
-                  block={editingBlock}
-                  onSave={handleBlockEditorSave}
-                  onClose={() => setEditingBlock(null)}
-                />
-              )}
             </div>
           </div>
         </div>
       )}
 
-      {/* 공통 모달 (데스크톱/모바일 전체) */}
-      {isDetailModalOpen && (
+      {selectedItem && (
         <ItemDetailModal
           isOpen={isDetailModalOpen}
           onClose={() => {
@@ -741,6 +747,8 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
           }}
           item={selectedItem}
           onSave={handleItemDetailSave}
+          isMobile={isMobile}
+          timeBlocks={timeBlocks || []}
           onDelete={(id: number) => {
             if (selectedItem?.type === 'brain-dump') {
               deleteBrainDump(id);

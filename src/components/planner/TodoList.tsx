@@ -33,26 +33,12 @@ export const TodoList: React.FC<TodoListProps> = ({
       <div className="text-xs text-muted-foreground mb-2">최대 5개</div>
       <div className="space-y-2">
         {items.map((item) => {
-          let touchTimer: NodeJS.Timeout;
-
-          const handleTouchStart = () => {
-            touchTimer = setTimeout(() => {
-              onItemDoubleClick?.(item);
-            }, 600);
-          };
-
-          const handleTouchEnd = () => {
-            clearTimeout(touchTimer);
-          };
-
           return (
             <div
               key={item.id}
               draggable
               onDragStart={(e) => onDragStart(e, item)}
-              onClick={() => onItemDoubleClick?.(item)} // PC에서는 클릭
-              onTouchStart={handleTouchStart}
-              onTouchEnd={handleTouchEnd}
+              onDoubleClick={() => onItemDoubleClick?.(item)}
               className="flex items-center gap-2 p-2 bg-muted/30 rounded border border-border cursor-move hover:bg-muted transition-colors"
             >
               <GripVertical size={16} className="text-gray-400" />

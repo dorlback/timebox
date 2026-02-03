@@ -13,6 +13,7 @@ interface TimePlanProps {
   onBlockMouseDown: (e: React.MouseEvent, block: TimeBlock) => void;
   onBlockEdit: (block: TimeBlock) => void;
   isMobile?: boolean;
+  activeBlockId?: number | null;
 }
 
 export const TimePlan: React.FC<TimePlanProps> = ({
@@ -24,7 +25,8 @@ export const TimePlan: React.FC<TimePlanProps> = ({
   onDayOfWeekClick,
   onBlockMouseDown,
   onBlockEdit,
-  isMobile = false
+  isMobile = false,
+  activeBlockId = null
 }) => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -64,30 +66,22 @@ export const TimePlan: React.FC<TimePlanProps> = ({
 
 
   return (
-    <div className={`h-full flex flex-col bg-card col-span-2 transition-colors ${isMobile ? 'p-2' : 'rounded-lg shadow p-4 border border-border'
-      }`}>
-      <div className="flex justify-between items-center mb-2">
-        <h2 className={`font-semibold text-muted-foreground ${isMobile ? 'text-sm' : ''}`}>TIME PLAN</h2>
-        <DateSelector
-          date={date}
-          onDateChange={onDateChange}
-          isMobile={isMobile}
-        />
+    <div className="flex flex-col h-full bg-card/30 backdrop-blur-sm rounded-xl border border-border overflow-hidden">
+      <div className="p-4 border-b border-border bg-card/50">
+        <DateSelector date={date} onDateChange={onDateChange} isMobile={isMobile} />
       </div>
 
-      <div
-        ref={scrollContainerRef}
-        className="flex-1 overflow-y-auto overflow-x-hidden bg-background rounded-lg border border-border/50"
-      >
+      <div className="flex-1 overflow-y-auto custom-scrollbar">
         <TimeGrid
           timeBlocks={timeBlocks}
           draggingBlockId={draggingBlockId}
           resizingBlockId={resizingBlockId}
           onBlockMouseDown={onBlockMouseDown}
           onBlockEdit={onBlockEdit}
-          showCurrentTime={isToday(date)}
-          date={date} // 👈 날짜 전달
+          showCurrentTime={true}
+          date={date}
           isMobile={isMobile}
+          activeBlockId={activeBlockId}
         />
       </div>
     </div>

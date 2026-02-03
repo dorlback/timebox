@@ -12,6 +12,7 @@ interface TimeGridProps {
   showCurrentTime?: boolean; // 오늘 날짜일 때만 true로 전달
   date?: Date; // 날짜 변경 감지를 위한 prop
   isMobile?: boolean;
+  activeBlockId?: number | null;
 }
 
 export const TimeGrid: React.FC<TimeGridProps> = ({
@@ -22,7 +23,8 @@ export const TimeGrid: React.FC<TimeGridProps> = ({
   onBlockEdit,
   showCurrentTime = false,
   date,
-  isMobile = false
+  isMobile = false,
+  activeBlockId = null
 }) => {
   const hours = Array.from({ length: 24 }, (_, i) => i);
   const minuteMarkers = [10, 20, 30, 40, 50, 0];
@@ -59,6 +61,7 @@ export const TimeGrid: React.FC<TimeGridProps> = ({
             onMouseDown={onBlockMouseDown}
             onEdit={onBlockEdit}
             isMobile={isMobile}
+            activeBlockId={activeBlockId}
           />
         ))}
 

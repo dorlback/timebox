@@ -10,22 +10,32 @@ export const useTimeBlockInteraction = (
   const [dragOffset, setDragOffset] = useState(0);
   const [resizingBlock, setResizingBlock] = useState<number | null>(null);
   const [resizeEdge, setResizeEdge] = useState<'top' | 'bottom' | null>(null);
+  const [activeBlockId, setActiveBlockId] = useState<number | null>(null); // 현재 편집 모드인 블록
+
+  const clearActiveBlock = useCallback(() => {
+    setActiveBlockId(null);
+  }, []);
 
   const handleBlockMouseDown = useCallback((e: React.MouseEvent, block: TimeBlock) => {
+    // 편집 모드 활성화 (모바일 롱프레스 등을 통해 호출될 때)
+    setActiveBlockId(block.id);
     if ((e.target as HTMLElement).closest('.edit-button')) return;
 
     const rect = e.currentTarget.getBoundingClientRect();
     const offsetY = e.clientY - rect.top;
     const blockHeight = rect.height;
 
-    // 상단 10px 또는 하단 10px 영역이면 리사이즈 모드
-    if (offsetY <= 10) {
+    // 모바일이고 편집 모드인 블록인 경우, 핸들이 보여지므로 리사이즈 감지 영역을 조금 더 넓게 설정(20px)
+    const resizeThreshold = (activeBlockId === block.id) ? 20 : 10;
+
+    // 상단 영역 또는 하단 영역이면 리사이즈 모드
+    if (offsetY <= resizeThreshold) {
       e.preventDefault();
       e.stopPropagation();
       setResizingBlock(block.id);
       setResizeEdge('top');
       return;
-    } else if (offsetY >= blockHeight - 10) {
+    } else if (offsetY >= blockHeight - resizeThreshold) {
       e.preventDefault();
       e.stopPropagation();
       setResizingBlock(block.id);
@@ -40,13 +50,17 @@ export const useTimeBlockInteraction = (
     setDragOffset(offsetY);
   }, []);
 
-  const handleMouseMove = useCallback((e: MouseEvent) => {
+  const handleMouseMove = useCallback((e: MouseEvent | TouchEvent) => {
+    if (resizingBlock === null && draggingBlock === null) return;
+
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+
     if (resizingBlock !== null) {
       const timeGridElement = document.getElementById('time-grid');
       if (!timeGridElement) return;
 
       const rect = timeGridElement.getBoundingClientRect();
-      const relativeY = e.clientY - rect.top;
+      const relativeY = clientY - rect.top;
       const newMinutes = Math.round((relativeY) / 10) * 10;
 
       const block = timeBlocks.find(b => b.id === resizingBlock);
@@ -70,28 +84,28 @@ export const useTimeBlockInteraction = (
       return;
     }
 
-    if (draggingBlock === null) return;
+    if (draggingBlock !== null) {
+      const timeGridElement = document.getElementById('time-grid');
+      if (!timeGridElement) return;
 
-    const timeGridElement = document.getElementById('time-grid');
-    if (!timeGridElement) return;
+      const rect = timeGridElement.getBoundingClientRect();
+      const relativeY = clientY - rect.top - dragOffset;
 
-    const rect = timeGridElement.getBoundingClientRect();
-    const relativeY = e.clientY - rect.top - dragOffset;
+      const newStartMinutes = Math.round((relativeY) / 10) * 10;
+      const clampedStart = Math.max(0, Math.min(1440, newStartMinutes));
 
-    const newStartMinutes = Math.round((relativeY) / 10) * 10;
-    const clampedStart = Math.max(0, Math.min(1440, newStartMinutes));
+      const block = timeBlocks.find(b => b.id === draggingBlock);
+      if (!block) return;
 
-    const block = timeBlocks.find(b => b.id === draggingBlock);
-    if (!block) return;
+      const duration = block.endTime - block.startTime;
+      const newEnd = clampedStart + duration;
 
-    const duration = block.endTime - block.startTime;
-    const newEnd = clampedStart + duration;
+      if (newEnd > 1440) return;
 
-    if (newEnd > 1440) return;
-
-    const hasConflict = checkTimeConflict(timeBlocks, draggingBlock, clampedStart, newEnd);
-    if (!hasConflict) {
-      updateBlockTime(draggingBlock, clampedStart, newEnd);
+      const hasConflict = checkTimeConflict(timeBlocks, draggingBlock, clampedStart, newEnd);
+      if (!hasConflict) {
+        updateBlockTime(draggingBlock, clampedStart, newEnd);
+      }
     }
   }, [draggingBlock, dragOffset, resizingBlock, resizeEdge, timeBlocks, updateBlockTime]);
 
@@ -104,12 +118,18 @@ export const useTimeBlockInteraction = (
 
   useEffect(() => {
     if (draggingBlock !== null || resizingBlock !== null) {
+      const options = { passive: false };
+
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
+      document.addEventListener('touchmove', handleMouseMove, options);
+      document.addEventListener('touchend', handleMouseUp);
 
       return () => {
         document.removeEventListener('mousemove', handleMouseMove);
         document.removeEventListener('mouseup', handleMouseUp);
+        document.removeEventListener('touchmove', handleMouseMove);
+        document.removeEventListener('touchend', handleMouseUp);
       };
     }
   }, [draggingBlock, resizingBlock, handleMouseMove, handleMouseUp]);
@@ -117,6 +137,8 @@ export const useTimeBlockInteraction = (
   return {
     draggingBlock,
     resizingBlock,
+    activeBlockId,
+    setActiveBlockId,
     handleBlockMouseDown
   };
 };

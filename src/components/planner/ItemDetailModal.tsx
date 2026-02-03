@@ -15,6 +15,8 @@ interface ItemDetailModalProps {
     type: 'brain-dump' | 'todo-list' | 'time-block';
   } | null;
   onSave: (updatedItem: any) => void;
+  isMobile?: boolean;
+  timeBlocks?: any[];
   onDelete?: (id: number) => void;
 }
 
@@ -23,7 +25,9 @@ export const ItemDetailModal: React.FC<ItemDetailModalProps> = ({
   onClose,
   item,
   onSave,
-  onDelete
+  onDelete,
+  isMobile = false,
+  timeBlocks = []
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedText, setEditedText] = useState('');
