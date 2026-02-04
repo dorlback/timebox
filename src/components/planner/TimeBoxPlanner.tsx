@@ -359,84 +359,127 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
     e.dataTransfer.dropEffect = 'move';
   }, []);
 
-  const handleDropToTodo = useCallback((e: React.DragEvent) => {
+  const handleDropToTodo = useCallback((e: React.DragEvent, targetId?: number) => {
     if (!todoList || !timeBlocks || !brainDump) return;
 
     e.preventDefault();
-    if (draggedItem && dragSource === 'brain-dump') {
-      if (todoList.length >= 5) {
-        showError('할 일 목록은 최대 5개까지만 추가할 수 있습니다.');
-        setDraggedItem(null);
-        setDragSource(null);
-        return;
-      }
-
-      // Brain Dump에서 직접 추가된 기존 타임블록 제거
-      const existingDirectBlock = timeBlocks.find(block =>
-        block.todoId === draggedItem.id && block.isDirectFromBrainDump
-      );
-
-      // 현재 시간 이후 슬롯 찾기
-      const slot = findAvailableSlotAfterNow(
-        existingDirectBlock
-          ? timeBlocks.filter(block => block.id !== existingDirectBlock.id)
-          : timeBlocks,
-        60
-      );
-
-      if (!slot) {
-        showError('타임 플랜에 사용 가능한 시간이 없습니다. 기존 일정을 조정해주세요.');
-        setDraggedItem(null);
-        setDragSource(null);
-        return;
-      }
-
-      const newTodo = {
-        id: draggedItem.id,
-        text: draggedItem.text,
-        completed: draggedItem.completed
-      };
-      setTodoList([...todoList, newTodo]);
-      setBrainDump(brainDump.filter(item => item.id !== draggedItem.id));
-
-      const colorIndex = timeBlocks.length % PASTEL_COLORS.length;
-
-      // 기존 Brain Dump 직접 추가 블록 제거하고 새로운 Todo 블록 생성
-      setTimeBlocks([
-        ...timeBlocks.filter(block => !(block.todoId === draggedItem.id && block.isDirectFromBrainDump)),
-        {
-          id: Date.now(),
-          todoId: newTodo.id,
-          text: newTodo.text,
-          startTime: slot.startTime,
-          endTime: slot.endTime,
-          colorIndex,
-          completed: draggedItem.completed,
-          isDirectFromBrainDump: false
+    if (draggedItem) {
+      if (dragSource === 'brain-dump') {
+        // 다른 리스트에서 이동
+        if (todoList.length >= 5) {
+          showError('할 일 목록은 최대 5개까지만 추가할 수 있습니다.');
+          setDraggedItem(null);
+          setDragSource(null);
+          return;
         }
-      ]);
+
+        const existingDirectBlock = timeBlocks.find(block =>
+          block.todoId === draggedItem.id && block.isDirectFromBrainDump
+        );
+
+        const slot = findAvailableSlotAfterNow(
+          existingDirectBlock
+            ? timeBlocks.filter(block => block.id !== existingDirectBlock.id)
+            : timeBlocks,
+          60
+        );
+
+        if (!slot) {
+          showError('타임 플랜에 사용 가능한 시간이 없습니다. 기존 일정을 조정해주세요.');
+          setDraggedItem(null);
+          setDragSource(null);
+          return;
+        }
+
+        const newTodo = { ...draggedItem }; // 모든 속성(notes 포함) 보존
+
+        let newTodoList = [...todoList];
+        if (targetId !== undefined) {
+          const targetIndex = newTodoList.findIndex(item => item.id === targetId);
+          newTodoList.splice(targetIndex, 0, newTodo);
+        } else {
+          newTodoList.push(newTodo);
+        }
+
+        setTodoList(newTodoList);
+        setBrainDump(brainDump.filter(item => item.id !== draggedItem.id));
+
+        const colorIndex = timeBlocks.length % PASTEL_COLORS.length;
+        setTimeBlocks([
+          ...timeBlocks.filter(block => !(block.todoId === draggedItem.id && block.isDirectFromBrainDump)),
+          {
+            id: Date.now(),
+            todoId: newTodo.id,
+            text: newTodo.text,
+            startTime: slot.startTime,
+            endTime: slot.endTime,
+            colorIndex,
+            completed: draggedItem.completed,
+            isDirectFromBrainDump: false,
+            notes: draggedItem.notes // 메모 보존
+          }
+        ]);
+      } else if (dragSource === 'todo-list') {
+        // 동일 리스트 내 순서 변경
+        if (targetId === undefined || targetId === draggedItem.id) {
+          setDraggedItem(null);
+          setDragSource(null);
+          return;
+        }
+
+        const newTodoList = [...todoList];
+        const currentIndex = newTodoList.findIndex(item => item.id === draggedItem.id);
+        const targetIndex = newTodoList.findIndex(item => item.id === targetId);
+
+        if (currentIndex > -1 && targetIndex > -1) {
+          const [movedItem] = newTodoList.splice(currentIndex, 1);
+          newTodoList.splice(targetIndex, 0, movedItem);
+          setTodoList(newTodoList);
+        }
+      }
     }
     setDraggedItem(null);
     setDragSource(null);
   }, [todoList, timeBlocks, brainDump, draggedItem, dragSource, showError, setTodoList, setBrainDump, setTimeBlocks]);
 
-  const handleDropToBrainDump = useCallback((e: React.DragEvent) => {
-    if (!todoList) return;
-    if (!timeBlocks) return;
-    if (!brainDump) return;
+  const handleDropToBrainDump = useCallback((e: React.DragEvent, targetId?: number) => {
+    if (!todoList || !timeBlocks || !brainDump) return;
 
     e.preventDefault();
-    if (draggedItem && dragSource === 'todo-list') {
-      const newBrainDumpItem = {
-        id: draggedItem.id,
-        text: draggedItem.text,
-        completed: draggedItem.completed
-      };
-      setBrainDump([...brainDump, newBrainDumpItem]);
-      setTodoList(todoList.filter(item => item.id !== draggedItem.id));
+    if (draggedItem) {
+      if (dragSource === 'todo-list') {
+        // 다른 리스트에서 이동
+        const newBrainDumpItem = { ...draggedItem }; // 모든 속성 보존
 
-      // Todo에서 온 타임블록은 완전히 제거
-      setTimeBlocks(timeBlocks.filter(block => block.todoId !== draggedItem.id));
+        let newBrainDump = [...brainDump];
+        if (targetId !== undefined) {
+          const targetIndex = newBrainDump.findIndex(item => item.id === targetId);
+          newBrainDump.splice(targetIndex, 0, newBrainDumpItem);
+        } else {
+          newBrainDump.push(newBrainDumpItem);
+        }
+
+        setBrainDump(newBrainDump);
+        setTodoList(todoList.filter(item => item.id !== draggedItem.id));
+        setTimeBlocks(timeBlocks.filter(block => block.todoId !== draggedItem.id));
+      } else if (dragSource === 'brain-dump') {
+        // 동일 리스트 내 순서 변경
+        if (targetId === undefined || targetId === draggedItem.id) {
+          setDraggedItem(null);
+          setDragSource(null);
+          return;
+        }
+
+        const newBrainDump = [...brainDump];
+        const currentIndex = newBrainDump.findIndex(item => item.id === draggedItem.id);
+        const targetIndex = newBrainDump.findIndex(item => item.id === targetId);
+
+        if (currentIndex > -1 && targetIndex > -1) {
+          const [movedItem] = newBrainDump.splice(currentIndex, 1);
+          newBrainDump.splice(targetIndex, 0, movedItem);
+          setBrainDump(newBrainDump);
+        }
+      }
     }
     setDraggedItem(null);
     setDragSource(null);

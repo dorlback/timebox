@@ -9,7 +9,7 @@ interface TodoListProps {
   onMoveToBrainDump: (item: TodoItem) => void;
   onDragStart: (e: React.DragEvent, item: TodoItem) => void;
   onDragOver: (e: React.DragEvent) => void;
-  onDrop: (e: React.DragEvent) => void;
+  onDrop: (e: React.DragEvent, targetId?: number) => void;
   onItemDoubleClick?: (item: TodoItem) => void;
   draggedItemId?: number | null;
 }
@@ -26,9 +26,9 @@ export const TodoList: React.FC<TodoListProps> = React.memo(({
 }) => {
   return (
     <div
-      className="todo-list-container bg-card rounded-lg shadow p-4 transition-colors border border-border"
+      className="todo-list-container bg-card rounded-lg shadow p-4 transition-colors border border-border min-h-[150px]"
       onDragOver={onDragOver}
-      onDrop={onDrop}
+      onDrop={(e) => onDrop(e)}
     >
       <h2 className="font-semibold mb-3 text-muted-foreground">TO DO LIST</h2>
       <div className="text-xs text-muted-foreground mb-2">최대 5개</div>
@@ -68,6 +68,7 @@ export const TodoList: React.FC<TodoListProps> = React.memo(({
               draggable
               onDragStart={(e) => onDragStart(e, item)}
               onDoubleClick={() => onItemDoubleClick?.(item)}
+              onDrop={(e) => { e.stopPropagation(); onDrop(e, item.id); }}
               onTouchStart={handleTouchStart}
               onTouchEnd={handleTouchEnd}
               onTouchMove={handleTouchEnd}

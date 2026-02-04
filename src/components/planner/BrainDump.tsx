@@ -14,7 +14,7 @@ interface BrainDumpProps {
   onAddToTimePlan: (item: BrainDumpItem) => void;
   onDragStart: (e: React.DragEvent, item: BrainDumpItem) => void;
   onDragOver: (e: React.DragEvent) => void;
-  onDrop: (e: React.DragEvent) => void;
+  onDrop: (e: React.DragEvent, targetId?: number) => void;
   isMobile?: boolean;
   onOpenAddModal?: () => void;
   onItemDoubleClick?: (item: BrainDumpItem) => void;
@@ -41,9 +41,9 @@ export const BrainDump: React.FC<BrainDumpProps> = React.memo(({
 }) => {
   return (
     <div
-      className="brain-dump-container p-4 bg-card rounded-lg shadow border border-border transition-colors"
+      className="brain-dump-container p-4 bg-card rounded-lg shadow border border-border transition-colors min-h-[150px]"
       onDragOver={onDragOver}
-      onDrop={onDrop}
+      onDrop={(e) => onDrop(e)}
     >
       <div className="flex items-center justify-between mb-3">
         <h2 className="font-semibold text-muted-foreground">BRAIN DUMP</h2>
@@ -92,6 +92,7 @@ export const BrainDump: React.FC<BrainDumpProps> = React.memo(({
               draggable
               onDragStart={(e) => onDragStart(e, item)}
               onDoubleClick={() => onItemDoubleClick?.(item)}
+              onDrop={(e) => { e.stopPropagation(); onDrop(e, item.id); }}
               onTouchStart={handleTouchStart}
               onTouchEnd={handleTouchEnd}
               onTouchMove={handleTouchEnd}
