@@ -465,7 +465,7 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
         <>
           <ErrorToast message={errorMessage} />
           <SuccessToast message={successMessage} />
-          <div className="h-screen flex flex-col">
+          <div className="h-[100svh] flex flex-col">
             <div className="relative flex-1 overflow-hidden">
               {/* 좌측 뷰 (할일/브레인덤프) */}
               <div
@@ -560,7 +560,7 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
               <div className="relative flex items-center justify-around h-16 px-2">
                 {/* 1. 홈 버튼 */}
                 <Link href="/">
-                  <button className="flex flex-col items-center justify-center gap-0.5 px-3 py-1 rounded-lg transition-all text-muted-foreground hover:text-primary">
+                  <button className="flex flex-col items-center justify-center gap-0.5 px-3 pb-2 rounded-lg transition-all text-muted-foreground hover:text-primary">
                     <div className="min-h-[22px] flex items-center justify-center">
                       <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
@@ -574,7 +574,7 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
                 {/* 2. 다크모드 버튼 */}
                 <button
                   onClick={toggleDark}
-                  className="flex flex-col items-center justify-center gap-0.5 px-3 py-1 rounded-lg transition-all text-muted-foreground hover:text-primary"
+                  className="flex flex-col items-center justify-center gap-0.5 px-3 pb-2 rounded-lg transition-all text-muted-foreground hover:text-primary"
                 >
                   <div className="min-h-[22px] flex items-center justify-center">
                     {isDark ? (
@@ -611,7 +611,7 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
 
                 {/* 4. 로그아웃 버튼 */}
                 <Link href="/login">
-                  <button className="flex flex-col items-center justify-center gap-0.5 px-3 py-1 rounded-lg transition-all text-muted-foreground hover:text-primary">
+                  <button className="flex flex-col items-center justify-center gap-0.5 px-3 pb-2 rounded-lg transition-all text-muted-foreground hover:text-primary">
                     <div className="min-h-[22px] flex items-center justify-center">
                       <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
@@ -626,7 +626,7 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
                 {/* 5. 저장 버튼 */}
                 <button
                   onClick={handleSave}
-                  className="flex flex-col items-center justify-center gap-0.5 px-3 py-1 rounded-lg transition-all text-muted-foreground hover:text-primary"
+                  className="flex flex-col items-center justify-center gap-0.5 px-3 pb-2 rounded-lg transition-all text-muted-foreground hover:text-primary"
                 >
                   <div className="min-h-[22px] flex items-center justify-center">
                     <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
