@@ -50,6 +50,7 @@ html {
   overscroll-behavior: none;
 }
 
+
 body {
   background: var(--background);
   color: var(--foreground);
@@ -172,9 +173,16 @@ body {
 /* Touch-friendly sizing */
 @media (max-width: 768px) {
 
-  button,
+  /* button,
   a[role="button"] {
-    min-height: 44px;
-    min-width: 44px;
+    min-height: 30px;
+    min-width: 30px;
+  } */
+
+  /* Prevent iOS auto-zoom on focus by ensuring font-size is at least 16px */
+  input,
+  textarea,
+  select {
+    font-size: 16px !important;
   }
 }

@@ -69,8 +69,8 @@ export const BrainDumpAddModal: React.FC<BrainDumpAddModalProps> = ({
       />
 
       {/* 모달 컨텐츠 */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 animate-slideUp">
-        <div className="bg-card rounded-t-[20px] shadow-ios-xl border-t border-border p-6 max-h-[80vh] overflow-y-auto">
+      <div className="fixed bottom-0 left-0 right-0 z-60 animate-slideUp">
+        <div className="bg-card rounded-t-[20px] shadow-ios-xl border-t border-border p-6 max-h-[80dvh] overflow-y-auto">
           {/* 헤더 */}
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-foreground">새 항목 추가</h3>
@@ -90,7 +90,7 @@ export const BrainDumpAddModal: React.FC<BrainDumpAddModalProps> = ({
               onChange={(e) => setText(e.target.value)}
               onKeyPress={handleKeyPress}
               placeholder="Brain Dump에 추가할 내용을 입력하세요..."
-              className="w-full px-4 py-3 border border-input rounded-ios-lg text-sm bg-background text-foreground placeholder-muted-foreground resize-none focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+              className="w-full px-4 py-3 border border-input rounded-ios-lg text-base md:text-sm bg-background text-foreground placeholder-muted-foreground resize-none focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
               rows={4}
               autoFocus
             />

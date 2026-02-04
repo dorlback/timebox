@@ -14,9 +14,10 @@ interface TimePlanProps {
   onBlockEdit: (block: TimeBlock) => void;
   isMobile?: boolean;
   activeBlockId?: number | null;
+  activeView?: 'left' | 'right';
 }
 
-export const TimePlan: React.FC<TimePlanProps> = ({
+export const TimePlan: React.FC<TimePlanProps> = React.memo(({
   date,
   timeBlocks,
   draggingBlockId,
@@ -26,14 +27,17 @@ export const TimePlan: React.FC<TimePlanProps> = ({
   onBlockMouseDown,
   onBlockEdit,
   isMobile = false,
-  activeBlockId = null
+  activeBlockId = null,
+  activeView = 'right'
 }) => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-
   useEffect(() => {
-    // DOM이 완전히 렌더링된 후 스크롤
-    setTimeout(() => {
+    // 뷰가 바뀌거나 날짜가 바뀔 때 스크롤 수행
+    // 모바일에서는 activeView가 'right'일 때만, 데스크탑은 항상 수행
+    if (isMobile && activeView !== 'right') return;
+
+    const performScroll = () => {
       if (scrollContainerRef.current) {
         const now = new Date();
         const currentHour = now.getHours();
@@ -43,17 +47,24 @@ export const TimePlan: React.FC<TimePlanProps> = ({
         // 1분 = 1px이므로, 현재 시간의 픽셀 위치
         const scrollPosition = currentTimeInMinutes;
 
-        // 스크롤 컨테이너 높이의 절반만큼 위로 올려서 현재 시간이 상단에 오도록
+        // 사용자의 요청: 현재 시간이 상단에서 약 20% 지점에 오도록
+        // 즉, scrollTop = currentTime - (containerHeight * 0.2)
         const containerHeight = scrollContainerRef.current.clientHeight;
-        const adjustedScrollPosition = scrollPosition - 50; // 상단에서 약간 아래 위치
+        const adjustedScrollPosition = scrollPosition - (containerHeight * 0.2);
 
-        scrollContainerRef.current.scrollTop = Math.max(0, adjustedScrollPosition);
+        scrollContainerRef.current.scrollTo({
+          top: Math.max(0, adjustedScrollPosition),
+          behavior: 'smooth'
+        });
 
-        console.log('Current time:', `${currentHour}:${currentMinute}`);
-        console.log('Scroll position:', adjustedScrollPosition);
+        console.log('Scrolling to current time:', `${currentHour}:${currentMinute}`);
       }
-    }, 100); // 100ms 후 실행
-  }, [date]); // date가 변경될 때마다 다시 스크롤
+    };
+
+    // DOM 렌더링 및 레이아웃 계산을 위해 약간의 지연 후 실행
+    const timer = setTimeout(performScroll, 300);
+    return () => clearTimeout(timer);
+  }, [date, activeView, isMobile]);
 
   const isToday = (date: Date): boolean => {
     const today = new Date();
@@ -70,7 +81,7 @@ export const TimePlan: React.FC<TimePlanProps> = ({
         <DateSelector date={date} onDateChange={onDateChange} isMobile={isMobile} />
       </div>
 
-      <div className="flex-1 overflow-y-auto custom-scrollbar">
+      <div className="flex-1 overflow-y-auto custom-scrollbar" ref={scrollContainerRef}>
         <TimeGrid
           timeBlocks={timeBlocks}
           draggingBlockId={draggingBlockId}
@@ -85,4 +96,4 @@ export const TimePlan: React.FC<TimePlanProps> = ({
       </div>
     </div >
   );
-};
+});

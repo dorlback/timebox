@@ -13,7 +13,7 @@ interface TimeBlockProps {
   activeBlockId?: number | null;
 }
 
-export const TimeBlock: React.FC<TimeBlockProps> = ({
+export const TimeBlock: React.FC<TimeBlockProps> = React.memo(({
   block,
   isDragging,
   isResizing,
@@ -166,4 +166,4 @@ export const TimeBlock: React.FC<TimeBlockProps> = ({
       )}
     </div>
   );
-};
+});

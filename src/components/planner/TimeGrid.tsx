@@ -15,7 +15,11 @@ interface TimeGridProps {
   activeBlockId?: number | null;
 }
 
-export const TimeGrid: React.FC<TimeGridProps> = ({
+const hours = Array.from({ length: 24 }, (_, i) => i);
+const minuteMarkers = [10, 20, 30, 40, 50, 0];
+const pixelsPerMinute = 1; // 1분당 1픽셀 (60px / 60분)
+
+export const TimeGrid: React.FC<TimeGridProps> = React.memo(({
   timeBlocks,
   draggingBlockId,
   resizingBlockId,
@@ -26,10 +30,6 @@ export const TimeGrid: React.FC<TimeGridProps> = ({
   isMobile = false,
   activeBlockId = null
 }) => {
-  const hours = Array.from({ length: 24 }, (_, i) => i);
-  const minuteMarkers = [10, 20, 30, 40, 50, 0];
-  const pixelsPerMinute = 1; // 1분당 1픽셀 (60px / 60분)
-
   return (
     <div className="relative">
       <div className="border-b border-border mb-2" style={{ height: '1px' }}></div>
@@ -69,4 +69,4 @@ export const TimeGrid: React.FC<TimeGridProps> = ({
       </div>
     </div>
   );
-};
+});

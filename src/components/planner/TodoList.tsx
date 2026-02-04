@@ -11,9 +11,10 @@ interface TodoListProps {
   onDragOver: (e: React.DragEvent) => void;
   onDrop: (e: React.DragEvent) => void;
   onItemDoubleClick?: (item: TodoItem) => void;
+  draggedItemId?: number | null;
 }
 
-export const TodoList: React.FC<TodoListProps> = ({
+export const TodoList: React.FC<TodoListProps> = React.memo(({
   items,
   onToggleComplete,
   onDeleteItem,
@@ -25,7 +26,7 @@ export const TodoList: React.FC<TodoListProps> = ({
 }) => {
   return (
     <div
-      className="bg-card rounded-lg shadow p-4 transition-colors border border-border"
+      className="todo-list-container bg-card rounded-lg shadow p-4 transition-colors border border-border"
       onDragOver={onDragOver}
       onDrop={onDrop}
     >
@@ -33,13 +34,49 @@ export const TodoList: React.FC<TodoListProps> = ({
       <div className="text-xs text-muted-foreground mb-2">최대 5개</div>
       <div className="space-y-2">
         {items.map((item) => {
+          let touchTimer: NodeJS.Timeout;
+
+          const handleTouchStart = (e: React.TouchEvent) => {
+            const touch = e.touches[0];
+            const clientX = touch.clientX;
+            const clientY = touch.clientY;
+
+            touchTimer = setTimeout(() => {
+              // 롱프레스 시 드래그 시작 시뮬레이션
+              const dragEvent = {
+                dataTransfer: {
+                  effectAllowed: 'move',
+                  setData: () => { },
+                },
+                clientX,
+                clientY,
+              } as unknown as React.DragEvent;
+              onDragStart(dragEvent, item);
+
+              // 시각적 피드백이나 진동 추가 가능
+              if ('vibrate' in navigator) navigator.vibrate(10);
+            }, 600);
+          };
+
+          const handleTouchEnd = () => {
+            clearTimeout(touchTimer);
+          };
+
           return (
             <div
               key={item.id}
               draggable
               onDragStart={(e) => onDragStart(e, item)}
               onDoubleClick={() => onItemDoubleClick?.(item)}
-              className="flex items-center gap-2 p-2 bg-muted/30 rounded border border-border cursor-move hover:bg-muted transition-colors"
+              onTouchStart={handleTouchStart}
+              onTouchEnd={handleTouchEnd}
+              onTouchMove={handleTouchEnd}
+              onContextMenu={(e) => e.preventDefault()}
+              className={`flex items-center gap-2 p-2 bg-muted/30 rounded border border-border cursor-move hover:bg-muted transition-colors select-none touch-none ${
+                // 드래그 중인 아이템 강조
+                false ? 'opacity-50 border-blue-500 bg-blue-50' : ''
+                }`}
+              style={{ WebkitUserSelect: 'none', WebkitTouchCallout: 'none' }}
             >
               <GripVertical size={16} className="text-gray-400" />
               <input
@@ -76,4 +113,4 @@ export const TodoList: React.FC<TodoListProps> = ({
       </div>
     </div>
   );
-};
+});

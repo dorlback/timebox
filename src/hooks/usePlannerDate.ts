@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { DailyData, BrainDumpItem, TodoItem, TimeBlock } from '../types/planner';
 import { getDateKey } from '../utils/dateUtils';
 import { savePlannerData } from '@/utils/savePlannerData'; // 앞서 작성한 upsert 로직
@@ -59,11 +59,13 @@ export const usePlannerData = (currentDate: Date, userId: string, showSuccess: (
   }, [dateKey, userId]);
 
   // 3. 현재 화면에 표시할 데이터 추출 (불러오기 전까지 빈 배열 반환)
-  const currentData: DailyData = dailyData[dateKey] || {
-    brainDump: [],
-    todoList: [],
-    timeBlocks: []
-  };
+  const currentData: DailyData = useMemo(() => {
+    return dailyData[dateKey] || {
+      brainDump: [],
+      todoList: [],
+      timeBlocks: []
+    };
+  }, [dailyData, dateKey]);
 
   const handleSave = useCallback(async () => {
     if (!userId) {

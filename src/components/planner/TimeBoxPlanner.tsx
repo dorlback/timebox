@@ -49,15 +49,17 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
     setBrainDump,
     setTodoList,
     setTimeBlocks,
-    loading,
     handleSave,
     handleAutoSave,
+    loading,
   } = usePlannerData(date, CurrentUser.id, showSuccess, showError);
 
   const [newDumpText, setNewDumpText] = useState('');
   const [draggedItem, setDraggedItem] = useState<BrainDumpItem | TodoItem | null>(null);
   const [dragSource, setDragSource] = useState<'brain-dump' | 'todo-list' | null>(null);
+  const [touchPos, setTouchPos] = useState<{ x: number; y: number } | null>(null);
   const [editingBlock, setEditingBlock] = useState<TimeBlock | null>(null);
+
 
   // 모바일 뷰포트 감지
   useEffect(() => {
@@ -113,15 +115,15 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
   } = useTimeBlockInteraction(timeBlocks || [], updateBlockTime);
 
   // 배경 클릭 시 편집 모드 해제
-  const handleGridBackgroundClick = (e: React.MouseEvent) => {
+  const handleGridBackgroundClick = useCallback((e: React.MouseEvent) => {
     // 클릭된 요소가 타임블록 내부 요소가 아니면 해제
     const target = e.target as HTMLElement;
     if (!target.closest('.time-block-container')) {
       setActiveBlockId(null);
     }
-  };
+  }, [setActiveBlockId]);
 
-  const handleBlockEditorSave = (blockId: number, newStart: number, newEnd: number) => {
+  const handleBlockEditorSave = useCallback((blockId: number, newStart: number, newEnd: number) => {
     const hasConflict = checkTimeConflict(timeBlocks || [], blockId, newStart, newEnd);
 
     if (hasConflict) {
@@ -136,7 +138,7 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
 
     updateBlockTime(blockId, newStart, newEnd);
     setEditingBlock(null);
-  };
+  }, [timeBlocks, showError, updateBlockTime]);
 
   const addBrainDump = useCallback(() => {
     if (newDumpText.trim()) {
@@ -178,27 +180,33 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
   }, [brainDump, timeBlocks, setBrainDump, setTimeBlocks]);
 
   // Todo 핸들러
-  const deleteTodo = (id: number) => {
-    setTodoList((todoList || []).filter(item => item.id !== id));
-    setTimeBlocks((timeBlocks || []).filter(block => block.todoId !== id));
-  };
+  const deleteTodo = useCallback((id: number) => {
+    setTodoList((prev: TodoItem[] | null) => (prev || []).filter(item => item.id !== id));
+    setTimeBlocks((prev: TimeBlock[] | null) => (prev || []).filter(block => block.todoId !== id));
+  }, [setTodoList, setTimeBlocks]);
 
-  const toggleTodoComplete = (id: number) => {
-    if (!todoList) return;
-    setTodoList(todoList.map(item =>
-      item.id === id ? { ...item, completed: !item.completed } : item
-    ));
+  const toggleTodoComplete = useCallback((id: number) => {
+    setTodoList((prev: TodoItem[] | null) => {
+      const items = prev || [];
+      const updated = items.map(item =>
+        item.id === id ? { ...item, completed: !item.completed } : item
+      );
 
-    const updatedTodo = todoList.find(item => item.id === id);
-    if (updatedTodo) {
-      if (!timeBlocks) return;
-      setTimeBlocks(timeBlocks.map(block =>
-        block.todoId === id ? { ...block, completed: !updatedTodo.completed } : block
-      ));
-    }
-  };
+      // 연동된 타임블록들도 함께 업데이트
+      const targetItem = updated.find(i => i.id === id);
+      if (targetItem) {
+        setTimeBlocks((blocks: TimeBlock[] | null) =>
+          (blocks || []).map(block =>
+            block.todoId === id ? { ...block, completed: targetItem.completed } : block
+          )
+        );
+      }
 
-  const handleItemDetailSave = (updatedItem: any) => {
+      return updated;
+    });
+  }, [setTodoList, setTimeBlocks]);
+
+  const handleItemDetailSave = useCallback((updatedItem: any) => {
     if (!updatedItem) return;
 
     if (updatedItem.type === 'time-block') {
@@ -215,33 +223,62 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
             : block
         )
       );
+
+      // 연동된 원본 항목(Brain Dump 또는 Todo) 업데이트
+      const targetBlock = (timeBlocks || []).find(b => b.id === updatedItem.id);
+      if (targetBlock?.todoId) {
+        if (targetBlock.isDirectFromBrainDump) {
+          setBrainDump((prev: BrainDumpItem[] | null) =>
+            (prev || []).map((item: BrainDumpItem) =>
+              item.id === targetBlock.todoId ? { ...item, text: updatedItem.text, notes: updatedItem.notes } : item
+            )
+          );
+        } else {
+          setTodoList((prev: TodoItem[] | null) =>
+            (prev || []).map((item: TodoItem) =>
+              item.id === targetBlock.todoId ? { ...item, text: updatedItem.text, notes: updatedItem.notes } : item
+            )
+          );
+        }
+
+        // 동일한 todoId를 공유하는 다른 타임블록들도 함께 업데이트 (일관성 유지)
+        setTimeBlocks((prev: TimeBlock[] | null) =>
+          (prev || []).map((block: TimeBlock) =>
+            block.todoId === targetBlock.todoId
+              ? { ...block, text: updatedItem.text, notes: updatedItem.notes }
+              : block
+          )
+        );
+      }
     } else if (updatedItem.type === 'brain-dump') {
       setBrainDump((prev: BrainDumpItem[] | null) =>
         (prev || []).map((item: BrainDumpItem) => item.id === updatedItem.id ? { ...item, text: updatedItem.text, notes: updatedItem.notes } : item)
       );
-      // 타임플랜에 등록된 브레인덤프 연동 블록도 업데이트
+      // 타임플랜에 등록된 연동 블록들도 전체 업데이트
       setTimeBlocks((prev: TimeBlock[] | null) =>
-        (prev || []).map((block: TimeBlock) => block.todoId === updatedItem.id && block.isDirectFromBrainDump ? { ...block, text: updatedItem.text, notes: updatedItem.notes } : block)
+        (prev || []).map((block: TimeBlock) =>
+          block.todoId === updatedItem.id ? { ...block, text: updatedItem.text, notes: updatedItem.notes } : block
+        )
       );
     } else if (updatedItem.type === 'todo-list') {
       setTodoList((prev: TodoItem[] | null) =>
         (prev || []).map((item: TodoItem) => item.id === updatedItem.id ? { ...item, text: updatedItem.text, notes: updatedItem.notes } : item)
       );
-      // 연동된 타임블록들도 텍스트/메모 업데이트
+      // 연동된 타임블록들도 전체 업데이트
       setTimeBlocks((prev: TimeBlock[] | null) =>
-        (prev || []).map((block: TimeBlock) => block.todoId === updatedItem.id ? { ...block, text: updatedItem.text, notes: updatedItem.notes } : block)
+        (prev || []).map((block: TimeBlock) =>
+          block.todoId === updatedItem.id ? { ...block, text: updatedItem.text, notes: updatedItem.notes } : block
+        )
       );
     }
 
     setIsDetailModalOpen(false);
     setSelectedItem(null);
-  };
+  }, [timeBlocks, setTimeBlocks, setBrainDump, setTodoList, showError]);
 
   // 이동 핸들러 - 체크 상태 유지 + 현재 시간 이후 배치
-  const moveBrainDumpToTodo = (item: BrainDumpItem) => {
-    if (!todoList) return;
-    if (!timeBlocks) return;
-    if (!brainDump) return;
+  const moveBrainDumpToTodo = useCallback((item: BrainDumpItem) => {
+    if (!todoList || !timeBlocks || !brainDump) return;
 
     if (todoList.length >= 5) {
       showError('할 일 목록은 최대 5개까지만 추가할 수 있습니다.');
@@ -290,37 +327,40 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
         isDirectFromBrainDump: false
       }
     ]);
-  };
+  }, [todoList, timeBlocks, brainDump, showError, setTodoList, setBrainDump, setTimeBlocks]);
 
-  const moveTodoToBrainDump = (item: TodoItem) => {
+  const moveTodoToBrainDump = useCallback((item: TodoItem) => {
     const newBrainDumpItem = {
       id: item.id,
       text: item.text,
       completed: item.completed
     };
-    setBrainDump([...brainDump || [], newBrainDumpItem]);
-    setTodoList((todoList || []).filter(i => i.id !== item.id));
+    setBrainDump((prev: BrainDumpItem[] | null) => [...prev || [], newBrainDumpItem]);
+    setTodoList((prev: TodoItem[] | null) => (prev || []).filter(i => i.id !== item.id));
 
     // Todo에서 온 타임블록은 완전히 제거 (isDirectFromBrainDump가 false인 것)
-    setTimeBlocks((timeBlocks || []).filter(block => block.todoId !== item.id));
-  };
+    setTimeBlocks((prev: TimeBlock[] | null) => (prev || []).filter(block => block.todoId !== item.id));
+  }, [setBrainDump, setTodoList, setTimeBlocks]);
 
   // 드래그앤드롭 핸들러
-  const handleDragStart = (e: React.DragEvent, item: BrainDumpItem | TodoItem, source: 'brain-dump' | 'todo-list') => {
+  const handleDragStart = useCallback((e: React.DragEvent, item: BrainDumpItem | TodoItem, source: 'brain-dump' | 'todo-list') => {
     setDraggedItem(item);
     setDragSource(source);
     e.dataTransfer.effectAllowed = 'move';
-  };
 
-  const handleDragOver = (e: React.DragEvent) => {
+    // 모바일 초기 좌표 설정
+    if (e.clientX && e.clientY) {
+      setTouchPos({ x: e.clientX, y: e.clientY });
+    }
+  }, [setDraggedItem, setDragSource, setTouchPos]);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
-  };
+  }, []);
 
-  const handleDropToTodo = (e: React.DragEvent) => {
-    if (!todoList) return;
-    if (!timeBlocks) return;
-    if (!brainDump) return;
+  const handleDropToTodo = useCallback((e: React.DragEvent) => {
+    if (!todoList || !timeBlocks || !brainDump) return;
 
     e.preventDefault();
     if (draggedItem && dragSource === 'brain-dump') {
@@ -378,9 +418,9 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
     }
     setDraggedItem(null);
     setDragSource(null);
-  };
+  }, [todoList, timeBlocks, brainDump, draggedItem, dragSource, showError, setTodoList, setBrainDump, setTimeBlocks]);
 
-  const handleDropToBrainDump = (e: React.DragEvent) => {
+  const handleDropToBrainDump = useCallback((e: React.DragEvent) => {
     if (!todoList) return;
     if (!timeBlocks) return;
     if (!brainDump) return;
@@ -400,12 +440,11 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
     }
     setDraggedItem(null);
     setDragSource(null);
-  };
+  }, [todoList, timeBlocks, brainDump, draggedItem, dragSource, setBrainDump, setTodoList, setTimeBlocks]);
 
   // Brain Dump를 타임플랜에 직접 추가 - 현재 시간 이후 배치
-  const addBrainDumpToTimePlan = (item: BrainDumpItem) => {
-    if (!timeBlocks) return;
-    if (!brainDump) return;
+  const addBrainDumpToTimePlan = useCallback((item: BrainDumpItem) => {
+    if (!timeBlocks || !brainDump) return;
 
     // 이미 시간표에 있는지 확인
     const existingBlock = timeBlocks.find(block =>
@@ -440,7 +479,62 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
     }]);
 
     showSuccess('시간표에 추가되었습니다!');
-  };
+  }, [timeBlocks, brainDump, setTimeBlocks, showSuccess, showError]);
+
+  // 모바일 드래그 앤 드롭을 위한 전역 터치 핸들러
+  useEffect(() => {
+    if (!isMobile) return;
+
+    const handleTouchMoveGlobal = (e: TouchEvent) => {
+      if (!draggedItem || !dragSource) return;
+
+      // 드래그 중에는 스크롤 방지
+      e.preventDefault();
+
+      const touch = e.touches[0];
+      setTouchPos({ x: touch.clientX, y: touch.clientY });
+    };
+
+    const handleTouchEndGlobal = (e: TouchEvent) => {
+      if (!draggedItem || !dragSource) return;
+
+      const touch = e.changedTouches[0];
+      const targetElement = document.elementFromPoint(touch.clientX, touch.clientY);
+
+      setTouchPos(null);
+
+      if (!targetElement) {
+        setDraggedItem(null);
+        setDragSource(null);
+        return;
+      }
+
+      // 드롭 대상 확인 (클래스 기반)
+      const isTodoTarget = targetElement.closest('.todo-list-container');
+      const isBrainDumpTarget = targetElement.closest('.brain-dump-container');
+
+      if (dragSource === 'brain-dump' && isTodoTarget) {
+        // Brain Dump -> Todo List 이동
+        const fakeEvent = { preventDefault: () => { } } as React.DragEvent;
+        handleDropToTodo(fakeEvent);
+      } else if (dragSource === 'todo-list' && isBrainDumpTarget) {
+        // Todo List -> Brain Dump 이동
+        const fakeEvent = { preventDefault: () => { } } as React.DragEvent;
+        handleDropToBrainDump(fakeEvent);
+      } else {
+        setDraggedItem(null);
+        setDragSource(null);
+      }
+    };
+
+    document.addEventListener('touchmove', handleTouchMoveGlobal, { passive: false });
+    document.addEventListener('touchend', handleTouchEndGlobal);
+    return () => {
+      document.removeEventListener('touchmove', handleTouchMoveGlobal);
+      document.removeEventListener('touchend', handleTouchEndGlobal);
+    };
+  }, [isMobile, draggedItem, dragSource, handleDropToTodo, handleDropToBrainDump]);
+
 
   const brainDumpItemsInTimePlan = React.useMemo(() => {
     if (!timeBlocks || !brainDump) return [];
@@ -453,207 +547,189 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
 
 
   return (
-    <div className="h-screen bg-background transition-colors">
-      {loading && (
+    <div className="h-[100dvh] bg-background transition-colors">
+      {loading ? (
         <div className="absolute inset-0 bg-white/50 dark:bg-black/50 z-50 flex items-center justify-center">
           <div className="text-blue-500 font-bold">데이터 불러오는 중...</div>
         </div>
-      )}
+      ) : null}
 
-      {/* 모바일 UI */}
-      {isMobile && (
-        <>
+      {isMobile ? (
+        <div className="h-full flex flex-col">
           <ErrorToast message={errorMessage} />
           <SuccessToast message={successMessage} />
-          <div className="h-[100dvh] flex flex-col">
-            <div className="relative flex-1 overflow-hidden">
-              {/* 좌측 뷰 (할일/브레인덤프) */}
-              <div
-                className={`absolute h-full top-0 left-0 right-0 transition-transform duration-300 ease-in-out ${activeView === 'left' ? 'translate-x-0' : '-translate-x-full'
-                  }`}
-              >
-                <div className="h-full overflow-y-auto p-4 space-y-4">
-                  <div className="bg-card rounded-ios-lg shadow-ios">
-                    <TodoList
-                      items={todoList || []}
-                      onToggleComplete={toggleTodoComplete}
-                      onDeleteItem={deleteTodo}
-                      onMoveToBrainDump={moveTodoToBrainDump}
-                      onDragStart={(e, item) => handleDragStart(e, item, 'todo-list')}
-                      onDragOver={handleDragOver}
-                      onDrop={handleDropToTodo}
-                      onItemDoubleClick={(item) => {
-                        setSelectedItem({ ...item, type: 'todo-list' });
-                        setIsDetailModalOpen(true);
-                      }}
-                    />
-                  </div>
-
-                  <BrainDump
-                    items={brainDump || []}
-                    itemsInTimePlan={brainDumpItemsInTimePlan}
-                    newItemText={newDumpText}
-                    onNewItemTextChange={setNewDumpText}
-                    onAddItem={addBrainDump}
-                    onDeleteItem={deleteBrainDump}
-                    onToggleComplete={toggleBrainDumpComplete}
-                    onMoveToTodo={moveBrainDumpToTodo}
-                    onAddToTimePlan={addBrainDumpToTimePlan}
-                    onDragStart={(e, item) => handleDragStart(e, item, 'brain-dump')}
+          <div className="h-full relative flex-1 overflow-hidden">
+            {/* 좌측 뷰 (할일/브레인덤프) */}
+            <div
+              className={`absolute h-full top-0 left-0 right-0 transition-transform duration-300 ease-in-out ${activeView === 'left' ? 'translate-x-0' : '-translate-x-full'
+                }`}
+            >
+              <div className="h-full overflow-y-auto p-4 space-y-4">
+                <div className="bg-card rounded-ios-lg shadow-ios">
+                  <TodoList
+                    items={todoList || []}
+                    onToggleComplete={toggleTodoComplete}
+                    onDeleteItem={deleteTodo}
+                    onMoveToBrainDump={moveTodoToBrainDump}
+                    onDragStart={(e, item) => handleDragStart(e, item, 'todo-list')}
                     onDragOver={handleDragOver}
-                    onDrop={handleDropToBrainDump}
-                    isMobile={true}
-                    onOpenAddModal={() => setIsAddModalOpen(true)}
+                    onDrop={handleDropToTodo}
                     onItemDoubleClick={(item) => {
-                      setSelectedItem({ ...item, type: 'brain-dump' });
+                      setSelectedItem({ ...item, type: 'todo-list' });
                       setIsDetailModalOpen(true);
                     }}
+                    draggedItemId={draggedItem?.id}
                   />
                 </div>
-              </div>
 
-              {/* 우측 뷰 (타임플랜) */}
-              <div
-                className={`absolute h-full top-0 left-0 right-0 transition-transform duration-300 ease-in-out ${activeView === 'right' ? 'translate-x-0' : 'translate-x-full'
-                  }`}
-              >
-                {/* 여기 */}
-                <div
-                  className="h-full"
-                  onClick={handleGridBackgroundClick}
-                >
-                  <TimePlan
-                    date={date}
-                    timeBlocks={timeBlocks || []}
-                    draggingBlockId={draggingBlock}
-                    resizingBlockId={resizingBlock}
-                    onDateChange={handleDateChange}
-                    onDayOfWeekClick={handleDayOfWeekClick}
-                    onBlockMouseDown={handleBlockMouseDown}
-                    onBlockEdit={(block) => {
-                      setSelectedItem({ ...block, type: 'time-block' });
-                      setIsDetailModalOpen(true);
-                    }}
-                    isMobile={true}
-                    activeBlockId={activeBlockId}
-                  />
-                </div>
-              </div>
-
-              {/* Brain Dump 추가 모달 */}
-              <BrainDumpAddModal
-                isOpen={isAddModalOpen}
-                onClose={() => setIsAddModalOpen(false)}
-                onAdd={(text) => {
-                  if (!brainDump) return;
-                  const newItem: BrainDumpItem = {
-                    id: Date.now(),
-                    text: text,
-                    completed: false
-                  };
-                  setBrainDump([...brainDump, newItem]);
-                }}
-              />
-            </div>
-            {/* 하단 네비게이션 바 (iOS 스타일) */}
-            <nav className="h-[70px] bottom-0 left-0 right-0 bg-card/95 backdrop-blur-md border-t border-border z-50">
-              <div className="relative flex items-center justify-around h-16 px-2">
-                {/* 1. 홈 버튼 */}
-                <Link href="/">
-                  <button className="flex flex-col items-center justify-center gap-0.5 px-3 pb-2 rounded-lg transition-all text-muted-foreground hover:text-primary">
-                    <div className="min-h-[22px] flex items-center justify-center">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
-                      </svg>
-                    </div>
-                    <span className="text-[10px] font-medium">홈</span>
-                  </button>
-                </Link>
-
-                {/* 2. 다크모드 버튼 */}
-                <button
-                  onClick={toggleDark}
-                  className="flex flex-col items-center justify-center gap-0.5 px-3 pb-2 rounded-lg transition-all text-muted-foreground hover:text-primary"
-                >
-                  <div className="min-h-[22px] flex items-center justify-center">
-                    {isDark ? (
-                      <Sun size={22} aria-hidden="true" />
-                    ) : (
-                      <Moon size={22} aria-hidden="true" />
-                    )}
-                  </div>
-                  <span className="text-[10px] font-medium">테마</span>
-                </button>
-
-                {/* 3. 가운데: 원형 전환 버튼 (큰 원형, 상단 돌출) */}
-                <button
-                  onClick={() => setActiveView(activeView === 'left' ? 'right' : 'left')}
-                  className="absolute left-1/2 -translate-x-1/2 -top-7 w-14 h-14 bg-primary text-primary-foreground rounded-full shadow-lg hover:shadow-xl active:scale-95 transition-all flex items-center justify-center"
-                  style={{
-                    boxShadow: '0 4px 14px 0 rgba(59, 130, 246, 0.4)'
+                <BrainDump
+                  items={brainDump || []}
+                  itemsInTimePlan={brainDumpItemsInTimePlan}
+                  newItemText={newDumpText}
+                  onNewItemTextChange={setNewDumpText}
+                  onAddItem={addBrainDump}
+                  onDeleteItem={deleteBrainDump}
+                  onToggleComplete={toggleBrainDumpComplete}
+                  onMoveToTodo={moveBrainDumpToTodo}
+                  onAddToTimePlan={addBrainDumpToTimePlan}
+                  onDragStart={(e, item) => handleDragStart(e, item, 'brain-dump')}
+                  onDragOver={handleDragOver}
+                  onDrop={handleDropToBrainDump}
+                  isMobile={true}
+                  onOpenAddModal={() => setIsAddModalOpen(true)}
+                  onItemDoubleClick={(item) => {
+                    setSelectedItem({ ...item, type: 'brain-dump' });
+                    setIsDetailModalOpen(true);
                   }}
-                >
-                  {activeView === 'left' ? (
-                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                      <line x1="16" y1="2" x2="16" y2="6"></line>
-                      <line x1="8" y1="2" x2="8" y2="6"></line>
-                      <line x1="3" y1="10" x2="21" y2="10"></line>
-                    </svg>
-                  ) : (
-                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M9 11l3 3L22 4"></path>
-                      <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
-                    </svg>
-                  )}
-                </button>
+                  draggedItemId={draggedItem?.id}
+                />
+              </div>
+            </div>
 
-                {/* 4. 로그아웃 버튼 */}
-                <Link href="/login">
-                  <button className="flex flex-col items-center justify-center gap-0.5 px-3 pb-2 rounded-lg transition-all text-muted-foreground hover:text-primary">
-                    <div className="min-h-[22px] flex items-center justify-center">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                        <polyline points="16 17 21 12 16 7"></polyline>
-                        <line x1="21" y1="12" x2="9" y2="12"></line>
-                      </svg>
-                    </div>
-                    <span className="text-[10px] font-medium">로그아웃</span>
-                  </button>
-                </Link>
+            {/* 우측 뷰 (타임플랜) */}
+            <div
+              className={`absolute h-full top-0 left-0 right-0 transition-transform duration-300 ease-in-out ${activeView === 'right' ? 'translate-x-0' : 'translate-x-full'
+                }`}
+            >
+              <div
+                className="h-full"
+                onClick={handleGridBackgroundClick}
+              >
+                <TimePlan
+                  date={date}
+                  timeBlocks={timeBlocks || []}
+                  draggingBlockId={draggingBlock}
+                  resizingBlockId={resizingBlock}
+                  onDateChange={handleDateChange}
+                  onDayOfWeekClick={handleDayOfWeekClick}
+                  onBlockMouseDown={handleBlockMouseDown}
+                  onBlockEdit={(block) => {
+                    setSelectedItem({ ...block, type: 'time-block' });
+                    setIsDetailModalOpen(true);
+                  }}
+                  isMobile={true}
+                  activeBlockId={activeBlockId}
+                  activeView={activeView}
+                />
+              </div>
+            </div>
 
-                {/* 5. 저장 버튼 */}
-                <button
-                  onClick={handleSave}
-                  className="flex flex-col items-center justify-center gap-0.5 px-3 pb-2 rounded-lg transition-all text-muted-foreground hover:text-primary"
-                >
+            {/* Brain Dump 추가 모달 */}
+            <BrainDumpAddModal
+              isOpen={isAddModalOpen}
+              onClose={() => setIsAddModalOpen(false)}
+              onAdd={(text) => {
+                if (!brainDump) return;
+                const newItem: BrainDumpItem = {
+                  id: Date.now(),
+                  text: text,
+                  completed: false
+                };
+                setBrainDump([...brainDump, newItem]);
+              }}
+            />
+          </div>
+          {/* 하단 네비게이션 바 (iOS 스타일) */}
+          <nav className="h-[64px] bottom-0 left-0 right-0 bg-card/95 backdrop-blur-md border-t border-border z-50">
+            <div className="relative flex items-center justify-around h-16 px-2">
+              <Link href="/">
+                <button className="flex flex-col items-center justify-center gap-0.5 px-3 pb-1 rounded-lg transition-all text-muted-foreground hover:text-primary">
                   <div className="min-h-[22px] flex items-center justify-center">
                     <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
-                      <polyline points="17 21 17 13 7 13 7 21"></polyline>
-                      <polyline points="7 3 7 8 15 8"></polyline>
+                      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                      <polyline points="9 22 9 12 15 12 15 22"></polyline>
                     </svg>
                   </div>
-                  <span className="text-[10px] font-medium">저장</span>
+                  <span className="text-[10px] font-medium">홈</span>
                 </button>
-              </div>
-            </nav>
+              </Link>
 
-          </div>
+              <button
+                onClick={toggleDark}
+                className="flex flex-col items-center justify-center gap-0.5 px-3 pb-1 rounded-lg transition-all text-muted-foreground hover:text-primary"
+              >
+                <div className="min-h-[22px] flex items-center justify-center">
+                  {mounted ? (isDark ? (
+                    <Sun size={22} aria-hidden="true" />
+                  ) : (
+                    <Moon size={22} aria-hidden="true" />
+                  )) : null}
+                </div>
+                <span className="text-[10px] font-medium">테마</span>
+              </button>
 
-          {editingBlock && (
-            <TimeBlockEditor
-              block={editingBlock}
-              onSave={handleBlockEditorSave}
-              onClose={() => setEditingBlock(null)}
-            />
-          )}
-        </>
-      )}
+              <button
+                onClick={() => setActiveView(activeView === 'left' ? 'right' : 'left')}
+                className="absolute left-1/2 -translate-x-1/2 -top-7 w-14 h-14 bg-primary text-primary-foreground rounded-full shadow-lg hover:shadow-xl active:scale-95 transition-all flex items-center justify-center"
+                style={{
+                  boxShadow: '0 4px 14px 0 rgba(59, 130, 246, 0.4)'
+                }}
+              >
+                {activeView === 'left' ? (
+                  <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                  </svg>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M9 11l3 3L22 4"></path>
+                    <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                  </svg>
+                )}
+              </button>
 
-      {/* 데스크톱 UI (기존) */}
-      {!isMobile && (
+              <Link href="/login">
+                <button className="flex flex-col items-center justify-center gap-0.5 px-3 pb-1 rounded-lg transition-all text-muted-foreground hover:text-primary">
+                  <div className="min-h-[22px] flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                      <polyline points="16 17 21 12 16 7"></polyline>
+                      <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
+                  </div>
+                  <span className="text-[10px] font-medium">로그아웃</span>
+                </button>
+              </Link>
+
+              <button
+                onClick={handleSave}
+                className="flex flex-col items-center justify-center gap-0.5 px-3 pb-1 rounded-lg transition-all text-muted-foreground hover:text-primary"
+              >
+                <div className="min-h-[22px] flex items-center justify-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                    <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                    <polyline points="7 3 7 8 15 8"></polyline>
+                  </svg>
+                </div>
+                <span className="text-[10px] font-medium">저장</span>
+              </button>
+            </div>
+          </nav>
+        </div>
+      ) : (
         <div className="h-screen p-6 flex flex-col">
           <div className="max-w-7xl mx-auto w-full flex flex-col flex-grow overflow-hidden">
             <div className="flex items-center justify-between px-4 py-2 mb-6 drop-shadow border border-border bg-card rounded-full flex-shrink-0">
@@ -696,6 +772,7 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
                         setSelectedItem({ ...item, type: 'todo-list' });
                         setIsDetailModalOpen(true);
                       }}
+                      draggedItemId={draggedItem?.id}
                     />
                   </div>
 
@@ -716,6 +793,7 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
                       setSelectedItem({ ...item, type: 'brain-dump' });
                       setIsDetailModalOpen(true);
                     }}
+                    draggedItemId={draggedItem?.id}
                   />
                 </div>
               </div>
@@ -740,7 +818,7 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
         </div>
       )}
 
-      {selectedItem && (
+      {selectedItem ? (
         <ItemDetailModal
           isOpen={isDetailModalOpen}
           onClose={() => {
@@ -761,15 +839,34 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
             }
           }}
         />
-      )}
+      ) : null}
 
-      {editingBlock && !isMobile && (
+      {editingBlock && !isMobile ? (
         <TimeBlockEditor
           block={editingBlock}
           onSave={handleBlockEditorSave}
           onClose={() => setEditingBlock(null)}
         />
-      )}
+      ) : null}
+
+      {/* 모바일 드래그 프리뷰 (Ghost) */}
+      {isMobile && draggedItem && touchPos ? (
+        <div
+          className="fixed pointer-events-none z-[9999] opacity-70 p-3 bg-card border-2 border-primary rounded-xl shadow-2xl scale-105"
+          style={{
+            left: touchPos.x,
+            top: touchPos.y,
+            transform: 'translate(-50%, -100%) rotate(2deg)',
+            width: '200px',
+            maxWidth: '80vw'
+          }}
+        >
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-primary" />
+            <span className="text-sm font-semibold truncate text-foreground">{draggedItem.text}</span>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 };

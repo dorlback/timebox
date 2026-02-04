@@ -116,52 +116,52 @@ export const ItemDetailModal: React.FC<ItemDetailModalProps> = ({
     };
 
     return (
-      <div className="flex flex-col items-center gap-2 bg-muted/40 p-3 rounded-[1.5rem] border border-border/40 flex-1 w-full min-w-0">
-        <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">{label}</span>
+      <div className={`flex flex-col items-center gap-1.5 bg-muted/40 ${isMobile ? 'p-2 rounded-2xl' : 'p-3 rounded-[1.5rem]'} border border-border/40 flex-1 w-full min-w-0`}>
+        <span className={`${isMobile ? 'text-[8px]' : 'text-[9px]'} font-black text-muted-foreground uppercase tracking-widest`}>{label}</span>
 
-        <div className="flex items-center justify-center gap-2 w-full">
+        <div className={`flex items-center justify-center ${isMobile ? 'gap-1' : 'gap-2'} w-full`}>
           {/* AM/PM */}
           <button
             onClick={handlePeriodToggle}
-            className="text-[10px] font-black text-primary bg-primary/10 px-2 py-0.5 rounded-full uppercase transition-all active:scale-90"
+            className={`${isMobile ? 'px-3 py-2 text-[10px]' : 'text-[10px] px-2 py-0.5'} flex items-center justify-center font-black text-primary bg-primary/10 rounded-full uppercase transition-all active:scale-90 shrink-0`}
           >
             {period}
           </button>
 
-          <div className="flex items-center gap-1.5 justify-center">
+          <div className={`flex items-center ${isMobile ? 'gap-0.5' : 'gap-1.5'} justify-center`}>
             {/* Hour */}
-            <div className="flex flex-col items-center bg-background rounded-xl border border-border/50 shadow-sm overflow-hidden shrink-0">
+            <div className={`flex flex-col items-center bg-background rounded-xl border border-border/50 shadow-sm overflow-hidden shrink-0`}>
               <button
                 onClick={() => handleHChange(h12 >= 12 ? 1 : h12 + 1)}
-                className="w-8 py-1 flex justify-center hover:bg-muted transition-colors text-muted-foreground"
+                className={` ${isMobile ? 'py-3 w-10' : 'py-1 w-8'} flex items-center justify-center hover:bg-muted transition-colors text-muted-foreground`}
               >
-                <ChevronUp size={14} />
+                <ChevronUp size={isMobile ? 12 : 14} />
               </button>
-              <div className="w-8 py-0.5 flex justify-center text-sm font-black tabular-nums">{h12}</div>
+              <div className={`w-8 py-0.5 ${isMobile ? 'text-xs' : 'text-sm'} flex justify-center font-black tabular-nums`}>{h12}</div>
               <button
                 onClick={() => handleHChange(h12 <= 1 ? 12 : h12 - 1)}
-                className="w-8 py-1 flex justify-center hover:bg-muted transition-colors text-muted-foreground"
+                className={`${isMobile ? 'py-3 w-10' : 'py-1 w-8'} flex items-center justify-center hover:bg-muted transition-colors text-muted-foreground`}
               >
-                <ChevronDown size={14} />
+                <ChevronDown size={isMobile ? 12 : 14} />
               </button>
             </div>
 
-            <span className="text-sm font-bold text-muted-foreground/30">:</span>
+            <span className={`${isMobile ? 'text-xs' : 'text-sm'} font-bold text-muted-foreground/30`}>:</span>
 
             {/* Minute (10min interval) */}
-            <div className="flex flex-col items-center bg-background rounded-xl border border-border/50 shadow-sm overflow-hidden shrink-0">
+            <div className={`flex flex-col items-center bg-background rounded-xl border border-border/50 shadow-sm overflow-hidden shrink-0`}>
               <button
                 onClick={() => handleMChange(m >= 50 ? 0 : m + 10)}
-                className="w-8 py-1 flex justify-center hover:bg-muted transition-colors text-muted-foreground"
+                className={`${isMobile ? 'py-3 w-10' : 'py-1 w-8'} flex items-center justify-center hover:bg-muted transition-colors text-muted-foreground`}
               >
-                <ChevronUp size={14} />
+                <ChevronUp size={isMobile ? 12 : 14} />
               </button>
-              <div className="w-8 py-0.5 flex justify-center text-sm font-black tabular-nums">{m.toString().padStart(2, '0')}</div>
+              <div className={`w-8 py-0.5 ${isMobile ? 'text-xs' : 'text-sm'} flex justify-center font-black tabular-nums`}>{m.toString().padStart(2, '0')}</div>
               <button
                 onClick={() => handleMChange(m <= 0 ? 50 : m - 10)}
-                className="w-8 py-1 flex justify-center hover:bg-muted transition-colors text-muted-foreground"
+                className={`${isMobile ? 'py-3 w-10' : 'py-1 w-8'} flex items-center justify-center hover:bg-muted transition-colors text-muted-foreground`}
               >
-                <ChevronDown size={14} />
+                <ChevronDown size={isMobile ? 12 : 14} />
               </button>
             </div>
           </div>
@@ -171,9 +171,9 @@ export const ItemDetailModal: React.FC<ItemDetailModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-300">
+    <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-300">
       <div
-        className="bg-card w-full max-w-[420px] mx-auto rounded-[2.5rem] shadow-2xl border border-white/10 overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-10 duration-500 max-h-[90vh] flex flex-col"
+        className="bg-card w-full max-w-[420px] mx-auto rounded-[2.5rem] shadow-2xl border border-white/10 overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-10 duration-500 max-h-[90dvh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* 헤더 */}
@@ -185,14 +185,14 @@ export const ItemDetailModal: React.FC<ItemDetailModalProps> = ({
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-full bg-muted/50 text-muted-foreground hover:bg-muted transition-all active:scale-90"
+            className="p-2 flex justify-center items-center rounded-full bg-muted/50 text-muted-foreground hover:bg-muted transition-all active:scale-90"
           >
             <X size={18} />
           </button>
         </div>
 
         {/* 본문 (스크롤 가능하도록) */}
-        <div className="p-8 pt-2 space-y-6 overflow-y-auto custom-scrollbar">
+        <div className={`${isMobile ? 'p-5' : 'p-8'} pt-2 space-y-6 overflow-y-auto custom-scrollbar`}>
           {/* 제목 섹션 */}
           <div className="space-y-2">
             {isEditing ? (
@@ -212,9 +212,9 @@ export const ItemDetailModal: React.FC<ItemDetailModalProps> = ({
           </div>
 
           {/* 시간 섹션 (타임블록인 경우) */}
-          {item.type === 'time-block' && (
+          {item.type === 'time-block' ? (
             <div className="space-y-4">
-              <div className="flex flex-col sm:flex-row gap-3 items-center sm:items-stretch">
+              <div className="flex flex-row gap-2 items-stretch">
                 {isEditing ? (
                   <>
                     <TimeEditor label="시작" totalMinutes={startMinutes} onChange={setStartMinutes} />
@@ -228,27 +228,27 @@ export const ItemDetailModal: React.FC<ItemDetailModalProps> = ({
                       </div>
                       <div>
                         <p className="text-[9px] font-black text-muted-foreground/60 uppercase tracking-widest mb-0.5">Time Range</p>
-                        <p className="text-xl font-black text-foreground tabular-nums">
+                        <p className={`${isMobile ? 'text-sm' : 'text-lg'} font-black text-foreground tabular-nums`}>
                           {formatTimeDisplay(item.startTime!)} — {formatTimeDisplay(item.endTime!)}
                         </p>
                       </div>
                     </div>
-                    <div className="px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-black tracking-wider">
+                    <div className={`${isMobile ? 'text-[9px]' : 'text-[10px]'} px-3 py-1 rounded-full bg-primary/10 text-primary font-black tracking-wider`}>
                       {formatDuration(item.startTime!, item.endTime!)}
                     </div>
                   </div>
                 )}
               </div>
 
-              {isEditing && (
+              {isEditing ? (
                 <div className="flex justify-center">
                   <div className="px-4 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-black tracking-widest">
                     TOTAL: {formatDuration(startMinutes, endMinutes)}
                   </div>
                 </div>
-              )}
+              ) : null}
             </div>
-          )}
+          ) : null}
 
           {/* 메모 섹션 */}
           <div className="space-y-2">
@@ -260,7 +260,7 @@ export const ItemDetailModal: React.FC<ItemDetailModalProps> = ({
                 value={editedNotes}
                 onChange={(e) => setEditedNotes(e.target.value)}
                 rows={4}
-                className="w-full p-5 rounded-[1.8rem] bg-muted/40 text-foreground placeholder-muted-foreground/30 outline-none focus:ring-4 focus:ring-primary/5 transition-all resize-none text-sm leading-relaxed border-2 border-transparent focus:border-primary/10"
+                className="w-full p-5 rounded-[1.8rem] bg-muted/40 text-foreground placeholder-muted-foreground/30 outline-none focus:ring-4 focus:ring-primary/5 transition-all resize-none text-base md:text-sm leading-relaxed border-2 border-transparent focus:border-primary/10"
                 placeholder="어떤 구체적인 계획이 있나요?"
               />
             ) : (
@@ -310,7 +310,7 @@ export const ItemDetailModal: React.FC<ItemDetailModalProps> = ({
               )}
               <button
                 onClick={() => setIsEditing(true)}
-                className="flex-1 py-4 rounded-[1.5rem] bg-foreground text-background text-xs font-black shadow-xl hover:opacity-90 transition-all active:scale-95 flex items-center justify-center gap-1.5"
+                className="flex-1 py-4 rounded-[1.5rem] bg-primary text-background text-xs font-black shadow-xl hover:opacity-90 transition-all active:scale-95 flex items-center justify-center gap-1.5"
               >
                 <Edit2 size={16} />
                 수정하기

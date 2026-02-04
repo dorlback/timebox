@@ -100,7 +100,7 @@ export const DateSelector: React.FC<DateSelectorProps> = ({
 
       <button
         onClick={() => handleDateUpdate(new Date())}
-        className={`${isMobile ? 'min-h-4' : 'min-h-8'} px-4  text-xs font-bold text-primary bg-primary/10 hover:bg-primary/20 rounded-lg transition-colors border border-primary/20`}
+        className={`${isMobile ? 'min-h-8' : 'min-h-10'} px-4  text-xs font-bold text-primary bg-primary/10 hover:bg-primary/20 rounded-lg transition-colors border border-primary/20`}
       >
         오늘
       </button>

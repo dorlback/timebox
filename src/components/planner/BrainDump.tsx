@@ -18,9 +18,10 @@ interface BrainDumpProps {
   isMobile?: boolean;
   onOpenAddModal?: () => void;
   onItemDoubleClick?: (item: BrainDumpItem) => void;
+  draggedItemId?: number | null;
 }
 
-export const BrainDump: React.FC<BrainDumpProps> = ({
+export const BrainDump: React.FC<BrainDumpProps> = React.memo(({
   items,
   itemsInTimePlan,
   newItemText,
@@ -35,17 +36,18 @@ export const BrainDump: React.FC<BrainDumpProps> = ({
   onDrop,
   isMobile = false,
   onOpenAddModal,
-  onItemDoubleClick
+  onItemDoubleClick,
+  draggedItemId = null
 }) => {
   return (
     <div
-      className="p-4 bg-card rounded-lg shadow border border-border transition-colors"
+      className="brain-dump-container p-4 bg-card rounded-lg shadow border border-border transition-colors"
       onDragOver={onDragOver}
       onDrop={onDrop}
     >
       <div className="flex items-center justify-between mb-3">
         <h2 className="font-semibold text-muted-foreground">BRAIN DUMP</h2>
-        {isMobile && onOpenAddModal && (
+        {isMobile && onOpenAddModal ? (
           <button
             onClick={onOpenAddModal}
             className="p-2 flex justify-center items-center rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
@@ -53,21 +55,52 @@ export const BrainDump: React.FC<BrainDumpProps> = ({
           >
             <Plus size={18} />
           </button>
-        )}
+        ) : null}
       </div>
       <div className="space-y-2 mb-3">
         {items.map((item) => {
           const isInTimePlan = itemsInTimePlan.includes(item.id);
+          let touchTimer: NodeJS.Timeout;
+
+          const handleTouchStart = (e: React.TouchEvent) => {
+            const touch = e.touches[0];
+            const clientX = touch.clientX;
+            const clientY = touch.clientY;
+
+            touchTimer = setTimeout(() => {
+              const dragEvent = {
+                dataTransfer: {
+                  effectAllowed: 'move',
+                  setData: () => { },
+                },
+                clientX,
+                clientY,
+              } as unknown as React.DragEvent;
+              onDragStart(dragEvent, item);
+
+              if ('vibrate' in navigator) navigator.vibrate(10);
+            }, 600);
+          };
+
+          const handleTouchEnd = () => {
+            clearTimeout(touchTimer);
+          };
+
           return (
             <div
               key={item.id}
               draggable
               onDragStart={(e) => onDragStart(e, item)}
               onDoubleClick={() => onItemDoubleClick?.(item)}
-              className={`flex items-center gap-2 p-2 rounded border cursor-move transition-colors ${isInTimePlan
+              onTouchStart={handleTouchStart}
+              onTouchEnd={handleTouchEnd}
+              onTouchMove={handleTouchEnd}
+              onContextMenu={(e) => e.preventDefault()}
+              className={`flex items-center gap-2 p-2 rounded border cursor-move transition-colors select-none touch-none ${isInTimePlan
                 ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/30'
                 : 'bg-muted/50 border-border hover:bg-muted'
-                }`}
+                } ${item.id === draggedItemId ? 'opacity-40 border-blue-500 bg-blue-50/50 scale-[0.98]' : ''}`}
+              style={{ WebkitUserSelect: 'none', WebkitTouchCallout: 'none' }}
             >
               <GripVertical size={16} className="text-gray-400" />
               <input
@@ -81,12 +114,12 @@ export const BrainDump: React.FC<BrainDumpProps> = ({
                 {item.text}
               </span>
 
-              {isInTimePlan && (
+              {isInTimePlan ? (
                 <span className="flex items-center gap-1 text-xs text-blue-600 bg-blue-100 px-2 py-0.5 rounded-full">
                   <Check size={12} />
                   시간표
                 </span>
-              )}
+              ) : null}
 
               <button
                 onClick={(e) => { e.stopPropagation(); onAddToTimePlan(item); }}
@@ -115,7 +148,7 @@ export const BrainDump: React.FC<BrainDumpProps> = ({
           );
         })}
       </div>
-      {!isMobile && (
+      {!isMobile ? (
         <div className="flex gap-2">
           <input
             type="text"
@@ -132,7 +165,7 @@ export const BrainDump: React.FC<BrainDumpProps> = ({
             <Plus size={16} />
           </button>
         </div>
-      )}
+      ) : null}
     </div>
   );
-};
+});
