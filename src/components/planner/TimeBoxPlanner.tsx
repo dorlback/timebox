@@ -465,7 +465,7 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
         <>
           <ErrorToast message={errorMessage} />
           <SuccessToast message={successMessage} />
-          <div className="h-[100svh] flex flex-col">
+          <div className="h-[100dvh] flex flex-col">
             <div className="relative flex-1 overflow-hidden">
               {/* 좌측 뷰 (할일/브레인덤프) */}
               <div
