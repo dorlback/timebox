@@ -65,7 +65,9 @@ export const TimeGrid: React.FC<TimeGridProps> = React.memo(({
           />
         ))}
 
-        <CurrentTimeIndicator pixelsPerMinute={pixelsPerMinute} date={date} isMobile={isMobile} />
+        {showCurrentTime ? (
+          <CurrentTimeIndicator pixelsPerMinute={pixelsPerMinute} date={date} isMobile={isMobile} />
+        ) : null}
       </div>
     </div>
   );
