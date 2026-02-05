@@ -73,14 +73,14 @@ export const TimeBlock: React.FC<TimeBlockProps> = React.memo(({
     clearTimeout(touchTimer);
   };
 
+  const isActive = isMobile && activeBlockId === block.id;
+
   const interactionStyles: React.CSSProperties = isMobile ? {
     userSelect: 'none',
     WebkitUserSelect: 'none',
     WebkitTouchCallout: 'none',
-    touchAction: 'none'
+    touchAction: isActive ? 'none' : 'pan-y'
   } : {};
-
-  const isActive = isMobile && activeBlockId === block.id;
 
   return (
     <div

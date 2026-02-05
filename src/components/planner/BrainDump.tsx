@@ -97,11 +97,11 @@ export const BrainDump: React.FC<BrainDumpProps> = React.memo(({
               onTouchEnd={handleTouchEnd}
               onTouchMove={handleTouchEnd}
               onContextMenu={(e) => e.preventDefault()}
-              className={`flex items-center gap-2 p-2 rounded border cursor-move transition-colors select-none touch-none ${isInTimePlan
+              className={`flex items-center gap-2 p-2 rounded border cursor-move transition-colors select-none ${isInTimePlan
                 ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/30'
                 : 'bg-muted/50 border-border hover:bg-muted'
                 } ${item.id === draggedItemId ? 'opacity-40 border-blue-500 bg-blue-50/50 scale-[0.98]' : ''}`}
-              style={{ WebkitUserSelect: 'none', WebkitTouchCallout: 'none' }}
+              style={{ WebkitUserSelect: 'none', WebkitTouchCallout: 'none', touchAction: 'pan-y' }}
             >
               <GripVertical size={16} className="text-gray-400" />
               <input

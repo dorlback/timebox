@@ -73,11 +73,11 @@ export const TodoList: React.FC<TodoListProps> = React.memo(({
               onTouchEnd={handleTouchEnd}
               onTouchMove={handleTouchEnd}
               onContextMenu={(e) => e.preventDefault()}
-              className={`flex items-center gap-2 p-2 bg-muted/30 rounded border border-border cursor-move hover:bg-muted transition-colors select-none touch-none ${
+              className={`flex items-center gap-2 p-2 bg-muted/30 rounded border border-border cursor-move hover:bg-muted transition-colors select-none ${
                 // 드래그 중인 아이템 강조
                 false ? 'opacity-50 border-blue-500 bg-blue-50' : ''
                 }`}
-              style={{ WebkitUserSelect: 'none', WebkitTouchCallout: 'none' }}
+              style={{ WebkitUserSelect: 'none', WebkitTouchCallout: 'none', touchAction: 'pan-y' }}
             >
               <GripVertical size={16} className="text-gray-400" />
               <input
