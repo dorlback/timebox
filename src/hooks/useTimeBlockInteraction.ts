@@ -14,6 +14,8 @@ export const useTimeBlockInteraction = (
 
   const scrollIntervalRef = useRef<number | null>(null);
   const lastClientYRef = useRef<number>(0);
+  const initialScrollTopRef = useRef<number>(0);
+  const gridTopAbsoluteRef = useRef<number>(0);
 
   const clearActiveBlock = useCallback(() => {
     setActiveBlockId(null);
@@ -46,49 +48,45 @@ export const useTimeBlockInteraction = (
       return;
     }
 
-    // 그 외 영역이면 드래그 모드
-    e.preventDefault();
-    e.stopPropagation();
+    // 드래그 시작 시점의 절대 좌표 정보 캐싱
+    const timeGrid = document.getElementById('time-grid');
+    const scrollContainer = document.getElementById('planner-scroll-container');
+    if (timeGrid && scrollContainer) {
+      gridTopAbsoluteRef.current = timeGrid.getBoundingClientRect().top + scrollContainer.scrollTop;
+      initialScrollTopRef.current = scrollContainer.scrollTop;
+    }
+
     setDraggingBlock(block.id);
     setDragOffset(offsetY);
   }, [activeBlockId]);
 
-  // 통합 위치 업데이트 로직
+  // 통합 위치 업데이트 로직 (절대 좌표 기반)
   const updatePosition = useCallback((clientY: number) => {
     if (resizingBlock === null && draggingBlock === null) return;
 
+    const scrollContainer = document.getElementById('planner-scroll-container');
+    if (!scrollContainer) return;
+
+    // 현재 스크롤 위치를 고려한 절대 Y 좌표 계산 (스크롤 중 지터 방지)
+    const absoluteY = clientY + scrollContainer.scrollTop - gridTopAbsoluteRef.current;
+
     if (resizingBlock !== null) {
-      const timeGridElement = document.getElementById('time-grid');
-      if (!timeGridElement) return;
-
-      const rect = timeGridElement.getBoundingClientRect();
-      const relativeY = clientY - rect.top;
-      const newMinutes = Math.round((relativeY) / 10) * 10;
-
+      const newMinutes = Math.round(absoluteY / 10) * 10;
       const block = timeBlocks.find(b => b.id === resizingBlock);
       if (!block) return;
 
       if (resizeEdge === 'top') {
         const clampedStart = Math.max(0, Math.min(block.endTime - 10, newMinutes));
         const hasConflict = checkTimeConflict(timeBlocks, resizingBlock, clampedStart, block.endTime);
-        if (!hasConflict) {
-          updateBlockTime(resizingBlock, clampedStart, block.endTime);
-        }
+        if (!hasConflict) updateBlockTime(resizingBlock, clampedStart, block.endTime);
       } else if (resizeEdge === 'bottom') {
         const clampedEnd = Math.min(1440, Math.max(block.startTime + 10, newMinutes));
         const hasConflict = checkTimeConflict(timeBlocks, resizingBlock, block.startTime, clampedEnd);
-        if (!hasConflict) {
-          updateBlockTime(resizingBlock, block.startTime, clampedEnd);
-        }
+        if (!hasConflict) updateBlockTime(resizingBlock, block.startTime, clampedEnd);
       }
     } else if (draggingBlock !== null) {
-      const timeGridElement = document.getElementById('time-grid');
-      if (!timeGridElement) return;
-
-      const rect = timeGridElement.getBoundingClientRect();
-      const relativeY = clientY - rect.top - dragOffset;
-
-      const newStartMinutes = Math.round((relativeY) / 10) * 10;
+      const relativeY = absoluteY - dragOffset;
+      const newStartMinutes = Math.round(relativeY / 10) * 10;
       const clampedStart = Math.max(0, Math.min(1440, newStartMinutes));
 
       const block = timeBlocks.find(b => b.id === draggingBlock);
@@ -96,13 +94,10 @@ export const useTimeBlockInteraction = (
 
       const duration = block.endTime - block.startTime;
       const newEnd = clampedStart + duration;
-
       if (newEnd > 1440) return;
 
       const hasConflict = checkTimeConflict(timeBlocks, draggingBlock, clampedStart, newEnd);
-      if (!hasConflict) {
-        updateBlockTime(draggingBlock, clampedStart, newEnd);
-      }
+      if (!hasConflict) updateBlockTime(draggingBlock, clampedStart, newEnd);
     }
   }, [resizingBlock, draggingBlock, timeBlocks, dragOffset, resizeEdge, updateBlockTime]);
 
@@ -128,7 +123,7 @@ export const useTimeBlockInteraction = (
     const scrollContainer = document.getElementById('planner-scroll-container');
     if (scrollContainer) {
       const scrollRect = scrollContainer.getBoundingClientRect();
-      const threshold = 40; // 감지 영역 축소 (100 -> 40)
+      const threshold = 60; // 감지 영역 소폭 확장 (40 -> 60)
 
       const isNearTop = clientY < scrollRect.top + threshold;
       const isNearBottom = clientY > scrollRect.bottom - threshold;
@@ -144,16 +139,18 @@ export const useTimeBlockInteraction = (
 
             let speed = 0;
             if (currentY < sRect.top + threshold) {
-              // 위로 갈수록 빨라짐, 1px부터 시작하도록 수정
-              speed = -Math.max(1, (sRect.top + threshold - currentY) / 3);
+              const dist = sRect.top + threshold - currentY;
+              // 지수 가속 곡선 적용 (최대 약 30px)
+              speed = -Math.max(2, Math.pow(dist / threshold, 1.5) * 35);
             } else if (currentY > sRect.bottom - threshold) {
-              // 아래로 갈수록 빨라짐, 1px부터 시작하도록 수정
-              speed = Math.max(1, (currentY - (sRect.bottom - threshold)) / 3);
+              const dist = currentY - (sRect.bottom - threshold);
+              // 지수 가속 곡선 적용 (최대 약 30px)
+              speed = Math.max(2, Math.pow(dist / threshold, 1.5) * 35);
             }
 
             if (speed !== 0) {
               container.scrollTop += speed;
-              // 스크롤이 발생했으므로 블록 위치도 재계산
+              // 스크롤 이동과 즉시 위치 동기화 (절대 좌표 시스템 덕분에 떨림 없음)
               updatePosition(currentY);
               scrollIntervalRef.current = requestAnimationFrame(scrollStep);
             } else {
