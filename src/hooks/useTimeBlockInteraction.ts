@@ -19,14 +19,16 @@ export const useTimeBlockInteraction = (
   const isDraggingRef = useRef<number | null>(null);
   const isResizingRef = useRef<number | null>(null);
 
+  // 드래그 중 시각적 프리뷰 오프셋 (CSS transform용)
+  const [dragPreviewOffset, setDragPreviewOffset] = useState<{ blockId: number; offsetY: number; type: 'drag' | 'resize-top' | 'resize-bottom' } | null>(null);
+
   const clearActiveBlock = useCallback(() => {
     setActiveBlockId(null);
   }, []);
 
-  // 통합 위치 업데이트 로직 (절대 좌표 기반 + 하이브리드 스냅)
-  const updatePosition = useCallback((
+  // 드래그 중 시각적 프리뷰 업데이트 (실제 데이터 변경 없음)
+  const updateDragPreview = useCallback((
     clientY: number,
-    snap: boolean = true,
     overrideDraggingId?: number | null,
     overrideResizingId?: number | null,
     overrideOffset?: number
@@ -44,44 +46,47 @@ export const useTimeBlockInteraction = (
     const absoluteY = clientY + scrollContainer.scrollTop - gridTopAbsoluteRef.current;
 
     if (rBlockId !== null) {
-      // 모든 결과값에 Math.round 적용하여 소수점 제거
-      const newMinutes = Math.round(snap ? Math.round(absoluteY / 10) * 10 : absoluteY);
+      // 리사이즈 프리뷰: 그리드 및 블록 최소 길이(10분) 제한
       const block = timeBlocks.find(b => b.id === rBlockId);
-      if (!block) return;
-
-      if (resizeEdge === 'top') {
-        const clampedStart = Math.max(0, Math.min(block.endTime - 10, newMinutes));
-        const hasConflict = checkTimeConflict(timeBlocks, rBlockId, clampedStart, block.endTime);
-        if (!hasConflict) updateBlockTime(rBlockId, Math.round(clampedStart), Math.round(block.endTime));
-      } else if (resizeEdge === 'bottom') {
-        const clampedEnd = Math.min(1440, Math.max(block.startTime + 10, newMinutes));
-        const hasConflict = checkTimeConflict(timeBlocks, rBlockId, block.startTime, clampedEnd);
-        if (!hasConflict) updateBlockTime(rBlockId, Math.round(block.startTime), Math.round(clampedEnd));
+      if (block) {
+        let clampedMinutes = Math.round(absoluteY);
+        if (resizeEdge === 'top') {
+          clampedMinutes = Math.max(0, Math.min(block.endTime - 10, clampedMinutes));
+        } else {
+          clampedMinutes = Math.min(1440, Math.max(block.startTime + 10, clampedMinutes));
+        }
+        setDragPreviewOffset({
+          blockId: rBlockId,
+          offsetY: clampedMinutes,
+          type: resizeEdge === 'top' ? 'resize-top' : 'resize-bottom'
+        });
       }
     } else if (dBlockId !== null) {
+      // 드래그 프리뷰: 블록이 그리드를 벗어나지 않도록 클램핑
       const relativeY = absoluteY - offset;
-      const newStartMinutes = Math.round(snap ? Math.round(relativeY / 10) * 10 : relativeY);
-      const clampedStart = Math.max(0, Math.min(1440, newStartMinutes));
+      const newStartMinutes = Math.round(relativeY);
 
       const block = timeBlocks.find(b => b.id === dBlockId);
-      if (!block) return;
-
-      const duration = block.endTime - block.startTime;
-      const newEnd = clampedStart + duration;
-      if (newEnd > 1440) return;
-
-      const hasConflict = checkTimeConflict(timeBlocks, dBlockId, clampedStart, newEnd);
-      if (!hasConflict) updateBlockTime(dBlockId, Math.round(clampedStart), Math.round(newEnd));
+      if (block) {
+        const duration = block.endTime - block.startTime;
+        const clampedStart = Math.max(0, Math.min(1440 - duration, newStartMinutes));
+        setDragPreviewOffset({
+          blockId: dBlockId,
+          offsetY: clampedStart,
+          type: 'drag'
+        });
+      }
     }
-  }, [resizingBlock, draggingBlock, timeBlocks, dragOffset, resizeEdge, updateBlockTime]);
+  }, [resizingBlock, draggingBlock, dragOffset, resizeEdge]);
 
-  // 스크롤 루프 시작 로직 분리
+
+  // 고속 자동 스크롤 로직
   const startScrollIfNeeded = useCallback((clientY: number) => {
     const scrollContainer = document.getElementById('planner-scroll-container');
     if (!scrollContainer) return;
 
     const scrollRect = scrollContainer.getBoundingClientRect();
-    const threshold = 60;
+    const threshold = 80; // 임계값 확대 (60 -> 80)
 
     const isNearTop = clientY < scrollRect.top + threshold;
     const isNearBottom = clientY > scrollRect.bottom - threshold;
@@ -98,17 +103,26 @@ export const useTimeBlockInteraction = (
           let speed = 0;
           if (currentY < sRect.top + threshold) {
             const dist = sRect.top + threshold - currentY;
-            speed = -Math.max(4, Math.pow(dist / threshold, 1.2) * 25);
+            // 고속 스크롤: 최소 10px, 최대 40px, 급격한 가속 (1.8 지수)
+            speed = -Math.max(10, Math.pow(dist / threshold, 1.8) * 40);
           } else if (currentY > sRect.bottom - threshold) {
             const dist = currentY - (sRect.bottom - threshold);
-            speed = Math.max(4, Math.pow(dist / threshold, 1.2) * 25);
+            // 고속 스크롤: 최소 10px, 최대 40px, 급격한 가속 (1.8 지수)
+            speed = Math.max(10, Math.pow(dist / threshold, 1.8) * 40);
           }
 
           if (speed !== 0) {
-            container.scrollTop += speed;
-            const shouldSnap = Math.abs(speed) < 10;
-            updatePosition(currentY, shouldSnap);
-            scrollIntervalRef.current = requestAnimationFrame(scrollStep);
+            // 실제 스크롤 가능 여부 확인 (상단/하단 경계 도달 시 중단)
+            const canScrollUp = container.scrollTop > 0;
+            const canScrollDown = container.scrollTop < container.scrollHeight - container.clientHeight;
+
+            if ((speed < 0 && canScrollUp) || (speed > 0 && canScrollDown)) {
+              container.scrollTop += speed;
+              updateDragPreview(currentY);
+              scrollIntervalRef.current = requestAnimationFrame(scrollStep);
+            } else {
+              scrollIntervalRef.current = null;
+            }
           } else {
             scrollIntervalRef.current = null;
           }
@@ -119,7 +133,7 @@ export const useTimeBlockInteraction = (
       cancelAnimationFrame(scrollIntervalRef.current);
       scrollIntervalRef.current = null;
     }
-  }, [updatePosition]);
+  }, [updateDragPreview]);
 
   const handleBlockMouseDown = useCallback((e: React.MouseEvent, block: TimeBlock) => {
     // 편집 모드 활성화 (모바일 롱프레스 등을 통해 호출될 때)
@@ -150,7 +164,7 @@ export const useTimeBlockInteraction = (
       setResizeEdge('top');
       isResizingRef.current = block.id;
       // 상태 업데이트 대기 없이 즉시 위치 갱신
-      updatePosition(e.clientY, true, null, block.id, offsetY);
+      updateDragPreview(e.clientY, null, block.id, offsetY);
       startScrollIfNeeded(e.clientY);
       return;
     } else if (offsetY >= blockHeight - resizeThreshold) {
@@ -160,7 +174,7 @@ export const useTimeBlockInteraction = (
       setResizeEdge('bottom');
       isResizingRef.current = block.id;
       // 상태 업데이트 대기 없이 즉시 위치 갱신
-      updatePosition(e.clientY, true, null, block.id, offsetY);
+      updateDragPreview(e.clientY, null, block.id, offsetY);
       startScrollIfNeeded(e.clientY);
       return;
     }
@@ -170,15 +184,17 @@ export const useTimeBlockInteraction = (
     isDraggingRef.current = block.id;
 
     // 상태 업데이트 대기 없이 즉시 위치 갱신 (모바일 롱프레스 즉시 드래그 연동 핵심)
-    updatePosition(e.clientY, true, block.id, null, offsetY);
+    updateDragPreview(e.clientY, block.id, null, offsetY);
     startScrollIfNeeded(e.clientY);
-  }, [activeBlockId, updatePosition, startScrollIfNeeded]);
+  }, [activeBlockId, updateDragPreview, startScrollIfNeeded]);
 
   const handleMouseMove = useCallback((e: MouseEvent | TouchEvent) => {
     // Ref를 사용하여 상태 업데이트 대기 없이 즉시 반응 가능 (모바일 롱프레스 연동 핵심)
-    if (isResizingRef.current === null && isDraggingRef.current === null) return;
+    const isInteracting = isResizingRef.current !== null || isDraggingRef.current !== null;
 
-    // 기본 스크롤 동작 방지 (자동 스크롤 제어를 위해)
+    if (!isInteracting) return;
+
+    // 상호작용 중에는 브라우저의 기본 스크롤 동작을 즉시 차단
     if (e.cancelable) {
       e.preventDefault();
     }
@@ -190,12 +206,50 @@ export const useTimeBlockInteraction = (
     if (clientY === undefined) return;
     lastClientYRef.current = clientY;
 
-    // 마우스 이동 시에는 항상 스냅 적용해서 정교하게
-    updatePosition(clientY, true);
+    // 드래그 중에는 프리뷰만 업데이트
+    updateDragPreview(clientY);
     startScrollIfNeeded(clientY);
-  }, [resizingBlock, draggingBlock, updatePosition, startScrollIfNeeded]);
+  }, [updateDragPreview, startScrollIfNeeded]);
 
   const handleMouseUp = useCallback(() => {
+    // 릴리즈 시 dragPreviewOffset을 사용하여 10분 단위로 스냅
+    if (dragPreviewOffset) {
+      const { blockId, offsetY, type } = dragPreviewOffset;
+      const block = timeBlocks.find(b => b.id === blockId);
+
+      if (block) {
+        if (type === 'drag') {
+          // 드래그: 시작 위치를 10분 단위로 스냅
+          const snappedStart = Math.max(0, Math.min(1440, Math.round(offsetY / 10) * 10));
+          const duration = block.endTime - block.startTime;
+          const snappedEnd = snappedStart + duration;
+
+          if (snappedEnd <= 1440) {
+            const hasConflict = checkTimeConflict(timeBlocks, blockId, snappedStart, snappedEnd);
+            if (!hasConflict) {
+              updateBlockTime(blockId, snappedStart, snappedEnd);
+            }
+          }
+        } else if (type === 'resize-top') {
+          // 상단 리사이즈: 시작 시간만 스냅
+          const snappedStart = Math.max(0, Math.min(block.endTime - 10, Math.round(offsetY / 10) * 10));
+          const hasConflict = checkTimeConflict(timeBlocks, blockId, snappedStart, block.endTime);
+          if (!hasConflict) {
+            updateBlockTime(blockId, snappedStart, block.endTime);
+          }
+        } else if (type === 'resize-bottom') {
+          // 하단 리사이즈: 종료 시간만 스냅
+          const snappedEnd = Math.min(1440, Math.max(block.startTime + 10, Math.round(offsetY / 10) * 10));
+          const hasConflict = checkTimeConflict(timeBlocks, blockId, block.startTime, snappedEnd);
+          if (!hasConflict) {
+            updateBlockTime(blockId, block.startTime, snappedEnd);
+          }
+        }
+      }
+    }
+
+    // 모든 상태 초기화
+    setDragPreviewOffset(null);
     setDraggingBlock(null);
     setDragOffset(0);
     setResizingBlock(null);
@@ -207,36 +261,37 @@ export const useTimeBlockInteraction = (
       cancelAnimationFrame(scrollIntervalRef.current);
       scrollIntervalRef.current = null;
     }
-  }, []);
+  }, [dragPreviewOffset, timeBlocks, updateBlockTime]);
 
   useEffect(() => {
-    if (draggingBlock !== null || resizingBlock !== null) {
-      const options = { passive: false };
+    const options = { passive: false };
 
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-      document.addEventListener('touchmove', handleMouseMove, options);
-      document.addEventListener('touchend', handleMouseUp);
+    // 이벤트 리스너 상시 등록 (모바일 롱프레스 즉각 반응을 위함)
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    document.addEventListener('touchmove', handleMouseMove, options);
+    document.addEventListener('touchend', handleMouseUp);
 
-      return () => {
-        document.removeEventListener('mousemove', handleMouseMove);
-        document.removeEventListener('mouseup', handleMouseUp);
-        document.removeEventListener('touchmove', handleMouseMove);
-        document.removeEventListener('touchend', handleMouseUp);
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener('touchmove', handleMouseMove);
+      document.removeEventListener('touchend', handleMouseUp);
 
-        if (scrollIntervalRef.current) {
-          cancelAnimationFrame(scrollIntervalRef.current);
-          scrollIntervalRef.current = null;
-        }
-      };
-    }
-  }, [draggingBlock, resizingBlock, handleMouseMove, handleMouseUp]);
+      if (scrollIntervalRef.current) {
+        cancelAnimationFrame(scrollIntervalRef.current);
+        scrollIntervalRef.current = null;
+      }
+    };
+  }, [handleMouseMove, handleMouseUp]);
 
   return {
     draggingBlock,
     resizingBlock,
     activeBlockId,
+    dragPreviewOffset,
     setActiveBlockId,
-    handleBlockMouseDown
+    handleBlockMouseDown,
+    clearActiveBlock
   };
 };

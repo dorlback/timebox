@@ -8,6 +8,7 @@ interface TimePlanProps {
   timeBlocks: TimeBlock[];
   draggingBlockId: number | null;
   resizingBlockId: number | null;
+  dragPreviewOffset?: { blockId: number; offsetY: number; type: 'drag' | 'resize-top' | 'resize-bottom' } | null;
   onDateChange: (year: number, month: number, day: number) => void;
   onDayOfWeekClick: (dayIndex: number) => void;
   onBlockMouseDown: (e: React.MouseEvent, block: TimeBlock) => void;
@@ -22,6 +23,7 @@ export const TimePlan: React.FC<TimePlanProps> = React.memo(({
   timeBlocks,
   draggingBlockId,
   resizingBlockId,
+  dragPreviewOffset,
   onDateChange,
   onDayOfWeekClick,
   onBlockMouseDown,
@@ -86,6 +88,7 @@ export const TimePlan: React.FC<TimePlanProps> = React.memo(({
           timeBlocks={timeBlocks}
           draggingBlockId={draggingBlockId}
           resizingBlockId={resizingBlockId}
+          dragPreviewOffset={dragPreviewOffset}
           onBlockMouseDown={onBlockMouseDown}
           onBlockEdit={onBlockEdit}
           showCurrentTime={isToday(date)}

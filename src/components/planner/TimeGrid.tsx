@@ -7,6 +7,7 @@ interface TimeGridProps {
   timeBlocks: TimeBlockType[];
   draggingBlockId: number | null;
   resizingBlockId: number | null;
+  dragPreviewOffset?: { blockId: number; offsetY: number; type: 'drag' | 'resize-top' | 'resize-bottom' } | null;
   onBlockMouseDown: (e: React.MouseEvent, block: TimeBlockType) => void;
   onBlockEdit: (block: TimeBlockType) => void;
   showCurrentTime?: boolean; // 오늘 날짜일 때만 true로 전달
@@ -23,6 +24,7 @@ export const TimeGrid: React.FC<TimeGridProps> = React.memo(({
   timeBlocks,
   draggingBlockId,
   resizingBlockId,
+  dragPreviewOffset,
   onBlockMouseDown,
   onBlockEdit,
   showCurrentTime = false,
@@ -58,6 +60,7 @@ export const TimeGrid: React.FC<TimeGridProps> = React.memo(({
             block={block}
             isDragging={draggingBlockId === block.id}
             isResizing={resizingBlockId === block.id}
+            dragPreviewOffset={dragPreviewOffset}
             onMouseDown={onBlockMouseDown}
             onEdit={onBlockEdit}
             isMobile={isMobile}

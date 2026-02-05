@@ -110,8 +110,10 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
     draggingBlock,
     resizingBlock,
     activeBlockId,
+    dragPreviewOffset,
     setActiveBlockId,
-    handleBlockMouseDown
+    handleBlockMouseDown,
+    clearActiveBlock
   } = useTimeBlockInteraction(timeBlocks || [], updateBlockTime);
 
   // 배경 클릭 시 편집 모드 해제
@@ -663,6 +665,7 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
                   timeBlocks={timeBlocks || []}
                   draggingBlockId={draggingBlock}
                   resizingBlockId={resizingBlock}
+                  dragPreviewOffset={dragPreviewOffset}
                   onDateChange={handleDateChange}
                   onDayOfWeekClick={handleDayOfWeekClick}
                   onBlockMouseDown={handleBlockMouseDown}
@@ -847,6 +850,7 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
                   timeBlocks={timeBlocks || []}
                   draggingBlockId={draggingBlock}
                   resizingBlockId={resizingBlock}
+                  dragPreviewOffset={dragPreviewOffset}
                   onDateChange={handleDateChange}
                   onDayOfWeekClick={handleDayOfWeekClick}
                   onBlockMouseDown={handleBlockMouseDown}

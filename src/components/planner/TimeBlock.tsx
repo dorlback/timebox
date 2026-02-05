@@ -7,6 +7,7 @@ interface TimeBlockProps {
   block: TimeBlockType;
   isDragging: boolean;
   isResizing: boolean;
+  dragPreviewOffset?: { blockId: number; offsetY: number; type: 'drag' | 'resize-top' | 'resize-bottom' } | null;
   onMouseDown: (e: React.MouseEvent, block: TimeBlockType) => void;
   onEdit: (block: TimeBlockType) => void;
   isMobile?: boolean;
@@ -17,6 +18,7 @@ export const TimeBlock: React.FC<TimeBlockProps> = React.memo(({
   block,
   isDragging,
   isResizing,
+  dragPreviewOffset,
   onMouseDown,
   onEdit,
   isMobile = false,
@@ -26,6 +28,25 @@ export const TimeBlock: React.FC<TimeBlockProps> = React.memo(({
   const height = (block.endTime - block.startTime) * 1;
   const color = getColorByIndex(block.colorIndex);
   const isCompleted = block.completed;
+
+  // 드래그 프리뷰 transform 계산
+  let transformY = 0;
+  let previewHeight = height;
+
+  if (dragPreviewOffset && dragPreviewOffset.blockId === block.id) {
+    if (dragPreviewOffset.type === 'drag') {
+      // 드래그: 시작 위치 이동
+      transformY = dragPreviewOffset.offsetY - block.startTime;
+    } else if (dragPreviewOffset.type === 'resize-top') {
+      // 상단 리사이즈: 시작 위치 변경
+      const newStart = dragPreviewOffset.offsetY;
+      transformY = newStart - block.startTime;
+      previewHeight = block.endTime - newStart;
+    } else if (dragPreviewOffset.type === 'resize-bottom') {
+      // 하단 리사이즈: 높이 변경
+      previewHeight = dragPreviewOffset.offsetY - block.startTime;
+    }
+  }
 
   // 텍스트 노출 로직 고도화 (v2/v5)
   const isInteracting = isDragging || isResizing;
@@ -45,6 +66,7 @@ export const TimeBlock: React.FC<TimeBlockProps> = React.memo(({
   const handleTouchStart = (e: React.TouchEvent) => {
     // 이미 편집 모드이면 롱프레스 필요 없음 (즉시 onMouseDown 트리거)
     if (isMobile && activeBlockId === block.id) {
+      e.stopPropagation(); // 부모 스크롤 등 간섭 방지
       const touch = e.touches[0];
       const simulatedEvent = {
         clientX: touch.clientX,
@@ -75,6 +97,7 @@ export const TimeBlock: React.FC<TimeBlockProps> = React.memo(({
         preventDefault: () => { },
       } as unknown as React.MouseEvent;
 
+      // 롱프레스 성공 시 시각적으로 진동 효과나 소리 등을 주면 좋으나 여기서는 즉시 드래그 활성화
       onMouseDown(simulatedEvent, block);
     }, 600);
   };
@@ -89,19 +112,24 @@ export const TimeBlock: React.FC<TimeBlockProps> = React.memo(({
     userSelect: 'none',
     WebkitUserSelect: 'none',
     WebkitTouchCallout: 'none',
-    touchAction: isActive ? 'none' : 'pan-y'
+    touchAction: (isActive || isDragging || isResizing) ? 'none' : 'pan-y'
   } : {};
 
   return (
     <div
-      className={`time-block-container absolute ${isMobile ? 'left-8 right-1' : 'left-12 right-0'} rounded px-2 py-1 transition-all ${isCompleted
+      className={`time-block-container absolute ${isMobile ? 'left-8 right-1' : 'left-12 right-0'} rounded px-2 py-1 ${isCompleted
         ? 'bg-gray-200 border-2 border-gray-400'
         : `${color.bg} border-2 ${color.border}`
         } ${isDragging ? 'opacity-70 shadow-lg cursor-move z-40 scale-[1.02]' : ''} ${isResizing ? 'opacity-70 shadow-lg z-40' : ''
         } ${isActive ? 'opacity-85 shadow-2xl z-40 ring-2 ring-blue-500 ring-offset-1' : ''} ${isCompleted ? '' : 'hover:brightness-95'}`}
       style={{
         top: `${top}px`,
-        height: `${height}px`,
+        height: `${previewHeight}px`,
+        transform: `translateY(${transformY}px)`,
+        // 릴리즈 시 부드럽게 붙는 애니메이션이 '바운스'로 느껴지므로 완전히 제거
+        // 즉각적으로 딱딱 끊기며 제자리를 찾아가도록 함
+        transition: 'none',
+        willChange: (isDragging || isResizing) ? 'transform, height' : 'auto',
         cursor: isDragging ? 'move' : 'default',
         zIndex: (isDragging || isResizing || isActive) ? 50 : 1,
         ...interactionStyles
