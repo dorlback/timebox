@@ -140,17 +140,17 @@ export const useTimeBlockInteraction = (
             let speed = 0;
             if (currentY < sRect.top + threshold) {
               const dist = sRect.top + threshold - currentY;
-              // 지수 가속 곡선 적용 (최대 약 30px)
-              speed = -Math.max(2, Math.pow(dist / threshold, 1.5) * 35);
+              // 가속 곡선 상향 및 배율 조정 (최대 속도 약 50px)
+              speed = -Math.max(5, Math.pow(dist / threshold, 2) * 50);
             } else if (currentY > sRect.bottom - threshold) {
               const dist = currentY - (sRect.bottom - threshold);
-              // 지수 가속 곡선 적용 (최대 약 30px)
-              speed = Math.max(2, Math.pow(dist / threshold, 1.5) * 35);
+              // 가속 곡선 상향 및 배율 조정 (최대 속도 약 50px)
+              speed = Math.max(5, Math.pow(dist / threshold, 2) * 50);
             }
 
             if (speed !== 0) {
               container.scrollTop += speed;
-              // 스크롤 이동과 즉시 위치 동기화 (절대 좌표 시스템 덕분에 떨림 없음)
+              // 스크롤 이동 직후 즉시 위치 계산 (고속 대처)
               updatePosition(currentY);
               scrollIntervalRef.current = requestAnimationFrame(scrollStep);
             } else {

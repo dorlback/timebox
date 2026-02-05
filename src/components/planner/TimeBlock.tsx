@@ -27,11 +27,14 @@ export const TimeBlock: React.FC<TimeBlockProps> = React.memo(({
   const color = getColorByIndex(block.colorIndex);
   const isCompleted = block.completed;
 
-  // 텍스트 노출 로직 고도화 (v2)
+  // 텍스트 노출 로직 고도화 (v2/v5)
+  const isInteracting = isDragging || isResizing;
   const duration = block.endTime - block.startTime;
-  const showFullContent = duration > 40; // 40분 초과일 때만 전체 노출
-  const showTitleOnly = duration >= 20 && duration <= 40; // 20~40분은 제목만
-  const showContent = duration >= 20;
+
+  // 드래그 중이 아닐 때의 기본 노출 기준
+  const showFullContent = !isInteracting && duration > 40;
+  const showTitleOnly = isInteracting || (duration >= 20 && duration <= 40);
+  const showContent = duration >= 20 || isInteracting;
 
   // 20분~40분 구간에서 제목 폰트 크기 동적 계산 (8px ~ 12px)
   const dynamicFontSize = showTitleOnly
@@ -158,7 +161,7 @@ export const TimeBlock: React.FC<TimeBlockProps> = React.memo(({
           >
             {block.text}
           </div>
-          {showFullContent && (
+          {showFullContent && !isInteracting && (
             <div
               className={`text-xs mt-1 flex justify-between items-center ${isCompleted
                 ? 'text-gray-500'
