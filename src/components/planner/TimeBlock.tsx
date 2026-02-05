@@ -61,15 +61,15 @@ export const TimeBlock: React.FC<TimeBlockProps> = React.memo(({
 
     // 롱프레스 타이머: 600ms 동안 누르고 있으면 편집 모드 활성화 및 드래그 시작
     const currentTarget = e.currentTarget;
-    const target = e.target;
 
     touchTimer = setTimeout(() => {
       const touch = e.touches[0];
+      // 롱프레스 완료 시점의 최신 터치 좌표 전달
       const simulatedEvent = {
         clientX: touch.clientX,
         clientY: touch.clientY,
         button: 0,
-        target: target,
+        target: e.target,
         currentTarget: currentTarget,
         stopPropagation: () => { },
         preventDefault: () => { },
@@ -117,6 +117,13 @@ export const TimeBlock: React.FC<TimeBlockProps> = React.memo(({
         onEdit(block);
       }}
       onContextMenu={(e) => isMobile && e.preventDefault()}
+      onWheel={(e) => {
+        // 드래그나 리사이즈 중에는 블록 위의 개별 스크롤 기능 차단
+        if (isDragging || isResizing) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      }}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
       onTouchMove={handleTouchEnd} // 움직이면 롱프레스 취소

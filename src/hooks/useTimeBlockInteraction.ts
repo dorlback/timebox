@@ -16,10 +16,110 @@ export const useTimeBlockInteraction = (
   const lastClientYRef = useRef<number>(0);
   const initialScrollTopRef = useRef<number>(0);
   const gridTopAbsoluteRef = useRef<number>(0);
+  const isDraggingRef = useRef<number | null>(null);
+  const isResizingRef = useRef<number | null>(null);
 
   const clearActiveBlock = useCallback(() => {
     setActiveBlockId(null);
   }, []);
+
+  // 통합 위치 업데이트 로직 (절대 좌표 기반 + 하이브리드 스냅)
+  const updatePosition = useCallback((
+    clientY: number,
+    snap: boolean = true,
+    overrideDraggingId?: number | null,
+    overrideResizingId?: number | null,
+    overrideOffset?: number
+  ) => {
+    const dBlockId = overrideDraggingId !== undefined ? overrideDraggingId : draggingBlock;
+    const rBlockId = overrideResizingId !== undefined ? overrideResizingId : resizingBlock;
+    const offset = overrideOffset !== undefined ? overrideOffset : dragOffset;
+
+    if (rBlockId === null && dBlockId === null) return;
+
+    const scrollContainer = document.getElementById('planner-scroll-container');
+    if (!scrollContainer) return;
+
+    // 현재 스크롤 위치를 고려한 절대 Y 좌표 계산
+    const absoluteY = clientY + scrollContainer.scrollTop - gridTopAbsoluteRef.current;
+
+    if (rBlockId !== null) {
+      // 모든 결과값에 Math.round 적용하여 소수점 제거
+      const newMinutes = Math.round(snap ? Math.round(absoluteY / 10) * 10 : absoluteY);
+      const block = timeBlocks.find(b => b.id === rBlockId);
+      if (!block) return;
+
+      if (resizeEdge === 'top') {
+        const clampedStart = Math.max(0, Math.min(block.endTime - 10, newMinutes));
+        const hasConflict = checkTimeConflict(timeBlocks, rBlockId, clampedStart, block.endTime);
+        if (!hasConflict) updateBlockTime(rBlockId, Math.round(clampedStart), Math.round(block.endTime));
+      } else if (resizeEdge === 'bottom') {
+        const clampedEnd = Math.min(1440, Math.max(block.startTime + 10, newMinutes));
+        const hasConflict = checkTimeConflict(timeBlocks, rBlockId, block.startTime, clampedEnd);
+        if (!hasConflict) updateBlockTime(rBlockId, Math.round(block.startTime), Math.round(clampedEnd));
+      }
+    } else if (dBlockId !== null) {
+      const relativeY = absoluteY - offset;
+      const newStartMinutes = Math.round(snap ? Math.round(relativeY / 10) * 10 : relativeY);
+      const clampedStart = Math.max(0, Math.min(1440, newStartMinutes));
+
+      const block = timeBlocks.find(b => b.id === dBlockId);
+      if (!block) return;
+
+      const duration = block.endTime - block.startTime;
+      const newEnd = clampedStart + duration;
+      if (newEnd > 1440) return;
+
+      const hasConflict = checkTimeConflict(timeBlocks, dBlockId, clampedStart, newEnd);
+      if (!hasConflict) updateBlockTime(dBlockId, Math.round(clampedStart), Math.round(newEnd));
+    }
+  }, [resizingBlock, draggingBlock, timeBlocks, dragOffset, resizeEdge, updateBlockTime]);
+
+  // 스크롤 루프 시작 로직 분리
+  const startScrollIfNeeded = useCallback((clientY: number) => {
+    const scrollContainer = document.getElementById('planner-scroll-container');
+    if (!scrollContainer) return;
+
+    const scrollRect = scrollContainer.getBoundingClientRect();
+    const threshold = 60;
+
+    const isNearTop = clientY < scrollRect.top + threshold;
+    const isNearBottom = clientY > scrollRect.bottom - threshold;
+
+    if (isNearTop || isNearBottom) {
+      if (!scrollIntervalRef.current) {
+        const scrollStep = () => {
+          const container = document.getElementById('planner-scroll-container');
+          if (!container) return;
+
+          const currentY = lastClientYRef.current;
+          const sRect = container.getBoundingClientRect();
+
+          let speed = 0;
+          if (currentY < sRect.top + threshold) {
+            const dist = sRect.top + threshold - currentY;
+            speed = -Math.max(4, Math.pow(dist / threshold, 1.2) * 25);
+          } else if (currentY > sRect.bottom - threshold) {
+            const dist = currentY - (sRect.bottom - threshold);
+            speed = Math.max(4, Math.pow(dist / threshold, 1.2) * 25);
+          }
+
+          if (speed !== 0) {
+            container.scrollTop += speed;
+            const shouldSnap = Math.abs(speed) < 10;
+            updatePosition(currentY, shouldSnap);
+            scrollIntervalRef.current = requestAnimationFrame(scrollStep);
+          } else {
+            scrollIntervalRef.current = null;
+          }
+        };
+        scrollIntervalRef.current = requestAnimationFrame(scrollStep);
+      }
+    } else if (scrollIntervalRef.current) {
+      cancelAnimationFrame(scrollIntervalRef.current);
+      scrollIntervalRef.current = null;
+    }
+  }, [updatePosition]);
 
   const handleBlockMouseDown = useCallback((e: React.MouseEvent, block: TimeBlock) => {
     // 편집 모드 활성화 (모바일 롱프레스 등을 통해 호출될 때)
@@ -27,82 +127,56 @@ export const useTimeBlockInteraction = (
     if ((e.target as HTMLElement).closest('.edit-button')) return;
 
     const rect = e.currentTarget.getBoundingClientRect();
+    const scrollContainer = document.getElementById('planner-scroll-container');
+    const timeGrid = document.getElementById('time-grid');
+
+    // 터치/마우스 시작 시점의 좌표 및 스크롤 정보 즉시 캐싱
+    if (timeGrid && scrollContainer) {
+      gridTopAbsoluteRef.current = timeGrid.getBoundingClientRect().top + scrollContainer.scrollTop;
+      initialScrollTopRef.current = scrollContainer.scrollTop;
+    }
+
     const offsetY = e.clientY - rect.top;
     const blockHeight = rect.height;
+    lastClientYRef.current = e.clientY;
 
     // 모바일이고 편집 모드인 블록인 경우, 핸들이 보여지므로 리사이즈 감지 영역을 조금 더 넓게 설정(20px)
     const resizeThreshold = (activeBlockId === block.id) ? 20 : 10;
 
-    // 상단 영역 또는 하단 영역이면 리사이즈 모드
     if (offsetY <= resizeThreshold) {
       e.preventDefault();
       e.stopPropagation();
       setResizingBlock(block.id);
       setResizeEdge('top');
+      isResizingRef.current = block.id;
+      // 상태 업데이트 대기 없이 즉시 위치 갱신
+      updatePosition(e.clientY, true, null, block.id, offsetY);
+      startScrollIfNeeded(e.clientY);
       return;
     } else if (offsetY >= blockHeight - resizeThreshold) {
       e.preventDefault();
       e.stopPropagation();
       setResizingBlock(block.id);
       setResizeEdge('bottom');
+      isResizingRef.current = block.id;
+      // 상태 업데이트 대기 없이 즉시 위치 갱신
+      updatePosition(e.clientY, true, null, block.id, offsetY);
+      startScrollIfNeeded(e.clientY);
       return;
-    }
-
-    // 드래그 시작 시점의 절대 좌표 정보 캐싱
-    const timeGrid = document.getElementById('time-grid');
-    const scrollContainer = document.getElementById('planner-scroll-container');
-    if (timeGrid && scrollContainer) {
-      gridTopAbsoluteRef.current = timeGrid.getBoundingClientRect().top + scrollContainer.scrollTop;
-      initialScrollTopRef.current = scrollContainer.scrollTop;
     }
 
     setDraggingBlock(block.id);
     setDragOffset(offsetY);
-  }, [activeBlockId]);
+    isDraggingRef.current = block.id;
 
-  // 통합 위치 업데이트 로직 (절대 좌표 기반)
-  const updatePosition = useCallback((clientY: number) => {
-    if (resizingBlock === null && draggingBlock === null) return;
-
-    const scrollContainer = document.getElementById('planner-scroll-container');
-    if (!scrollContainer) return;
-
-    // 현재 스크롤 위치를 고려한 절대 Y 좌표 계산 (스크롤 중 지터 방지)
-    const absoluteY = clientY + scrollContainer.scrollTop - gridTopAbsoluteRef.current;
-
-    if (resizingBlock !== null) {
-      const newMinutes = Math.round(absoluteY / 10) * 10;
-      const block = timeBlocks.find(b => b.id === resizingBlock);
-      if (!block) return;
-
-      if (resizeEdge === 'top') {
-        const clampedStart = Math.max(0, Math.min(block.endTime - 10, newMinutes));
-        const hasConflict = checkTimeConflict(timeBlocks, resizingBlock, clampedStart, block.endTime);
-        if (!hasConflict) updateBlockTime(resizingBlock, clampedStart, block.endTime);
-      } else if (resizeEdge === 'bottom') {
-        const clampedEnd = Math.min(1440, Math.max(block.startTime + 10, newMinutes));
-        const hasConflict = checkTimeConflict(timeBlocks, resizingBlock, block.startTime, clampedEnd);
-        if (!hasConflict) updateBlockTime(resizingBlock, block.startTime, clampedEnd);
-      }
-    } else if (draggingBlock !== null) {
-      const relativeY = absoluteY - dragOffset;
-      const newStartMinutes = Math.round(relativeY / 10) * 10;
-      const clampedStart = Math.max(0, Math.min(1440, newStartMinutes));
-
-      const block = timeBlocks.find(b => b.id === draggingBlock);
-      if (!block) return;
-
-      const duration = block.endTime - block.startTime;
-      const newEnd = clampedStart + duration;
-      if (newEnd > 1440) return;
-
-      const hasConflict = checkTimeConflict(timeBlocks, draggingBlock, clampedStart, newEnd);
-      if (!hasConflict) updateBlockTime(draggingBlock, clampedStart, newEnd);
-    }
-  }, [resizingBlock, draggingBlock, timeBlocks, dragOffset, resizeEdge, updateBlockTime]);
+    // 상태 업데이트 대기 없이 즉시 위치 갱신 (모바일 롱프레스 즉시 드래그 연동 핵심)
+    updatePosition(e.clientY, true, block.id, null, offsetY);
+    startScrollIfNeeded(e.clientY);
+  }, [activeBlockId, updatePosition, startScrollIfNeeded]);
 
   const handleMouseMove = useCallback((e: MouseEvent | TouchEvent) => {
-    if (resizingBlock === null && draggingBlock === null) return;
+    // Ref를 사용하여 상태 업데이트 대기 없이 즉시 반응 가능 (모바일 롱프레스 연동 핵심)
+    if (isResizingRef.current === null && isDraggingRef.current === null) return;
 
     // 기본 스크롤 동작 방지 (자동 스크롤 제어를 위해)
     if (e.cancelable) {
@@ -116,63 +190,18 @@ export const useTimeBlockInteraction = (
     if (clientY === undefined) return;
     lastClientYRef.current = clientY;
 
-    // 현재 마우스 위치에 따른 즉시 업데이트
-    updatePosition(clientY);
-
-    // 자동 스크롤 여부 판단
-    const scrollContainer = document.getElementById('planner-scroll-container');
-    if (scrollContainer) {
-      const scrollRect = scrollContainer.getBoundingClientRect();
-      const threshold = 60; // 감지 영역 소폭 확장 (40 -> 60)
-
-      const isNearTop = clientY < scrollRect.top + threshold;
-      const isNearBottom = clientY > scrollRect.bottom - threshold;
-
-      if (isNearTop || isNearBottom) {
-        if (!scrollIntervalRef.current) {
-          const scrollStep = () => {
-            const container = document.getElementById('planner-scroll-container');
-            if (!container) return;
-
-            const currentY = lastClientYRef.current;
-            const sRect = container.getBoundingClientRect();
-
-            let speed = 0;
-            if (currentY < sRect.top + threshold) {
-              const dist = sRect.top + threshold - currentY;
-              // 가속 곡선 상향 및 배율 조정 (최대 속도 약 50px)
-              speed = -Math.max(5, Math.pow(dist / threshold, 2) * 50);
-            } else if (currentY > sRect.bottom - threshold) {
-              const dist = currentY - (sRect.bottom - threshold);
-              // 가속 곡선 상향 및 배율 조정 (최대 속도 약 50px)
-              speed = Math.max(5, Math.pow(dist / threshold, 2) * 50);
-            }
-
-            if (speed !== 0) {
-              container.scrollTop += speed;
-              // 스크롤 이동 직후 즉시 위치 계산 (고속 대처)
-              updatePosition(currentY);
-              scrollIntervalRef.current = requestAnimationFrame(scrollStep);
-            } else {
-              scrollIntervalRef.current = null;
-            }
-          };
-          scrollIntervalRef.current = requestAnimationFrame(scrollStep);
-        }
-      } else {
-        if (scrollIntervalRef.current) {
-          cancelAnimationFrame(scrollIntervalRef.current);
-          scrollIntervalRef.current = null;
-        }
-      }
-    }
-  }, [resizingBlock, draggingBlock, updatePosition]);
+    // 마우스 이동 시에는 항상 스냅 적용해서 정교하게
+    updatePosition(clientY, true);
+    startScrollIfNeeded(clientY);
+  }, [resizingBlock, draggingBlock, updatePosition, startScrollIfNeeded]);
 
   const handleMouseUp = useCallback(() => {
     setDraggingBlock(null);
     setDragOffset(0);
     setResizingBlock(null);
     setResizeEdge(null);
+    isDraggingRef.current = null;
+    isResizingRef.current = null;
 
     if (scrollIntervalRef.current) {
       cancelAnimationFrame(scrollIntervalRef.current);
