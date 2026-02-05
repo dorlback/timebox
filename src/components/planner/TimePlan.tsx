@@ -81,7 +81,7 @@ export const TimePlan: React.FC<TimePlanProps> = React.memo(({
         <DateSelector date={date} onDateChange={onDateChange} isMobile={isMobile} />
       </div>
 
-      <div className="flex-1 overflow-y-auto custom-scrollbar" ref={scrollContainerRef}>
+      <div id="planner-scroll-container" className="flex-1 overflow-y-auto custom-scrollbar" ref={scrollContainerRef}>
         <TimeGrid
           timeBlocks={timeBlocks}
           draggingBlockId={draggingBlockId}

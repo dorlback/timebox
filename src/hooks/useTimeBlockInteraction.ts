@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { TimeBlock } from '../types/planner';
 import { checkTimeConflict } from '../utils/timeUtils';
 
@@ -11,6 +11,9 @@ export const useTimeBlockInteraction = (
   const [resizingBlock, setResizingBlock] = useState<number | null>(null);
   const [resizeEdge, setResizeEdge] = useState<'top' | 'bottom' | null>(null);
   const [activeBlockId, setActiveBlockId] = useState<number | null>(null); // 현재 편집 모드인 블록
+
+  const scrollIntervalRef = useRef<number | null>(null);
+  const lastClientYRef = useRef<number>(0);
 
   const clearActiveBlock = useCallback(() => {
     setActiveBlockId(null);
@@ -48,12 +51,11 @@ export const useTimeBlockInteraction = (
     e.stopPropagation();
     setDraggingBlock(block.id);
     setDragOffset(offsetY);
-  }, []);
+  }, [activeBlockId]);
 
-  const handleMouseMove = useCallback((e: MouseEvent | TouchEvent) => {
+  // 통합 위치 업데이트 로직
+  const updatePosition = useCallback((clientY: number) => {
     if (resizingBlock === null && draggingBlock === null) return;
-
-    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
 
     if (resizingBlock !== null) {
       const timeGridElement = document.getElementById('time-grid');
@@ -68,23 +70,18 @@ export const useTimeBlockInteraction = (
 
       if (resizeEdge === 'top') {
         const clampedStart = Math.max(0, Math.min(block.endTime - 10, newMinutes));
-
         const hasConflict = checkTimeConflict(timeBlocks, resizingBlock, clampedStart, block.endTime);
         if (!hasConflict) {
           updateBlockTime(resizingBlock, clampedStart, block.endTime);
         }
       } else if (resizeEdge === 'bottom') {
         const clampedEnd = Math.min(1440, Math.max(block.startTime + 10, newMinutes));
-
         const hasConflict = checkTimeConflict(timeBlocks, resizingBlock, block.startTime, clampedEnd);
         if (!hasConflict) {
           updateBlockTime(resizingBlock, block.startTime, clampedEnd);
         }
       }
-      return;
-    }
-
-    if (draggingBlock !== null) {
+    } else if (draggingBlock !== null) {
       const timeGridElement = document.getElementById('time-grid');
       if (!timeGridElement) return;
 
@@ -107,13 +104,83 @@ export const useTimeBlockInteraction = (
         updateBlockTime(draggingBlock, clampedStart, newEnd);
       }
     }
-  }, [draggingBlock, dragOffset, resizingBlock, resizeEdge, timeBlocks, updateBlockTime]);
+  }, [resizingBlock, draggingBlock, timeBlocks, dragOffset, resizeEdge, updateBlockTime]);
+
+  const handleMouseMove = useCallback((e: MouseEvent | TouchEvent) => {
+    if (resizingBlock === null && draggingBlock === null) return;
+
+    // 기본 스크롤 동작 방지 (자동 스크롤 제어를 위해)
+    if (e.cancelable) {
+      e.preventDefault();
+    }
+
+    const clientY = 'touches' in e
+      ? (e as TouchEvent).touches[0]?.clientY
+      : (e as MouseEvent).clientY;
+
+    if (clientY === undefined) return;
+    lastClientYRef.current = clientY;
+
+    // 현재 마우스 위치에 따른 즉시 업데이트
+    updatePosition(clientY);
+
+    // 자동 스크롤 여부 판단
+    const scrollContainer = document.getElementById('planner-scroll-container');
+    if (scrollContainer) {
+      const scrollRect = scrollContainer.getBoundingClientRect();
+      const threshold = 40; // 감지 영역 축소 (100 -> 40)
+
+      const isNearTop = clientY < scrollRect.top + threshold;
+      const isNearBottom = clientY > scrollRect.bottom - threshold;
+
+      if (isNearTop || isNearBottom) {
+        if (!scrollIntervalRef.current) {
+          const scrollStep = () => {
+            const container = document.getElementById('planner-scroll-container');
+            if (!container) return;
+
+            const currentY = lastClientYRef.current;
+            const sRect = container.getBoundingClientRect();
+
+            let speed = 0;
+            if (currentY < sRect.top + threshold) {
+              // 위로 갈수록 빨라짐, 1px부터 시작하도록 수정
+              speed = -Math.max(1, (sRect.top + threshold - currentY) / 3);
+            } else if (currentY > sRect.bottom - threshold) {
+              // 아래로 갈수록 빨라짐, 1px부터 시작하도록 수정
+              speed = Math.max(1, (currentY - (sRect.bottom - threshold)) / 3);
+            }
+
+            if (speed !== 0) {
+              container.scrollTop += speed;
+              // 스크롤이 발생했으므로 블록 위치도 재계산
+              updatePosition(currentY);
+              scrollIntervalRef.current = requestAnimationFrame(scrollStep);
+            } else {
+              scrollIntervalRef.current = null;
+            }
+          };
+          scrollIntervalRef.current = requestAnimationFrame(scrollStep);
+        }
+      } else {
+        if (scrollIntervalRef.current) {
+          cancelAnimationFrame(scrollIntervalRef.current);
+          scrollIntervalRef.current = null;
+        }
+      }
+    }
+  }, [resizingBlock, draggingBlock, updatePosition]);
 
   const handleMouseUp = useCallback(() => {
     setDraggingBlock(null);
     setDragOffset(0);
     setResizingBlock(null);
     setResizeEdge(null);
+
+    if (scrollIntervalRef.current) {
+      cancelAnimationFrame(scrollIntervalRef.current);
+      scrollIntervalRef.current = null;
+    }
   }, []);
 
   useEffect(() => {
@@ -130,6 +197,11 @@ export const useTimeBlockInteraction = (
         document.removeEventListener('mouseup', handleMouseUp);
         document.removeEventListener('touchmove', handleMouseMove);
         document.removeEventListener('touchend', handleMouseUp);
+
+        if (scrollIntervalRef.current) {
+          cancelAnimationFrame(scrollIntervalRef.current);
+          scrollIntervalRef.current = null;
+        }
       };
     }
   }, [draggingBlock, resizingBlock, handleMouseMove, handleMouseUp]);
