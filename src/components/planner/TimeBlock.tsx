@@ -153,7 +153,7 @@ export const TimeBlock: React.FC<TimeBlockProps> = React.memo(({
           <div
             className={`text-xs mt-1 flex justify-between items-center ${isCompleted
               ? 'text-gray-500'
-              : color.text.replace('900', '700')
+              : color.subtext
               }`}
           >
             <span className="pointer-events-none">

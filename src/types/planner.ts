@@ -37,6 +37,7 @@ export interface PastelColor {
   bg: string;
   border: string;
   text: string;
+  subtext: string; // 보조 텍스트 색상 (700 계열)
 }
 
 export interface PlannerResponse {
