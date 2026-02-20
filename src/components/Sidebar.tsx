@@ -4,30 +4,28 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import DarkModeToggle from "@/components/DarkModeToggle";
+import { useUser } from "@/hooks/useUser";
 
 interface SidebarProps {
-  userName?: string;
-  userType?: string;
-  userAvatar?: string;
-  planName?: string;
   defaultExpanded?: boolean;
 }
 
 export default function Sidebar({
-  userName = "Alex Johnson",
-  userType = "Pro Member",
-  userAvatar = "https://lh3.googleusercontent.com/aida-public/AB6AXuDtju3C_Ol36H8MSHEVmRaGPvqbKdm8zS5IVUYW1PsOEu3H_23VwqeQ2wii9kysrpmALEFdCSNzwAYUSC1A0OZ3D8GNGrzULFMqQKsbyEJQT3_MSjG0SJ-gd5OPli2ndmMnCynLM4Cq0sF5QtN0uuA2hafU0McIESxVyt3C26SggpzVGpW0YrItW44b1fN879wavE2-A2ATfH00fqFZ0RpRx_YDQ-CPPvwXsGtjZ9-DnQtXtyp-OtoFLFIiiltviSXCou4jMBlQvpg",
-  planName = "Premium Plan",
   defaultExpanded = true
 }: SidebarProps) {
   const pathname = usePathname();
+  const { user, isLoading: isUserLoading } = useUser();
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
 
   const navItems = [
+    { name: "Planner", href: "/timebox", icon: "calendar_today" },
     { name: "Dash", href: "/dashboard", icon: "dashboard" },
     { name: "Profile", href: "/mypage", icon: "person" },
-    { name: "Planner", href: "/timebox", icon: "calendar_today" },
   ];
+
+  const userName = user?.displayName || "사용자";
+  const userType = user?.isAdmin ? "관리자" : "Pro 멤버";
+  const userAvatar = user?.avatarUrl || "";
 
   return (
     <aside
@@ -52,11 +50,11 @@ export default function Sidebar({
 
         <div className={`transition-all duration-300 whitespace-nowrap overflow-hidden ${isExpanded ? "opacity-100 max-w-full block" : "opacity-0 max-w-0 hidden"}`}>
           <h1 className="text-lg font-bold leading-tight tracking-tight text-card-foreground">Productivity Pro</h1>
-          <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">{planName}</p>
+          <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Premium Plan</p>
         </div>
       </div>
 
-      <nav className={`flex-1 overflow-y-auto space-y-2 py-4 ${isExpanded ? "px-4" : "px-3"}`}>
+      <nav className={`flex-1 overflow-y-auto space-y-2 py-4 ${isExpanded ? "px-4" : "px-2"}`}>
         {navItems.map((item) => {
           const isActive = pathname === item.href || (pathname?.startsWith(item.href) && item.href !== '/');
           return (
@@ -79,24 +77,20 @@ export default function Sidebar({
         })}
       </nav>
 
-      <div className={`p-4 mt-auto border-t border-border flex flex-col gap-4 ${!isExpanded ? "items-center px-2" : ""}`}>
+      <div className={`p-4 mt-auto border-t border-border flex flex-col gap-4 ${!isExpanded ? "items-center px-1" : ""}`}>
 
-        {/* User Profile Section */}
-        <div className={`rounded-xl flex items-center gap-3 ${isExpanded ? "bg-muted/30 p-4" : "p-2 bg-transparent justify-center"}`}>
-          <div
-            className="w-10 h-10 rounded-full bg-cover bg-center border-2 border-background shrink-0 shadow-sm"
-            style={{ backgroundImage: `url('${userAvatar}')` }}
-            title={!isExpanded ? userName : undefined}
-          />
-          <div className={`flex-1 min-w-0 transition-all duration-300 whitespace-nowrap overflow-hidden ${isExpanded ? "opacity-100 max-w-full block" : "opacity-0 max-w-0 hidden"}`}>
-            <p className="text-sm font-bold truncate text-card-foreground">{userName}</p>
-            <p className="text-xs text-muted-foreground truncate">{userType}</p>
+        <div className="relative">
+          <div className={`rounded-xl flex items-center gap-3 ${isExpanded ? "bg-muted/30 p-3" : "p-1 bg-transparent justify-center"}`}>
+            <div
+              className={`w-10 h-10 rounded-full bg-cover bg-center border-2 border-background shrink-0 shadow-sm ${isUserLoading ? 'animate-pulse bg-muted' : ''}`}
+              style={userAvatar ? { backgroundImage: `url('${userAvatar}')` } : {}}
+              title={!isExpanded ? userName : undefined}
+            />
+            <div className={`flex-1 min-w-0 transition-all duration-300 whitespace-nowrap overflow-hidden ${isExpanded ? "opacity-100 max-w-full block" : "opacity-0 max-w-0 hidden"}`}>
+              <p className="text-sm font-bold truncate text-card-foreground">{isUserLoading ? "로딩 중..." : userName}</p>
+              <p className="text-[10px] text-muted-foreground truncate font-medium">{userType}</p>
+            </div>
           </div>
-          {isExpanded && (
-            <button className="text-muted-foreground hover:text-primary transition-colors shrink-0">
-              <span className="material-symbols-outlined text-[20px]">settings</span>
-            </button>
-          )}
         </div>
 
         {/* Global Dark Mode Toggle */}

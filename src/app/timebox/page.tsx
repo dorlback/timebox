@@ -45,7 +45,7 @@ export default function Page() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-background text-foreground transition-colors">
-      <Sidebar userName={user.displayName} userAvatar={user.avatarUrl} defaultExpanded={false} />
+      <Sidebar defaultExpanded={false} />
       <main className="flex-1 overflow-y-auto w-full">
         <TimeBoxPlanner CurrentUser={user} />
       </main>
