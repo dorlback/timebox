@@ -19,9 +19,9 @@ export const en: typeof ko = {
     add: "Add",
     close: "Close",
     details: "Details",
+    next: "Next",
     deleteConfirm: "Are you sure you want to delete?",
     theme: "Theme",
-    next: "Next",
   },
   sidebar: {
     planner: "Planner",
@@ -39,6 +39,8 @@ export const en: typeof ko = {
     completedGoals: "Completed Goals",
     score: "Score",
     goalMilestone: "{count} Goals",
+    searchPlaceholder: "Search tasks, goals...",
+    noResults: "No matches found",
   },
   planner: {
     title: "TIME BOX Planner",

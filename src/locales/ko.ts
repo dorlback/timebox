@@ -37,6 +37,8 @@ export const ko = {
     completedGoals: "완료한 목표",
     score: "점수",
     goalMilestone: "{count}개 목표",
+    searchPlaceholder: "할 일, 목표 검색...",
+    noResults: "검색 결과가 없습니다.",
   },
   planner: {
     title: "TIME BOX 플래너",
