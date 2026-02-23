@@ -34,12 +34,12 @@ export default function Dashboard() {
               <DashboardSearch />
 
               <div className="flex items-center gap-2">
-                <button className="w-10 h-10 flex items-center justify-center rounded-xl bg-muted text-muted-foreground hover:text-primary transition-colors">
+                {/* <button className="w-10 h-10 flex items-center justify-center rounded-xl bg-muted text-muted-foreground hover:text-primary transition-colors">
                   <span className="material-symbols-outlined">notifications</span>
                 </button>
                 <button className="w-10 h-10 flex items-center justify-center rounded-xl bg-muted text-muted-foreground hover:text-primary transition-colors">
                   <span className="material-symbols-outlined">chat_bubble</span>
-                </button>
+                </button> */}
               </div>
             </div>
           </header>
