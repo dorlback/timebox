@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import DarkModeToggle from "@/components/DarkModeToggle";
 import { useUser } from "@/hooks/useUser";
+import { useTranslation } from "@/contexts/LanguageContext";
 
 interface SidebarProps {
   defaultExpanded?: boolean;
@@ -14,17 +15,18 @@ export default function Sidebar({
   defaultExpanded = true
 }: SidebarProps) {
   const pathname = usePathname();
+  const { t } = useTranslation();
   const { user, isLoading: isUserLoading } = useUser();
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
 
   const navItems = [
-    { name: "Planner", href: "/timebox", icon: "calendar_today" },
-    { name: "Dash", href: "/dashboard", icon: "dashboard" },
-    { name: "Profile", href: "/mypage", icon: "person" },
+    { name: t('sidebar.planner'), href: "/timebox", icon: "calendar_today" },
+    { name: t('sidebar.dashboard'), href: "/dashboard", icon: "dashboard" },
+    { name: t('sidebar.profile'), href: "/mypage", icon: "person" },
   ];
 
-  const userName = user?.displayName || "사용자";
-  const userType = user?.isAdmin ? "관리자" : "Pro 멤버";
+  const userName = user?.displayName || t('common.anonymous');
+  const userType = user?.isAdmin ? t('common.admin') : t('common.proMember');
   const userAvatar = user?.avatarUrl || "";
 
   return (
@@ -36,7 +38,7 @@ export default function Sidebar({
       <button
         onClick={() => setIsExpanded(!isExpanded)}
         className="absolute -right-3 top-7 w-6 h-6 bg-background border border-border rounded-full flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary shadow-sm z-50 transition-colors"
-        aria-label={isExpanded ? "Collapse Sidebar" : "Expand Sidebar"}
+        aria-label={isExpanded ? t('sidebar.collapse') : t('sidebar.expand')}
       >
         <span className="material-symbols-outlined text-[14px]">
           {isExpanded ? "chevron_left" : "chevron_right"}
@@ -50,7 +52,7 @@ export default function Sidebar({
 
         <div className={`transition-all duration-300 whitespace-nowrap overflow-hidden ${isExpanded ? "opacity-100 max-w-full block" : "opacity-0 max-w-0 hidden"}`}>
           <h1 className="text-lg font-bold leading-tight tracking-tight text-card-foreground">Productivity Pro</h1>
-          <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Premium Plan</p>
+          <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">{t('common.premium')}</p>
         </div>
       </div>
 
@@ -87,8 +89,8 @@ export default function Sidebar({
               title={!isExpanded ? userName : undefined}
             />
             <div className={`flex-1 min-w-0 transition-all duration-300 whitespace-nowrap overflow-hidden ${isExpanded ? "opacity-100 max-w-full block" : "opacity-0 max-w-0 hidden"}`}>
-              <p className="text-sm font-bold truncate text-card-foreground">{isUserLoading ? "로딩 중..." : userName}</p>
-              <p className="text-[10px] text-muted-foreground truncate font-medium">{userType}</p>
+              <p className="text-sm font-bold truncate text-card-foreground">{isUserLoading ? t('common.loading') : userName}</p>
+              {/* <p className="text-[10px] text-muted-foreground truncate font-medium">{userType}</p> */}
             </div>
           </div>
         </div>

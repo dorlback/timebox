@@ -1,6 +1,7 @@
 import React from 'react';
 import { GripVertical, Plus, Trash2, ArrowUp, Clock, Check, X } from 'lucide-react';
 import { BrainDumpItem } from '@/types/planner';
+import { useTranslation } from '@/contexts/LanguageContext';
 
 interface BrainDumpProps {
   items: BrainDumpItem[];
@@ -39,6 +40,8 @@ export const BrainDump: React.FC<BrainDumpProps> = React.memo(({
   onItemDoubleClick,
   draggedItemId = null
 }) => {
+  const { t } = useTranslation();
+
   return (
     <div
       className="brain-dump-container p-4 bg-card rounded-lg shadow border border-border transition-colors min-h-[150px]"
@@ -46,12 +49,12 @@ export const BrainDump: React.FC<BrainDumpProps> = React.memo(({
       onDrop={(e) => onDrop(e)}
     >
       <div className="flex items-center justify-between mb-3">
-        <h2 className="font-semibold text-muted-foreground">BRAIN DUMP</h2>
+        <h2 className="font-semibold text-muted-foreground uppercase">{t('planner.brainDump')}</h2>
         {isMobile && onOpenAddModal ? (
           <button
             onClick={onOpenAddModal}
             className="p-2 flex justify-center items-center rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
-            aria-label="새 항목 추가"
+            aria-label={t('planner.addGoal')}
           >
             <Plus size={18} />
           </button>
@@ -118,7 +121,7 @@ export const BrainDump: React.FC<BrainDumpProps> = React.memo(({
               {isInTimePlan ? (
                 <span className="flex items-center gap-1 text-xs text-blue-600 bg-blue-100 px-2 py-0.5 rounded-full">
                   <Check size={12} />
-                  시간표
+                  {t('planner.timePlan')}
                 </span>
               ) : null}
 
@@ -128,14 +131,14 @@ export const BrainDump: React.FC<BrainDumpProps> = React.memo(({
                   ? 'text-red-500 hover:text-red-700'
                   : 'text-green-500 hover:text-green-700'
                   }`}
-                title={isInTimePlan ? '시간표에서 제거' : '시간표에 추가'}
+                title={isInTimePlan ? t('planner.removeFromTimePlan') : t('planner.addToTimePlan')}
               >
                 {isInTimePlan ? <Clock size={14} /> : <Clock size={14} />}
               </button>
               <button
                 onClick={(e) => { e.stopPropagation(); onMoveToTodo(item); }}
                 className="text-blue-500 hover:text-blue-700"
-                title="Todo List로 이동"
+                title={t('planner.moveBrainDump')}
               >
                 <ArrowUp size={14} />
               </button>
@@ -156,7 +159,7 @@ export const BrainDump: React.FC<BrainDumpProps> = React.memo(({
             value={newItemText}
             onChange={(e) => onNewItemTextChange(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && onAddItem()}
-            placeholder="새 항목 추가..."
+            placeholder={t('planner.addGoalPlaceholder')}
             className="flex-1 px-3 py-2 border border-input rounded text-sm bg-card text-foreground placeholder-muted-foreground"
           />
           <button

@@ -71,26 +71,51 @@ export async function deleteProfile(id: string) {
   if (error) throw error;
 }
 
-// 본인 회원 완전 탈퇴
+// 본인 회원 탈퇴 (Soft Delete: 30일 유예 기간 적용)
 export async function withdrawAccount() {
   const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
 
-  // 1. DB에 만든 delete_user_account 함수 실행
-  const { error } = await supabase.rpc('delete_user_account');
+  if (!user) throw new Error("로그인이 필요합니다.");
+
+  // profiles 테이블의 deleted_at 컬럼에 현재 시간 기록
+  const { error } = await supabase
+    .from('profiles')
+    .update({ deleted_at: new Date().toISOString() })
+    .eq('id', user.id);
 
   if (error) {
-    console.error('탈퇴 처리 중 에러:', error.message);
+    console.error('탈퇴 신청 중 에러:', error.message);
     throw error;
   }
 
-  // 2. 계정이 삭제되었으므로 클라이언트 세션도 로그아웃 처리
+  // 로그아웃 처리
   await supabase.auth.signOut();
-
-  // 3. 필요한 경우 메인 페이지로 이동
   window.location.href = '/';
 }
 
-// 관리자가 회원 완전 삭제
+// 계정 복구 (Soft Delete 해제)
+export async function reactivateAccount() {
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) throw new Error("로그인이 필요합니다.");
+
+  // deleted_at을 다시 null로 설정
+  const { error } = await supabase
+    .from('profiles')
+    .update({ deleted_at: null })
+    .eq('id', user.id);
+
+  if (error) {
+    console.error('계정 복구 중 에러:', error.message);
+    throw error;
+  }
+
+  return true;
+}
+
+// 관리자가 회원 완전 삭제 (기존 RPC 사용 가능)
 export async function forceDeleteAccount(userId: string) {
   const { error } = await supabase.rpc('admin_delete_user', {
     target_user_id: userId

@@ -15,10 +15,15 @@ export class User {
     public email: string,
     public displayName: string,
     public avatarUrl: string,
+    public location: string,
+    public birthday: string,
+    public description: string,
     public phone: string,
-    public isAdmin: boolean, // boolean 타입으로 정의
+    public language: string,
+    public isAdmin: boolean,
     public createdAt: Date,
-    public updatedAt: Date
+    public updatedAt: Date,
+    public deletedAt: Date | null
   ) { }
 
   /**
@@ -30,10 +35,15 @@ export class User {
       authData.email ?? '',
       profileData?.display_name ?? authData.raw_user_meta_data?.full_name ?? '익명 유저',
       profileData?.avatar_url ?? authData.raw_user_meta_data?.avatar_url ?? '',
+      profileData?.location ?? '',
+      profileData?.birthday ?? '',
+      profileData?.description ?? '',
       authData.phone ?? '',
-      profileData?.is_admin ?? false, // DB의 boolean 값 그대로 사용
+      profileData?.language ?? 'ko',
+      profileData?.is_admin ?? false,
       new Date(authData.created_at),
-      new Date(profileData?.updated_at ?? authData.created_at)
+      new Date(profileData?.updated_at ?? authData.created_at),
+      profileData?.deleted_at ? new Date(profileData.deleted_at) : null
     );
   }
 }

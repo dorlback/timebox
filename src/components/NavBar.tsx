@@ -23,7 +23,7 @@ export default function NavBar({ user }: NavBarProps) {
       <div className="flex items-center gap-3">
         <DarkModeToggle />
         {user ? (
-          <Link href="/login" >
+          <Link href="/mypage" >
             <span className="text-sm text-muted-foreground">{user.email}</span>
           </Link>
         ) : (

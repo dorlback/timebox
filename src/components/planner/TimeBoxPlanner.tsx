@@ -1,4 +1,7 @@
+'use client';
+
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { BrainDumpItem, TodoItem, TimeBlock } from '@/types/planner';
 import { useErrorToast } from '@/hooks/useErrorToast';
 import { useTimeBlockInteraction } from '@/hooks/useTimeBlockInteraction';
@@ -20,11 +23,36 @@ import { TimePlan } from './TimePlan';
 import { BrainDumpAddModal } from './BrainDumpAddModal';
 import { ItemDetailModal } from './ItemDetailModal';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
+import { useTranslation } from '@/contexts/LanguageContext';
 
 
 const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
+  const { t } = useTranslation();
   const { isDark, toggleDark, mounted } = useDarkMode();
-  const [date, setDate] = useState(new Date());
+
+  // URL에서 날짜 파라미터 가져오기
+  const searchParams = useSearchParams();
+  const dateParam = searchParams.get('date');
+
+  // 초기 날짜 설정 (파라미터가 있으면 해당 날짜로, 없으면 오늘로)
+  const [date, setDate] = useState(() => {
+    if (dateParam) {
+      const parsed = new Date(dateParam);
+      if (!isNaN(parsed.getTime())) return parsed;
+    }
+    return new Date();
+  });
+
+  // 파라미터가 변경될 때 날짜 업데이트
+  useEffect(() => {
+    if (dateParam) {
+      const parsed = new Date(dateParam);
+      if (!isNaN(parsed.getTime())) {
+        setDate(parsed);
+      }
+    }
+  }, [dateParam]);
+
   const { errorMessage, showError } = useErrorToast();
   const { successMessage, showSuccess } = useSuccessToast();
 
@@ -596,7 +624,7 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
     <div className="h-[100dvh] bg-background transition-colors">
       {loading ? (
         <div className="absolute inset-0 bg-white/50 dark:bg-black/50 z-50 flex items-center justify-center">
-          <div className="text-blue-500 font-bold">데이터 불러오는 중...</div>
+          <div className="text-blue-500 font-bold">{t('common.loading')}</div>
         </div>
       ) : null}
 
@@ -722,7 +750,7 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" /><polyline points="17 21 17 13 7 13 7 21" /><polyline points="7 3 7 8 15 8" />
                   </svg>
-                  저장
+                  {t('common.save')}
                 </button>
               </div>
             </div>

@@ -1,7 +1,10 @@
+'use client';
+
 import React, { forwardRef } from 'react';
 import DatePicker from 'react-datepicker';
 import { addDays, subDays } from 'date-fns';
-import { ko } from 'date-fns/locale';
+import { ko, enUS } from 'date-fns/locale';
+import { useTranslation } from '@/contexts/LanguageContext';
 
 // 스타일 임포트 (전역 CSS에 추가 권장)
 import "react-datepicker/dist/react-datepicker.css";
@@ -17,6 +20,8 @@ export const DateSelector: React.FC<DateSelectorProps> = ({
   onDateChange,
   isMobile = false
 }) => {
+  const { t, locale } = useTranslation();
+  const dateLocale = locale === 'ko' ? ko : enUS;
 
   // 공통 날짜 업데이트 로직
   const handleDateUpdate = (newDate: Date | null) => {
@@ -68,7 +73,7 @@ export const DateSelector: React.FC<DateSelectorProps> = ({
         <button
           onClick={goYesterday}
           className={`${isMobile ? 'px-2' : 'px-3'} h-full hover:bg-muted transition-colors border-r border-border text-muted-foreground hover:text-foreground`}
-          title="어제"
+          title={t('common.yesterday')}
         >
           <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
             <path d="M15 18l-6-6 6-6" />
@@ -79,8 +84,8 @@ export const DateSelector: React.FC<DateSelectorProps> = ({
         <DatePicker
           selected={date}
           onChange={handleDateUpdate}
-          locale={ko}
-          dateFormat={isMobile ? "MM/dd (eee)" : "yyyy년 MM월 dd일 (eee)"}
+          locale={dateLocale}
+          dateFormat={locale === 'ko' ? (isMobile ? "MM/dd (eee)" : "yyyy년 MM월 dd일 (eee)") : (isMobile ? "MM/dd (eee)" : "MMMM d, yyyy (eee)")}
           customInput={<CustomInput />}
           popperPlacement="bottom-start"
           portalId="root-portal"
@@ -90,7 +95,7 @@ export const DateSelector: React.FC<DateSelectorProps> = ({
         <button
           onClick={goTomorrow}
           className={`${isMobile ? 'px-2' : 'px-3'} h-full hover:bg-muted transition-colors border-l border-border text-muted-foreground hover:text-foreground`}
-          title="내일"
+          title={t('common.tomorrow')}
         >
           <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
             <path d="M9 18l6-6-6-6" />
@@ -102,7 +107,7 @@ export const DateSelector: React.FC<DateSelectorProps> = ({
         onClick={() => handleDateUpdate(new Date())}
         className={`${isMobile ? 'min-h-8' : 'min-h-10'} px-4  text-xs font-bold text-primary bg-primary/10 hover:bg-primary/20 rounded-lg transition-colors border border-primary/20`}
       >
-        오늘
+        {t('common.today')}
       </button>
     </div>
   );

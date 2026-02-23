@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Moon, Sun, LayoutDashboard, User, Calendar, Save, RefreshCw } from 'lucide-react';
 import { useDarkMode } from '@/hooks/useDarkMode';
+import { useTranslation } from '@/contexts/LanguageContext';
 
 interface MobileBottomNavProps {
   onSave?: () => void;
@@ -14,6 +15,7 @@ interface MobileBottomNavProps {
 
 export function MobileBottomNav({ onSave, activeView, onViewToggle }: MobileBottomNavProps) {
   const pathname = usePathname();
+  const { t } = useTranslation();
   const { isDark, toggleDark, mounted } = useDarkMode();
 
   const isPlanner = pathname === '/timebox';
@@ -27,22 +29,22 @@ export function MobileBottomNav({ onSave, activeView, onViewToggle }: MobileBott
           <>
             <Link href="/dashboard" className="flex flex-col items-center justify-center gap-0.5 px-3 pb-1 transition-all text-muted-foreground hover:text-primary">
               <LayoutDashboard size={20} />
-              <span className="text-[10px] font-medium">대시보드</span>
+              <span className="text-[10px] font-medium">{t('sidebar.dashboard')}</span>
             </Link>
             <Link href="/mypage" className="flex flex-col items-center justify-center gap-0.5 px-3 pb-1 transition-all text-muted-foreground hover:text-primary">
               <User size={20} />
-              <span className="text-[10px] font-medium">프로필</span>
+              <span className="text-[10px] font-medium">{t('sidebar.profile')}</span>
             </Link>
           </>
         ) : (
           <>
             <Link href="/timebox" className="flex flex-col items-center justify-center gap-0.5 px-3 pb-1 transition-all text-muted-foreground hover:text-primary">
               <Calendar size={20} />
-              <span className="text-[10px] font-medium">플래너</span>
+              <span className="text-[10px] font-medium">{t('sidebar.planner')}</span>
             </Link>
             <Link href="/dashboard" className={`flex flex-col items-center justify-center gap-0.5 px-3 pb-1 transition-all ${pathname === '/dashboard' ? 'text-primary' : 'text-muted-foreground hover:text-primary'}`}>
               <LayoutDashboard size={20} />
-              <span className="text-[10px] font-medium">대시보드</span>
+              <span className="text-[10px] font-medium">{t('sidebar.dashboard')}</span>
             </Link>
           </>
         )}
@@ -70,28 +72,28 @@ export function MobileBottomNav({ onSave, activeView, onViewToggle }: MobileBott
               className="flex flex-col items-center justify-center gap-0.5 px-3 pb-1 transition-all text-muted-foreground hover:text-primary"
             >
               {mounted ? (isDark ? <Sun size={20} /> : <Moon size={20} />) : <div className="w-5 h-5" />}
-              <span className="text-[10px] font-medium">테마</span>
+              <span className="text-[10px] font-medium">{t('common.theme')}</span>
             </button>
             <button
               onClick={onSave}
               className="flex flex-col items-center justify-center gap-0.5 px-3 pb-1 transition-all text-muted-foreground hover:text-primary"
             >
               <Save size={20} />
-              <span className="text-[10px] font-medium">저장</span>
+              <span className="text-[10px] font-medium">{t('common.save')}</span>
             </button>
           </>
         ) : (
           <>
             <Link href="/mypage" className={`flex flex-col items-center justify-center gap-0.5 px-3 pb-1 transition-all ${pathname === '/mypage' ? 'text-primary' : 'text-muted-foreground hover:text-primary'}`}>
               <User size={20} />
-              <span className="text-[10px] font-medium">프로필</span>
+              <span className="text-[10px] font-medium">{t('sidebar.profile')}</span>
             </Link>
             <button
               onClick={toggleDark}
               className="flex flex-col items-center justify-center gap-0.5 px-3 pb-1 transition-all text-muted-foreground hover:text-primary"
             >
               {mounted ? (isDark ? <Sun size={20} /> : <Moon size={20} />) : <div className="w-5 h-5" />}
-              <span className="text-[10px] font-medium">테마</span>
+              <span className="text-[10px] font-medium">{t('common.theme')}</span>
             </button>
           </>
         )}

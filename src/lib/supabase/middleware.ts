@@ -40,7 +40,7 @@ export async function updateSession(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
   // 로그인 없이 접근 가능한 페이지
-  const publicRoutes = ["/", "/login", "/signin", "/auth"];
+  const publicRoutes = ["/", "/login", "/signin", "/auth", "/terms", "/privacy"];
   const isPublicRoute = publicRoutes.some((route) =>
     route === "/" ? pathname === "/" : pathname.startsWith(route)
   );
@@ -52,19 +52,30 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // admin 페이지 접근 체크 (프로필 정보 기반)
-  if (user && pathname.startsWith("/admin")) {
+  // 탈퇴 신청 계정 체크 및 보호 (프로필 정보 기반)
+  if (user) {
     const { data: profile } = await supabase
       .from("profiles")
-      .select("is_admin")
+      .select("is_admin, deleted_at")
       .eq("id", user.id)
       .single();
 
-    if (!profile?.is_admin) {
+    // 1. 탈퇴 신청 상태인 경우 /mypage 이외의 보호된 페이지 접근 차단
+    if (profile?.deleted_at) {
+      if (!isPublicRoute && pathname !== "/mypage") {
+        const url = request.nextUrl.clone();
+        url.pathname = "/mypage";
+        return NextResponse.redirect(url);
+      }
+    }
+
+    // 2. admin 페이지 접근 체크
+    if (pathname.startsWith("/admin") && !profile?.is_admin) {
       const url = request.nextUrl.clone();
       url.pathname = "/";
       return NextResponse.redirect(url);
     }
   }
+
   return supabaseResponse;
 }

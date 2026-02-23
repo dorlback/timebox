@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Edit2, Save, Trash2, Clock, ChevronUp, ChevronDown } from 'lucide-react';
 import { formatTimeDisplay } from '@/utils/timeUtils';
+import { useTranslation } from '@/contexts/LanguageContext';
 
 interface ItemDetailModalProps {
   isOpen: boolean;
@@ -29,6 +30,7 @@ export const ItemDetailModal: React.FC<ItemDetailModalProps> = ({
   isMobile = false,
   timeBlocks = []
 }) => {
+  const { t } = useTranslation();
   const [isEditing, setIsEditing] = useState(false);
   const [editedText, setEditedText] = useState('');
   const [editedNotes, setEditedNotes] = useState('');
@@ -51,7 +53,7 @@ export const ItemDetailModal: React.FC<ItemDetailModalProps> = ({
 
   const handleSave = () => {
     if (item.type === 'time-block' && endMinutes <= startMinutes) {
-      alert('종료 시간은 시작 시간 이후여야 합니다.');
+      alert(t('planner.timeError'));
       return;
     }
 
@@ -67,10 +69,10 @@ export const ItemDetailModal: React.FC<ItemDetailModalProps> = ({
 
   const getTitle = () => {
     switch (item.type) {
-      case 'brain-dump': return '브레인덤프';
-      case 'todo-list': return '할 일';
-      case 'time-block': return '일정';
-      default: return '상세 정보';
+      case 'brain-dump': return t('planner.brainDump');
+      case 'todo-list': return t('sidebar.planner');
+      case 'time-block': return t('sidebar.planner');
+      default: return t('common.details');
     }
   };
 
@@ -201,7 +203,7 @@ export const ItemDetailModal: React.FC<ItemDetailModalProps> = ({
                 value={editedText}
                 onChange={(e) => setEditedText(e.target.value)}
                 className="w-full bg-transparent text-xl font-black text-foreground placeholder-muted-foreground/20 outline-none border-b-2 border-primary/30 focus:border-primary transition-all pb-2"
-                placeholder="일정 제목을 적어주세요"
+                placeholder={t('planner.addGoalPlaceholder')}
                 autoFocus
               />
             ) : (
@@ -261,7 +263,7 @@ export const ItemDetailModal: React.FC<ItemDetailModalProps> = ({
                 onChange={(e) => setEditedNotes(e.target.value)}
                 rows={4}
                 className="w-full p-5 rounded-[1.8rem] bg-muted/40 text-foreground placeholder-muted-foreground/30 outline-none focus:ring-4 focus:ring-primary/5 transition-all resize-none text-base md:text-sm leading-relaxed border-2 border-transparent focus:border-primary/10"
-                placeholder="어떤 구체적인 계획이 있나요?"
+                placeholder={t('planner.addGoalPlaceholder')}
               />
             ) : (
               <div className="p-5 rounded-[1.8rem] bg-muted/20 text-foreground text-sm leading-relaxed min-h-[100px] border border-border/20 shadow-inner">
@@ -283,14 +285,14 @@ export const ItemDetailModal: React.FC<ItemDetailModalProps> = ({
                 onClick={() => setIsEditing(false)}
                 className="flex-1 py-4 rounded-[1.5rem] text-xs font-black text-muted-foreground/60 hover:bg-muted transition-all active:scale-95"
               >
-                취소
+                {t('common.cancel')}
               </button>
               <button
                 onClick={handleSave}
                 className="flex-[2] py-4 rounded-[1.5rem] bg-primary text-primary-foreground text-xs font-black shadow-xl shadow-primary/20 hover:opacity-95 transition-all active:scale-95 flex items-center justify-center gap-2"
               >
                 <Save size={16} />
-                저장하기
+                {t('common.save')}
               </button>
             </>
           ) : (
@@ -298,7 +300,7 @@ export const ItemDetailModal: React.FC<ItemDetailModalProps> = ({
               {onDelete && (
                 <button
                   onClick={() => {
-                    if (confirm('정말 삭제하시겠습니까?')) {
+                    if (confirm(t('common.deleteConfirm'))) {
                       onDelete(item.id);
                       onClose();
                     }
@@ -313,12 +315,12 @@ export const ItemDetailModal: React.FC<ItemDetailModalProps> = ({
                 className="flex-1 py-4 rounded-[1.5rem] bg-primary text-background text-xs font-black shadow-xl hover:opacity-90 transition-all active:scale-95 flex items-center justify-center gap-1.5"
               >
                 <Edit2 size={16} />
-                수정하기
+                {t('common.edit')}
               </button>
             </>
           )}
         </div>
       </div>
-    </div>
+    </div >
   );
 };

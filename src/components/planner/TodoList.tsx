@@ -1,6 +1,7 @@
 import React from 'react';
 import { GripVertical, Trash2, ArrowDown } from 'lucide-react';
 import { TodoItem } from '@/types/planner';
+import { useTranslation } from '@/contexts/LanguageContext';
 
 interface TodoListProps {
   items: TodoItem[];
@@ -24,14 +25,16 @@ export const TodoList: React.FC<TodoListProps> = React.memo(({
   onDrop,
   onItemDoubleClick
 }) => {
+  const { t } = useTranslation();
+
   return (
     <div
       className="todo-list-container bg-card rounded-lg shadow p-4 transition-colors border border-border min-h-[150px]"
       onDragOver={onDragOver}
       onDrop={(e) => onDrop(e)}
     >
-      <h2 className="font-semibold mb-3 text-muted-foreground">TO DO LIST</h2>
-      <div className="text-xs text-muted-foreground mb-2">최대 5개</div>
+      <h2 className="font-semibold mb-3 text-muted-foreground uppercase">{t('sidebar.planner')}</h2>
+      <div className="text-xs text-muted-foreground mb-2">{t('planner.todoMax')}</div>
       <div className="space-y-2">
         {items.map((item) => {
           let touchTimer: NodeJS.Timeout;
@@ -93,7 +96,7 @@ export const TodoList: React.FC<TodoListProps> = React.memo(({
               <button
                 onClick={(e) => { e.stopPropagation(); onMoveToBrainDump(item); }}
                 className="text-orange-500 hover:text-orange-700"
-                title="Brain Dump로 이동"
+                title={t('planner.moveTodo')}
               >
                 <ArrowDown size={14} />
               </button>
@@ -108,7 +111,7 @@ export const TodoList: React.FC<TodoListProps> = React.memo(({
         })}
         {items.length === 0 && (
           <div className="text-center text-muted-foreground text-sm py-8 border-2 border-dashed border-border rounded">
-            Brain Dump에서 항목을 드래그하세요
+            {t('planner.todoEmpty')}
           </div>
         )}
       </div>

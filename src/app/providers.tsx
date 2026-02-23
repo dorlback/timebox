@@ -3,6 +3,7 @@
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createContext, useContext, useEffect, useState } from 'react'
+import { LanguageProvider } from '@/contexts/LanguageContext'
 
 interface ThemeContextType {
   isDark: boolean;
@@ -53,9 +54,11 @@ export default function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeContext.Provider value={{ isDark, toggleDark, mounted }}>
-        {children}
-      </ThemeContext.Provider>
+      <LanguageProvider>
+        <ThemeContext.Provider value={{ isDark, toggleDark, mounted }}>
+          {children}
+        </ThemeContext.Provider>
+      </LanguageProvider>
     </QueryClientProvider>
   )
 }
