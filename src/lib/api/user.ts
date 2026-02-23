@@ -122,3 +122,16 @@ export async function forceDeleteAccount(userId: string) {
   });
   if (error) throw error;
 }
+
+// 회원 탈퇴 피드백 저장
+export async function saveWithdrawalFeedback(data: { email?: string; reason: string; feedback?: string }) {
+  const supabase = createClient();
+  const { error } = await supabase
+    .from('withdrawal_feedback')
+    .insert(data);
+
+  if (error) {
+    console.error('피드백 저장 중 에러:', error.message);
+    throw error;
+  }
+}

@@ -19,6 +19,7 @@ export const ko = {
     details: "상세 정보",
     deleteConfirm: "정말 삭제하시겠습니까?",
     theme: "테마",
+    next: "다음",
   },
   sidebar: {
     planner: "플래너",
@@ -93,8 +94,19 @@ export const ko = {
       warning2: "설정된 프로필 정보 및 지역 정보가 삭제됩니다.",
       warning3: "프리미엄 구독이 있는 경우 즉시 혜택이 중지됩니다.",
       action: "탈퇴 절차 이해했으며, 진행하겠습니다.",
-      typeConfirm: "확인을 위해 아래에 '탈퇴'을 입력해 주세요.",
+      typeConfirm: "확인을 위해 아래에 '{confirmText}'을 입력해 주세요.",
       inputPlaceholder: "탈퇴",
+      reasonTitle: "탈퇴하시는 이유가 궁금해요",
+      reasonDescription: "보내주신 피드백은 더 나은 서비스를 만드는 데 큰 도움이 됩니다.",
+      reasons: {
+        rejoin: "탈퇴 후 재가입",
+        lackOfFeatures: "기능이 부족함",
+        missingFeature: "원하는 기능이 없음",
+        other: "기타",
+      },
+      feedbackPlaceholder: "서비스에 대한 의견을 자유롭게 남겨주세요 (선택사항)",
+      otherPlaceholder: "어떤 점이 불편하셨나요? 상세히 알려주시면 개선하도록 노력하겠습니다.",
+      finalAction: "의견 제출하고 탈퇴하기",
     },
     recovery: {
       title: "다시 오신 것을 환영합니다!",

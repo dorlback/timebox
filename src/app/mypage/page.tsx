@@ -10,7 +10,7 @@ import { WithdrawConfirmationModal } from "@/components/profile/WithdrawConfirma
 import { RecoveryModal } from "@/components/profile/RecoveryModal";
 import { MyPageSkeleton } from "@/components/profile/MyPageSkeleton";
 import { createClient } from "@/lib/supabase/client";
-import { withdrawAccount, reactivateAccount } from "@/lib/api/user";
+import { withdrawAccount, reactivateAccount, saveWithdrawalFeedback } from "@/lib/api/user";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
@@ -63,9 +63,18 @@ export default function MyPage() {
     }
   };
 
-  const handleWithdraw = async () => {
+  const handleWithdraw = async (feedbackData: { reason: string; feedback: string }) => {
     try {
       setIsWithdrawing(true);
+
+      // 1. 피드백 저장
+      await saveWithdrawalFeedback({
+        email: user?.email,
+        reason: feedbackData.reason,
+        feedback: feedbackData.feedback
+      });
+
+      // 2. 계정 탈퇴(비활성화) 처리
       await withdrawAccount();
       // Logic handled in api function redirects to /
     } catch (error) {

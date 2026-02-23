@@ -11,7 +11,7 @@ type TranslationSchema = typeof ko;
 interface LanguageContextType {
   locale: Locale;
   setLocale: (locale: Locale) => void;
-  t: (key: string) => string;
+  t: (key: string, options?: { returnObjects?: boolean;[key: string]: any }) => any;
   isI18nLoading: boolean;
 }
 
@@ -44,7 +44,7 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   }, [user, updateProfile]);
 
-  const t = useCallback((path: string): string => {
+  const t = useCallback((path: string, options?: { returnObjects?: boolean;[key: string]: any }): any => {
     const keys = path.split('.');
     let current: any = translations[locale];
 
@@ -57,7 +57,25 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       }
     }
 
-    return typeof current === 'string' ? current : path;
+    // Handle returnObjects
+    if (options?.returnObjects) {
+      return current;
+    }
+
+    // Handle strings and interpolation
+    if (typeof current === 'string') {
+      let result = current;
+      if (options) {
+        Object.entries(options).forEach(([key, value]) => {
+          if (key !== 'returnObjects') {
+            result = result.replace(new RegExp(`{${key}}`, 'g'), String(value));
+          }
+        });
+      }
+      return result;
+    }
+
+    return path;
   }, [locale]);
 
   return (

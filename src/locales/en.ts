@@ -21,6 +21,7 @@ export const en: typeof ko = {
     details: "Details",
     deleteConfirm: "Are you sure you want to delete?",
     theme: "Theme",
+    next: "Next",
   },
   sidebar: {
     planner: "Planner",
@@ -95,8 +96,19 @@ export const en: typeof ko = {
       warning2: "Your profile information and settings will be removed.",
       warning3: "Premium subscription benefits will end immediately.",
       action: "I understand and wish to proceed with withdrawal.",
-      typeConfirm: "Please type 'DELETE' below to confirm.",
+      typeConfirm: "Please type '{confirmText}' below to confirm.",
       inputPlaceholder: "DELETE",
+      reasonTitle: "We're sorry to see you go",
+      reasonDescription: "Your feedback will help us build a better service.",
+      reasons: {
+        rejoin: "Re-joining after withdrawal",
+        lackOfFeatures: "Lack of features",
+        missingFeature: "Desired feature is missing",
+        other: "Other",
+      },
+      feedbackPlaceholder: "Tell us more about your experience (optional)",
+      otherPlaceholder: "What could we have done better? Please tell us more.",
+      finalAction: "Submit & Withdraw",
     },
     recovery: {
       title: "Welcome Back!",

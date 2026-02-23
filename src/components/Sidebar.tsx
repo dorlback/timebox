@@ -51,8 +51,8 @@ export default function Sidebar({
         </div>
 
         <div className={`transition-all duration-300 whitespace-nowrap overflow-hidden ${isExpanded ? "opacity-100 max-w-full block" : "opacity-0 max-w-0 hidden"}`}>
-          <h1 className="text-lg font-bold leading-tight tracking-tight text-card-foreground">Productivity Pro</h1>
-          <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">{t('common.premium')}</p>
+          <h1 className="text-lg font-bold leading-tight tracking-tight text-card-foreground">TimeBox</h1>
+          {/* <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">{t('common.premium')}</p> */}
         </div>
       </div>
 
@@ -81,8 +81,8 @@ export default function Sidebar({
 
       <div className={`p-4 mt-auto border-t border-border flex flex-col gap-4 ${!isExpanded ? "items-center px-1" : ""}`}>
 
-        <div className="relative">
-          <div className={`rounded-xl flex items-center gap-3 ${isExpanded ? "bg-muted/30 p-3" : "p-1 bg-transparent justify-center"}`}>
+        <Link href="/mypage" className="relative block group">
+          <div className={`rounded-xl flex items-center gap-3 transition-colors ${isExpanded ? "bg-muted/30 p-3 group-hover:bg-muted/50" : "p-1 bg-transparent justify-center group-hover:bg-muted/30"}`}>
             <div
               className={`w-10 h-10 rounded-full bg-cover bg-center border-2 border-background shrink-0 shadow-sm ${isUserLoading ? 'animate-pulse bg-muted' : ''}`}
               style={userAvatar ? { backgroundImage: `url('${userAvatar}')` } : {}}
@@ -93,7 +93,7 @@ export default function Sidebar({
               {/* <p className="text-[10px] text-muted-foreground truncate font-medium">{userType}</p> */}
             </div>
           </div>
-        </div>
+        </Link>
 
         {/* Global Dark Mode Toggle */}
         <div className={`flex ${isExpanded ? "justify-center" : "justify-center w-full"}`}>

@@ -742,7 +742,7 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
               </Link>
 
               <div className="flex items-center gap-3">
-                <DarkModeToggle />
+                {/* <DarkModeToggle /> */}
                 <button
                   onClick={handleSave}
                   className="flex items-center gap-2 bg-primary hover:opacity-90 text-primary-foreground text-xs font-semibold px-5 py-2 rounded-full transition-all shadow-sm active:scale-95"
