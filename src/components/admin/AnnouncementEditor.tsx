@@ -11,16 +11,18 @@ const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false });
 
 interface AnnouncementEditorProps {
   onClose: () => void;
+  announcement?: any;
 }
 
-export function AnnouncementEditor({ onClose }: AnnouncementEditorProps) {
-  const { createAnnouncement, isCreating } = useAnnouncements();
+export function AnnouncementEditor({ onClose, announcement }: AnnouncementEditorProps) {
+  const { createAnnouncement, isCreating, updateAnnouncement } = useAnnouncements();
   const { users } = useUserList();
 
-  const [category, setCategory] = useState('notice');
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
-  const [targetUserIds, setTargetUserIds] = useState<string[]>([]);
+  const [category, setCategory] = useState(announcement?.category || 'notice');
+  const [title, setTitle] = useState(announcement?.title || '');
+  const [content, setContent] = useState(announcement?.content || '');
+  const [targetUserIds, setTargetUserIds] = useState<string[]>(announcement?.target_user_ids || []);
+  const [isSourceMode, setIsSourceMode] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
   const filteredUsers = useMemo(() => {
@@ -44,16 +46,29 @@ export function AnnouncementEditor({ onClose }: AnnouncementEditorProps) {
     }
 
     try {
-      await createAnnouncement({
-        category,
-        title,
-        content,
-        target_user_ids: category === 'user_notice' ? targetUserIds : undefined,
-      });
-      alert('Announcement created successfully.');
+      if (announcement?.id) {
+        await updateAnnouncement({
+          id: announcement.id,
+          data: {
+            category,
+            title,
+            content,
+            target_user_ids: category === 'user_notice' ? targetUserIds : null,
+          }
+        });
+        alert('Announcement updated successfully.');
+      } else {
+        await createAnnouncement({
+          category,
+          title,
+          content,
+          target_user_ids: category === 'user_notice' ? targetUserIds : undefined,
+        });
+        alert('Announcement created successfully.');
+      }
       onClose();
     } catch (error) {
-      alert('Failed to create announcement.');
+      alert(announcement?.id ? 'Failed to update announcement.' : 'Failed to create announcement.');
     }
   };
 
@@ -65,12 +80,16 @@ export function AnnouncementEditor({ onClose }: AnnouncementEditorProps) {
   ];
 
   return (
-    <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
       <div className="bg-card w-full max-w-4xl max-h-[90vh] rounded-3xl border border-border shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
         <header className="px-8 py-6 border-b border-border flex items-center justify-between bg-muted/30">
           <div>
-            <h2 className="text-xl font-black text-card-foreground">Create New Announcement</h2>
-            <p className="text-xs text-muted-foreground font-medium">Compose and publish updates for your users.</p>
+            <h2 className="text-xl font-black text-card-foreground">
+              {announcement ? 'Edit Announcement' : 'Create New Announcement'}
+            </h2>
+            <p className="text-xs text-muted-foreground font-medium">
+              {announcement ? 'Modify the details of your announcement.' : 'Compose and publish updates for your users.'}
+            </p>
           </div>
           <button onClick={onClose} className="w-10 h-10 rounded-xl hover:bg-muted flex items-center justify-center transition-colors">
             <span className="material-symbols-outlined">close</span>
@@ -162,25 +181,55 @@ export function AnnouncementEditor({ onClose }: AnnouncementEditorProps) {
             </div>
           )}
 
-          <div className="space-y-2 h-[400px] flex flex-col">
-            <label className="text-xs font-black uppercase text-muted-foreground tracking-widest pl-1">Content (HTML Editor)</label>
-            <div className="flex-1 bg-card rounded-2xl border border-border overflow-hidden">
-              <ReactQuill
-                theme="snow"
-                value={content}
-                onChange={setContent}
-                className="h-full flex flex-col"
-                modules={{
-                  toolbar: [
-                    [{ 'header': [1, 2, false] }],
-                    ['bold', 'italic', 'underline', 'strike', 'blockquote'],
-                    [{ 'list': 'ordered' }, { 'list': 'bullet' }, { 'indent': '-1' }, { 'indent': '+1' }],
-                    ['link', 'image'],
-                    ['clean']
-                  ],
-                }}
-              />
+          <div className="space-y-3 h-[450px] flex flex-col">
+            <div className="flex items-center justify-between pl-1">
+              <label className="text-xs font-black uppercase text-muted-foreground tracking-widest">Content</label>
+              <button
+                onClick={() => setIsSourceMode(!isSourceMode)}
+                className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-[10px] font-black transition-all ${isSourceMode
+                  ? 'bg-primary text-primary-foreground shadow-sm shadow-primary/20'
+                  : 'bg-muted text-muted-foreground hover:text-foreground'
+                  }`}
+              >
+                <span className="material-symbols-outlined text-xs">
+                  {isSourceMode ? 'wysiwyg' : 'code'}
+                </span>
+                {isSourceMode ? 'Editor Mode' : 'Source Mode'}
+              </button>
             </div>
+
+            <div className="flex-1 bg-card rounded-2xl border border-border overflow-hidden flex flex-col shadow-inner">
+              {isSourceMode ? (
+                <textarea
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  placeholder="Paste or write your raw HTML code here..."
+                  className="w-full h-full p-6 text-sm font-mono bg-stone-50 dark:bg-stone-900/40 text-foreground resize-none focus:outline-none leading-relaxed"
+                />
+              ) : (
+                <ReactQuill
+                  theme="snow"
+                  value={content}
+                  onChange={setContent}
+                  className="h-full flex flex-col"
+                  modules={{
+                    toolbar: [
+                      [{ 'header': [1, 2, 3, false] }],
+                      ['bold', 'italic', 'underline', 'strike'],
+                      [{ 'color': [] }, { 'background': [] }],
+                      [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                      ['link', 'image', 'video'],
+                      ['clean']
+                    ],
+                  }}
+                />
+              )}
+            </div>
+            <p className="text-[10px] text-muted-foreground font-medium italic pl-1">
+              {isSourceMode
+                ? "* Source mode allows direct HTML manipulation. Be careful with tag syntax."
+                : "* Use formatting tools to compose your message. Switch to Source for HTML code."}
+            </p>
           </div>
         </div>
 
@@ -199,12 +248,14 @@ export function AnnouncementEditor({ onClose }: AnnouncementEditorProps) {
             {isCreating ? (
               <>
                 <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
-                Publishing...
+                {announcement ? 'Updating...' : 'Publishing...'}
               </>
             ) : (
               <>
-                <span className="material-symbols-outlined text-sm">rocket_launch</span>
-                Publish Now
+                <span className="material-symbols-outlined text-sm">
+                  {announcement ? 'save' : 'rocket_launch'}
+                </span>
+                {announcement ? 'Update Now' : 'Publish Now'}
               </>
             )}
           </button>

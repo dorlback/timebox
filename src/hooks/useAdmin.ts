@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { fetchAllWithdrawalFeedback, createAnnouncement, fetchAnnouncements } from '@/lib/api/admin';
+import { fetchAllWithdrawalFeedback, createAnnouncement, fetchAnnouncements, updateAnnouncement, deleteAnnouncement } from '@/lib/api/admin';
 
 export function useAdminFeedback() {
   const query = useQuery({
@@ -36,5 +36,17 @@ export function useAnnouncements() {
     isError: query.isError,
     createAnnouncement: createMutation.mutateAsync, // mutationFn을 비동기로 사용하도록 mutateAsync 제공
     isCreating: createMutation.isPending,
+    updateAnnouncement: useMutation({
+      mutationFn: ({ id, data }: { id: string; data: any }) => updateAnnouncement(id, data),
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['adminAnnouncements'] });
+      },
+    }).mutateAsync,
+    deleteAnnouncement: useMutation({
+      mutationFn: deleteAnnouncement,
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['adminAnnouncements'] });
+      },
+    }).mutateAsync,
   };
 }

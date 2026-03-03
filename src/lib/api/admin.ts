@@ -53,3 +53,29 @@ export async function fetchAnnouncements() {
 
   return data;
 }
+
+export async function updateAnnouncement(id: string, data: Partial<AnnouncementData>) {
+  const supabase = createClient();
+  const { error } = await supabase
+    .from('announcements')
+    .update(data)
+    .eq('id', id);
+
+  if (error) {
+    console.error('Error updating announcement:', error);
+    throw error;
+  }
+}
+
+export async function deleteAnnouncement(id: string) {
+  const supabase = createClient();
+  const { error } = await supabase
+    .from('announcements')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    console.error('Error deleting announcement:', error);
+    throw error;
+  }
+}

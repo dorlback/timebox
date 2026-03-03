@@ -8,6 +8,7 @@ import { useAdminFeedback, useAnnouncements } from '@/hooks/useAdmin';
 import { useTranslation } from '@/contexts/LanguageContext';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { AnnouncementEditor } from '@/components/admin/AnnouncementEditor';
+import { AnnouncementsBoardModal } from '@/components/dashboard/AnnouncementsBoardModal';
 
 type TabType = 'users' | 'feedback' | 'announcements';
 
@@ -16,10 +17,12 @@ export default function AdminPage() {
   const { user, isLoading: isUserLoading } = useUser();
   const { users, isLoading: isUsersLoading, forceDelete, isDeleting } = useUserList();
   const { feedback, isLoading: isFeedbackLoading } = useAdminFeedback();
-  const { announcements, isLoading: isAnnouncementsLoading } = useAnnouncements();
+  const { announcements, isLoading: isAnnouncementsLoading, deleteAnnouncement } = useAnnouncements();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>('users');
   const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [editingAnnouncement, setEditingAnnouncement] = useState<any>(null);
+  const [previewId, setPreviewId] = useState<string | null>(null);
 
   // Guard: Redirect if not admin
   useEffect(() => {
@@ -225,25 +228,26 @@ export default function AdminPage() {
                           <th className="px-6 py-4 text-xs font-black uppercase tracking-wider text-muted-foreground">Author</th>
                           <th className="px-6 py-4 text-xs font-black uppercase tracking-wider text-muted-foreground">Target</th>
                           <th className="px-6 py-4 text-xs font-black uppercase tracking-wider text-muted-foreground">Date</th>
+                          <th className="px-6 py-4 text-xs font-black uppercase tracking-wider text-muted-foreground">Actions</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-border">
                         {isAnnouncementsLoading ? (
                           <tr>
-                            <td colSpan={5} className="px-6 py-12 text-center text-muted-foreground">Loading announcements...</td>
+                            <td colSpan={6} className="px-6 py-12 text-center text-muted-foreground">Loading announcements...</td>
                           </tr>
                         ) : announcements.length === 0 ? (
                           <tr>
-                            <td colSpan={5} className="px-6 py-12 text-center text-muted-foreground">No announcements yet.</td>
+                            <td colSpan={6} className="px-6 py-12 text-center text-muted-foreground">No announcements yet.</td>
                           </tr>
                         ) : (
                           announcements.map((a: any) => (
-                            <tr key={a.id} className="hover:bg-muted/10 transition-colors">
+                            <tr key={a.id} className="hover:bg-muted/10 transition-colors group">
                               <td className="px-6 py-4 whitespace-nowrap">
                                 <span className={`px-2 py-1 text-[10px] font-black rounded-lg uppercase tracking-wider ${a.category === 'notice' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' :
-                                    a.category === 'user_notice' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400' :
-                                      a.category === 'patch_note' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' :
-                                        'bg-muted text-muted-foreground'
+                                  a.category === 'user_notice' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400' :
+                                    a.category === 'patch_note' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' :
+                                      'bg-muted text-muted-foreground'
                                   }`}>
                                   {a.category}
                                 </span>
@@ -266,6 +270,38 @@ export default function AdminPage() {
                               <td className="px-6 py-4 whitespace-nowrap">
                                 <span className="text-xs text-muted-foreground">{formatDate(a.created_at)}</span>
                               </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <button
+                                    onClick={() => setPreviewId(a.id)}
+                                    className="p-2 rounded-lg bg-blue-50 dark:bg-blue-900/10 text-blue-500 hover:text-blue-600 border border-blue-500/10 transition-colors"
+                                    title="Preview"
+                                  >
+                                    <span className="material-symbols-outlined text-sm">visibility</span>
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      setEditingAnnouncement(a);
+                                      setIsEditorOpen(true);
+                                    }}
+                                    className="p-2 rounded-lg bg-orange-50 dark:bg-orange-900/10 text-orange-500 hover:text-orange-600 border border-orange-500/10 transition-colors"
+                                    title="Edit"
+                                  >
+                                    <span className="material-symbols-outlined text-sm">edit</span>
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      if (confirm('Are you sure you want to delete this announcement?')) {
+                                        deleteAnnouncement(a.id);
+                                      }
+                                    }}
+                                    className="p-2 rounded-lg bg-red-50 dark:bg-red-900/10 text-red-500 hover:text-red-600 border border-red-500/10 transition-colors"
+                                    title="Delete"
+                                  >
+                                    <span className="material-symbols-outlined text-sm">delete</span>
+                                  </button>
+                                </div>
+                              </td>
                             </tr>
                           ))
                         )}
@@ -281,7 +317,21 @@ export default function AdminPage() {
       <MobileBottomNav />
 
       {isEditorOpen && (
-        <AnnouncementEditor onClose={() => setIsEditorOpen(false)} />
+        <AnnouncementEditor
+          announcement={editingAnnouncement}
+          onClose={() => {
+            setIsEditorOpen(false);
+            setEditingAnnouncement(null);
+          }}
+        />
+      )}
+
+      {previewId && (
+        <AnnouncementsBoardModal
+          isOpen={!!previewId}
+          onClose={() => setPreviewId(null)}
+          initialAnnouncementId={previewId}
+        />
       )}
     </div>
   );

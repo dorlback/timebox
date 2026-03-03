@@ -5,12 +5,22 @@ import DarkModeToggle from "@/components/DarkModeToggle";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { DailyPlanTracker } from "@/components/dashboard/DailyPlanTracker";
 import { DashboardSearch } from "@/components/dashboard/DashboardSearch";
+import { NotificationBell } from "@/components/dashboard/NotificationBell";
+import { AnnouncementsBoardModal } from "@/components/dashboard/AnnouncementsBoardModal";
 import { useTranslation } from "@/contexts/LanguageContext";
+import { useState } from "react";
 
 const AVATAR_IMG = "url('https://lh3.googleusercontent.com/aida-public/AB6AXuDtju3C_Ol36H8MSHEVmRaGPvqbKdm8zS5IVUYW1PsOEu3H_23VwqeQ2wii9kysrpmALEFdCSNzwAYUSC1A0OZ3D8GNGrzULFMqQKsbyEJQT3_MSjG0SJ-gd5OPli2ndmMnCynLM4Cq0sF5QtN0uuA2hafU0McIESxVyt3C26SggpzVGpW0YrItW44b1fN879wavE2-A2ATfH00fqFZ0RpRx_YDQ-CPPvwXsGtjZ9-DnQtXtyp-OtoFLFIiiltviSXCou4jMBlQvpg')";
 
 export default function Dashboard() {
   const { t } = useTranslation();
+  const [isBoardOpen, setIsBoardOpen] = useState(false);
+  const [selectedAnnId, setSelectedAnnId] = useState<string | undefined>(undefined);
+
+  const handleOpenBoard = (id?: string) => {
+    setSelectedAnnId(id);
+    setIsBoardOpen(true);
+  };
 
   return (
     <div
@@ -34,12 +44,10 @@ export default function Dashboard() {
               <DashboardSearch />
 
               <div className="flex items-center gap-2">
-                {/* <button className="w-10 h-10 flex items-center justify-center rounded-xl bg-muted text-muted-foreground hover:text-primary transition-colors">
-                  <span className="material-symbols-outlined">notifications</span>
-                </button>
+                <NotificationBell onViewAll={handleOpenBoard} />
                 <button className="w-10 h-10 flex items-center justify-center rounded-xl bg-muted text-muted-foreground hover:text-primary transition-colors">
                   <span className="material-symbols-outlined">chat_bubble</span>
-                </button> */}
+                </button>
               </div>
             </div>
           </header>
@@ -154,6 +162,13 @@ export default function Dashboard() {
         </main>
       </div>
       <MobileBottomNav />
+
+      {/* Global Modals */}
+      <AnnouncementsBoardModal
+        isOpen={isBoardOpen}
+        onClose={() => setIsBoardOpen(false)}
+        initialAnnouncementId={selectedAnnId}
+      />
     </div >
   );
 }
