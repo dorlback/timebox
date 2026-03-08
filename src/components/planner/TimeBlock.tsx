@@ -160,7 +160,9 @@ export const TimeBlock: React.FC<TimeBlockProps> = React.memo(({
         const rect = e.currentTarget.getBoundingClientRect();
         const offsetY = e.clientY - rect.top;
         const blockHeight = rect.height;
-        if (offsetY <= 10 || offsetY >= blockHeight - 10) {
+        const threshold = activeBlockId === block.id ? 6 : 4;
+
+        if (offsetY <= threshold || offsetY >= blockHeight - threshold) {
           e.currentTarget.style.cursor = 'ns-resize';
         } else {
           e.currentTarget.style.cursor = showContent ? 'move' : 'pointer';

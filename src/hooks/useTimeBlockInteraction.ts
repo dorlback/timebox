@@ -154,8 +154,10 @@ export const useTimeBlockInteraction = (
     const blockHeight = rect.height;
     lastClientYRef.current = e.clientY;
 
-    // 모바일이고 편집 모드인 블록인 경우, 핸들이 보여지므로 리사이즈 감지 영역을 조금 더 넓게 설정(20px)
-    const resizeThreshold = (activeBlockId === block.id) ? 20 : 10;
+    // 모바일이고 편집 모드인 블록인 경우, 핸들이 보여지므로 리사이즈 감지 영역을 조금 더 넓게 설정(8px)
+    // 일반 상태에서는 오클릭 방지를 위해 최소화(4px)
+    // 타임블록 사이즈 조절
+    const resizeThreshold = (activeBlockId === block.id) ? 6 : 4;
 
     if (offsetY <= resizeThreshold) {
       e.preventDefault();
