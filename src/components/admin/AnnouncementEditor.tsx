@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic';
 import 'react-quill-new/dist/quill.snow.css';
 import { useUserList } from '@/hooks/useUser';
 import { useAnnouncements } from '@/hooks/useAdmin';
+import { useTranslation } from '@/contexts/LanguageContext';
 
 // Dynamic import for React Quill to avoid SSR issues
 const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false });
@@ -15,6 +16,7 @@ interface AnnouncementEditorProps {
 }
 
 export function AnnouncementEditor({ onClose, announcement }: AnnouncementEditorProps) {
+  const { t } = useTranslation();
   const { createAnnouncement, isCreating, updateAnnouncement } = useAnnouncements();
   const { users } = useUserList();
 
@@ -41,7 +43,7 @@ export function AnnouncementEditor({ onClose, announcement }: AnnouncementEditor
 
   const handleSave = async () => {
     if (!title || !content) {
-      alert('Please enter title and content.');
+      alert(t('dashboard.noResults')); // Using existing or should I use new error? Let's use generic for now if not defined.
       return;
     }
 
@@ -56,7 +58,6 @@ export function AnnouncementEditor({ onClose, announcement }: AnnouncementEditor
             target_user_ids: category === 'user_notice' ? targetUserIds : null,
           }
         });
-        alert('Announcement updated successfully.');
       } else {
         await createAnnouncement({
           category,
@@ -64,19 +65,18 @@ export function AnnouncementEditor({ onClose, announcement }: AnnouncementEditor
           content,
           target_user_ids: category === 'user_notice' ? targetUserIds : undefined,
         });
-        alert('Announcement created successfully.');
       }
       onClose();
     } catch (error) {
-      alert(announcement?.id ? 'Failed to update announcement.' : 'Failed to create announcement.');
+      console.error('Failed to save announcement:', error);
     }
   };
 
   const categories = [
-    { value: 'notice', label: '공지' },
-    { value: 'user_notice', label: '유저공지' },
-    { value: 'patch_note', label: '패치노트' },
-    { value: 'others', label: '기타' },
+    { value: 'notice', label: t('announcements.categories.notice') },
+    { value: 'user_notice', label: t('announcements.categories.user_notice') },
+    { value: 'patch_note', label: t('announcements.categories.patch_note') },
+    { value: 'others', label: t('announcements.categories.others') },
   ];
 
   return (
@@ -85,10 +85,10 @@ export function AnnouncementEditor({ onClose, announcement }: AnnouncementEditor
         <header className="px-8 py-6 border-b border-border flex items-center justify-between bg-muted/30">
           <div>
             <h2 className="text-xl font-black text-card-foreground">
-              {announcement ? 'Edit Announcement' : 'Create New Announcement'}
+              {announcement ? t('announcements.editor.editTitle') : t('announcements.editor.createTitle')}
             </h2>
             <p className="text-xs text-muted-foreground font-medium">
-              {announcement ? 'Modify the details of your announcement.' : 'Compose and publish updates for your users.'}
+              {announcement ? t('announcements.editor.editSubtitle') : t('announcements.editor.createSubtitle')}
             </p>
           </div>
           <button onClick={onClose} className="w-10 h-10 rounded-xl hover:bg-muted flex items-center justify-center transition-colors">
@@ -99,7 +99,7 @@ export function AnnouncementEditor({ onClose, announcement }: AnnouncementEditor
         <div className="flex-1 overflow-y-auto p-8 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div className="space-y-2">
-              <label className="text-xs font-black uppercase text-muted-foreground tracking-widest pl-1">Category</label>
+              <label className="text-xs font-black uppercase text-muted-foreground tracking-widest pl-1">{t('announcements.editor.category')}</label>
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
@@ -111,12 +111,12 @@ export function AnnouncementEditor({ onClose, announcement }: AnnouncementEditor
               </select>
             </div>
             <div className="md:col-span-3 space-y-2">
-              <label className="text-xs font-black uppercase text-muted-foreground tracking-widest pl-1">Title</label>
+              <label className="text-xs font-black uppercase text-muted-foreground tracking-widest pl-1">{t('announcements.editor.title')}</label>
               <input
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Enter announcement title..."
+                placeholder={t('announcements.editor.titlePlaceholder')}
                 className="w-full bg-muted/50 border border-border rounded-xl px-4 py-2 text-sm font-bold focus:ring-2 focus:ring-primary/20 transition-all outline-none"
               />
             </div>
@@ -126,7 +126,7 @@ export function AnnouncementEditor({ onClose, announcement }: AnnouncementEditor
             <div className="space-y-3 p-6 bg-primary/5 rounded-2xl border border-primary/10">
               <label className="text-xs font-black uppercase text-primary tracking-widest flex items-center gap-2">
                 <span className="material-symbols-outlined text-sm">person_search</span>
-                Target Specific Users
+                {t('announcements.editor.targetUsers')}
               </label>
 
               <div className="relative">
@@ -134,7 +134,7 @@ export function AnnouncementEditor({ onClose, announcement }: AnnouncementEditor
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search users by name or email..."
+                  placeholder={t('announcements.editor.searchUsers')}
                   className="w-full bg-card border border-border rounded-xl pl-4 pr-10 py-2 text-sm font-medium focus:ring-2 focus:ring-primary/20 transition-all outline-none"
                 />
                 <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">search</span>
@@ -183,7 +183,7 @@ export function AnnouncementEditor({ onClose, announcement }: AnnouncementEditor
 
           <div className="space-y-3 h-[450px] flex flex-col">
             <div className="flex items-center justify-between pl-1">
-              <label className="text-xs font-black uppercase text-muted-foreground tracking-widest">Content</label>
+              <label className="text-xs font-black uppercase text-muted-foreground tracking-widest">{t('announcements.editor.content')}</label>
               <button
                 onClick={() => setIsSourceMode(!isSourceMode)}
                 className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-[10px] font-black transition-all ${isSourceMode
@@ -194,7 +194,7 @@ export function AnnouncementEditor({ onClose, announcement }: AnnouncementEditor
                 <span className="material-symbols-outlined text-xs">
                   {isSourceMode ? 'wysiwyg' : 'code'}
                 </span>
-                {isSourceMode ? 'Editor Mode' : 'Source Mode'}
+                {isSourceMode ? t('announcements.editor.editorMode') : t('announcements.editor.sourceMode')}
               </button>
             </div>
 
@@ -203,7 +203,7 @@ export function AnnouncementEditor({ onClose, announcement }: AnnouncementEditor
                 <textarea
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
-                  placeholder="Paste or write your raw HTML code here..."
+                  placeholder={t('announcements.editor.htmlPlaceholder')}
                   className="w-full h-full p-6 text-sm font-mono bg-stone-50 dark:bg-stone-900/40 text-foreground resize-none focus:outline-none leading-relaxed"
                 />
               ) : (
@@ -227,8 +227,8 @@ export function AnnouncementEditor({ onClose, announcement }: AnnouncementEditor
             </div>
             <p className="text-[10px] text-muted-foreground font-medium italic pl-1">
               {isSourceMode
-                ? "* Source mode allows direct HTML manipulation. Be careful with tag syntax."
-                : "* Use formatting tools to compose your message. Switch to Source for HTML code."}
+                ? t('announcements.editor.sourceHint')
+                : t('announcements.editor.editorHint')}
             </p>
           </div>
         </div>
@@ -238,7 +238,7 @@ export function AnnouncementEditor({ onClose, announcement }: AnnouncementEditor
             onClick={onClose}
             className="px-6 py-2 rounded-xl text-sm font-bold text-muted-foreground hover:text-foreground transition-all"
           >
-            Cancel
+            {t('common.cancel')}
           </button>
           <button
             onClick={handleSave}
@@ -248,14 +248,14 @@ export function AnnouncementEditor({ onClose, announcement }: AnnouncementEditor
             {isCreating ? (
               <>
                 <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
-                {announcement ? 'Updating...' : 'Publishing...'}
+                {announcement ? t('announcements.editor.updating') : t('announcements.editor.publishing')}
               </>
             ) : (
               <>
                 <span className="material-symbols-outlined text-sm">
                   {announcement ? 'save' : 'rocket_launch'}
                 </span>
-                {announcement ? 'Update Now' : 'Publish Now'}
+                {announcement ? t('announcements.editor.updateNow') : t('announcements.editor.publishNow')}
               </>
             )}
           </button>

@@ -78,13 +78,13 @@ export function NotificationBell({ onViewAll }: NotificationBellProps) {
       {isOpen && (
         <div className="absolute right-0 mt-3 w-80 sm:w-96 bg-card border border-border rounded-3xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
           <header className="px-6 py-4 border-b border-border bg-muted/10 flex items-center justify-between">
-            <h3 className="text-sm font-black tracking-tight text-card-foreground">Notifications</h3>
+            <h3 className="text-sm font-black tracking-tight text-card-foreground">{t('announcements.notifications.title')}</h3>
             {unreadCount > 0 && (
               <button
                 onClick={handleMarkAllAsRead}
                 className="text-[10px] font-bold text-primary hover:underline"
               >
-                Mark all as read
+                {t('announcements.notifications.markAllRead')}
               </button>
             )}
           </header>
@@ -95,7 +95,7 @@ export function NotificationBell({ onViewAll }: NotificationBellProps) {
                 <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center opacity-30">
                   <span className="material-symbols-outlined text-3xl">notifications_off</span>
                 </div>
-                <p className="text-xs font-bold text-muted-foreground">Everything caught up!</p>
+                <p className="text-xs font-bold text-muted-foreground">{t('announcements.notifications.empty')}</p>
               </div>
             ) : (
               <div className="divide-y divide-border/50">
@@ -107,7 +107,7 @@ export function NotificationBell({ onViewAll }: NotificationBellProps) {
                   >
                     <div className="flex items-center justify-between">
                       <span className={`px-2 py-0.5 text-[8px] font-black rounded uppercase tracking-wider ${getCategoryColor(ann.category)}`}>
-                        {ann.category}
+                        {t(`announcements.categories.${ann.category}`)}
                       </span>
                       <span className="w-2 h-2 bg-primary rounded-full" />
                     </div>
@@ -115,7 +115,7 @@ export function NotificationBell({ onViewAll }: NotificationBellProps) {
                       {ann.title}
                     </p>
                     <span className="text-[10px] font-medium text-muted-foreground">
-                      {new Date(ann.created_at).toLocaleDateString()}
+                      {new Date(ann.created_at).toLocaleDateString(locale === 'ko' ? 'ko-KR' : 'en-US')}
                     </span>
                   </button>
                 ))}
@@ -128,7 +128,7 @@ export function NotificationBell({ onViewAll }: NotificationBellProps) {
               onClick={handleViewAll}
               className="w-full py-2.5 rounded-xl bg-primary text-primary-foreground text-xs font-bold shadow-lg hover:opacity-90 active:scale-95 transition-all flex items-center justify-center gap-2"
             >
-              View All Announcements
+              {t('announcements.notifications.viewAll')}
               <span className="material-symbols-outlined text-sm">arrow_forward</span>
             </button>
           </footer>

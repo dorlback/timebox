@@ -7,14 +7,18 @@ import { DailyPlanTracker } from "@/components/dashboard/DailyPlanTracker";
 import { DashboardSearch } from "@/components/dashboard/DashboardSearch";
 import { NotificationBell } from "@/components/dashboard/NotificationBell";
 import { AnnouncementsBoardModal } from "@/components/dashboard/AnnouncementsBoardModal";
+import { InquiryModal } from "@/components/dashboard/InquiryModal";
 import { useTranslation } from "@/contexts/LanguageContext";
+import { useUser } from "@/hooks/useUser";
 import { useState } from "react";
 
 const AVATAR_IMG = "url('https://lh3.googleusercontent.com/aida-public/AB6AXuDtju3C_Ol36H8MSHEVmRaGPvqbKdm8zS5IVUYW1PsOEu3H_23VwqeQ2wii9kysrpmALEFdCSNzwAYUSC1A0OZ3D8GNGrzULFMqQKsbyEJQT3_MSjG0SJ-gd5OPli2ndmMnCynLM4Cq0sF5QtN0uuA2hafU0McIESxVyt3C26SggpzVGpW0YrItW44b1fN879wavE2-A2ATfH00fqFZ0RpRx_YDQ-CPPvwXsGtjZ9-DnQtXtyp-OtoFLFIiiltviSXCou4jMBlQvpg')";
 
 export default function Dashboard() {
   const { t } = useTranslation();
+  const { user } = useUser();
   const [isBoardOpen, setIsBoardOpen] = useState(false);
+  const [isInquiryOpen, setIsInquiryOpen] = useState(false);
   const [selectedAnnId, setSelectedAnnId] = useState<string | undefined>(undefined);
 
   const handleOpenBoard = (id?: string) => {
@@ -45,7 +49,10 @@ export default function Dashboard() {
 
               <div className="flex items-center gap-2">
                 <NotificationBell onViewAll={handleOpenBoard} />
-                <button className="w-10 h-10 flex items-center justify-center rounded-xl bg-muted text-muted-foreground hover:text-primary transition-colors">
+                <button
+                  onClick={() => setIsInquiryOpen(true)}
+                  className="w-10 h-10 flex items-center justify-center rounded-xl bg-muted text-muted-foreground hover:text-primary transition-colors"
+                >
                   <span className="material-symbols-outlined">chat_bubble</span>
                 </button>
               </div>
@@ -168,6 +175,13 @@ export default function Dashboard() {
         isOpen={isBoardOpen}
         onClose={() => setIsBoardOpen(false)}
         initialAnnouncementId={selectedAnnId}
+      />
+
+      <InquiryModal
+        isOpen={isInquiryOpen}
+        onClose={() => setIsInquiryOpen(false)}
+        userName={user?.displayName}
+        userEmail={user?.email}
       />
     </div >
   );

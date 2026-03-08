@@ -39,11 +39,11 @@ export function AnnouncementsBoardModal({ isOpen, onClose, initialAnnouncementId
   }, [isOpen]);
 
   const categories = [
-    { value: 'all', label: '전체' },
-    { value: 'notice', label: '공지' },
-    { value: 'user_notice', label: '유저공지' },
-    { value: 'patch_note', label: '패치노트' },
-    { value: 'others', label: '기타' },
+    { value: 'all', label: t('announcements.categories.all') },
+    { value: 'notice', label: t('announcements.categories.notice') },
+    { value: 'user_notice', label: t('announcements.categories.user_notice') },
+    { value: 'patch_note', label: t('announcements.categories.patch_note') },
+    { value: 'others', label: t('announcements.categories.others') },
   ];
 
   const filteredAnnouncements = useMemo(() => {
@@ -97,14 +97,14 @@ export function AnnouncementsBoardModal({ isOpen, onClose, initialAnnouncementId
         <header className="px-6 py-6 sm:px-10 sm:py-8 flex items-center justify-between border-b border-border bg-card/30 shrink-0">
           <div>
             <h2 className="text-2xl sm:text-3xl font-black tracking-tighter flex items-center gap-3">
-              Announcement Board
+              {t('announcements.boardTitle')}
               {unreadCount > 0 && (
                 <span className="px-3 py-1 bg-primary text-primary-foreground text-[10px] font-bold rounded-full animate-pulse whitespace-nowrap">
-                  {unreadCount} New
+                  {t('announcements.newCount').replace('{count}', unreadCount.toString())}
                 </span>
               )}
             </h2>
-            <p className="text-muted-foreground font-medium text-xs sm:text-sm">Stay updated with the latest news and features.</p>
+            <p className="text-muted-foreground font-medium text-xs sm:text-sm">{t('announcements.subtitle')}</p>
           </div>
           <button
             onClick={onClose}
@@ -139,7 +139,7 @@ export function AnnouncementsBoardModal({ isOpen, onClose, initialAnnouncementId
               {filteredAnnouncements.length === 0 ? (
                 <div className="h-full flex flex-col items-center justify-center text-muted-foreground py-20 grayscale opacity-50">
                   <span className="material-symbols-outlined text-5xl mb-4">inbox_customize</span>
-                  <p className="font-bold text-xs uppercase tracking-widest">No entries</p>
+                  <p className="font-bold text-xs uppercase tracking-widest">{t('announcements.noEntries')}</p>
                 </div>
               ) : (
                 filteredAnnouncements.map(ann => (
@@ -159,7 +159,7 @@ export function AnnouncementsBoardModal({ isOpen, onClose, initialAnnouncementId
                     )}
                     <div className="flex items-center gap-2">
                       <span className={`px-2 py-0.5 text-[8px] font-black rounded uppercase tracking-wider ${getCategoryColor(ann.category)}`}>
-                        {ann.category}
+                        {t(`announcements.categories.${ann.category}`)}
                       </span>
                       <span className="text-[10px] font-bold text-muted-foreground">{formatDate(ann.created_at)}</span>
                     </div>
@@ -180,7 +180,7 @@ export function AnnouncementsBoardModal({ isOpen, onClose, initialAnnouncementId
                   <header className="px-8 py-10 sm:px-12 sm:py-12 space-y-4 shrink-0 border-b border-border/50 bg-muted/5">
                     <div className="flex items-center gap-3">
                       <span className={`px-3 py-1 text-[10px] font-black rounded-xl uppercase tracking-widest ${getCategoryColor(selectedAnnouncement.category)} shadow-sm`}>
-                        {selectedAnnouncement.category}
+                        {t(`announcements.categories.${selectedAnnouncement.category}`)}
                       </span>
                       <span className="text-xs font-bold text-muted-foreground">•</span>
                       <span className="text-xs font-bold text-muted-foreground">{formatDate(selectedAnnouncement.created_at)}</span>
@@ -206,8 +206,8 @@ export function AnnouncementsBoardModal({ isOpen, onClose, initialAnnouncementId
                 <div className="w-24 h-24 rounded-full bg-muted flex items-center justify-center mb-8">
                   <span className="material-symbols-outlined text-5xl">description_skeleton</span>
                 </div>
-                <p className="text-xl font-black tracking-tight">Select an announcement to read</p>
-                <p className="text-xs font-medium max-w-[200px] mt-2">Click on a list item on the left to view the full details of that message.</p>
+                <p className="text-xl font-black tracking-tight">{t('announcements.selectToRead')}</p>
+                <p className="text-xs font-medium max-w-[200px] mt-2">{t('announcements.clickToList')}</p>
               </div>
             )}
 
@@ -219,7 +219,7 @@ export function AnnouncementsBoardModal({ isOpen, onClose, initialAnnouncementId
                     <header className="px-4 py-3 border-b border-border flex items-center justify-between sticky top-0 bg-background/80 backdrop-blur-md z-10 shrink-0">
                       <button onClick={() => setSelectedId(null)} className="flex items-center gap-1.5 text-xs font-black text-primary px-3 py-2 rounded-xl bg-primary/5">
                         <span className="material-symbols-outlined text-sm">arrow_back</span>
-                        목록으로
+                        {t('announcements.backToList')}
                       </button>
                       <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-muted">
                         <span className="material-symbols-outlined text-muted-foreground">close</span>

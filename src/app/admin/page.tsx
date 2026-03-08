@@ -4,13 +4,13 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 import { useUser, useUserList } from '@/hooks/useUser';
-import { useAdminFeedback, useAnnouncements } from '@/hooks/useAdmin';
+import { useAdminFeedback, useAnnouncements, useInquiries } from '@/hooks/useAdmin';
 import { useTranslation } from '@/contexts/LanguageContext';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { AnnouncementEditor } from '@/components/admin/AnnouncementEditor';
 import { AnnouncementsBoardModal } from '@/components/dashboard/AnnouncementsBoardModal';
 
-type TabType = 'users' | 'feedback' | 'announcements';
+type TabType = 'users' | 'feedback' | 'announcements' | 'inquiries';
 
 export default function AdminPage() {
   const { t, locale } = useTranslation();
@@ -18,8 +18,10 @@ export default function AdminPage() {
   const { users, isLoading: isUsersLoading, forceDelete, isDeleting } = useUserList();
   const { feedback, isLoading: isFeedbackLoading } = useAdminFeedback();
   const { announcements, isLoading: isAnnouncementsLoading, deleteAnnouncement } = useAnnouncements();
+  const { inquiries, isLoading: isInquiriesLoading, updateInquiryStatus } = useInquiries();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>('users');
+  const [inquiryFilter, setInquiryFilter] = useState<'all' | 'pending' | 'completed'>('all');
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [editingAnnouncement, setEditingAnnouncement] = useState<any>(null);
   const [previewId, setPreviewId] = useState<string | null>(null);
@@ -68,7 +70,7 @@ export default function AdminPage() {
               </div>
 
               <div className="flex bg-muted/50 p-1.5 rounded-2xl border border-border">
-                {(['users', 'feedback', 'announcements'] as TabType[]).map((tab) => (
+                {(['users', 'feedback', 'announcements', 'inquiries'] as TabType[]).map((tab) => (
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
@@ -77,7 +79,7 @@ export default function AdminPage() {
                       : 'text-muted-foreground hover:text-foreground'
                       }`}
                   >
-                    {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                    {tab === 'inquiries' ? t('announcements.admin.inquiries.tabName') : tab.charAt(0).toUpperCase() + tab.slice(1)}
                   </button>
                 ))}
               </div>
@@ -208,27 +210,27 @@ export default function AdminPage() {
                 <div className="flex flex-col">
                   <div className="p-6 border-b border-border bg-muted/10 flex items-center justify-between">
                     <div>
-                      <h3 className="text-lg font-black text-card-foreground">Announcements</h3>
-                      <p className="text-xs text-muted-foreground font-medium">Create and manage global or targeted updates.</p>
+                      <h3 className="text-lg font-black text-card-foreground">{t('announcements.admin.manageTitle')}</h3>
+                      <p className="text-xs text-muted-foreground font-medium">{t('announcements.admin.manageSubtitle')}</p>
                     </div>
                     <button
                       onClick={() => setIsEditorOpen(true)}
                       className="bg-primary text-primary-foreground px-5 py-2 rounded-xl text-xs font-bold shadow-lg hover:opacity-90 active:scale-95 transition-all flex items-center gap-2"
                     >
                       <span className="material-symbols-outlined text-sm">add</span>
-                      New Announcement
+                      {t('announcements.admin.newAnnouncement')}
                     </button>
                   </div>
                   <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                       <thead>
                         <tr className="bg-muted/30 border-b border-border">
-                          <th className="px-6 py-4 text-xs font-black uppercase tracking-wider text-muted-foreground">Category</th>
-                          <th className="px-6 py-4 text-xs font-black uppercase tracking-wider text-muted-foreground">Title</th>
-                          <th className="px-6 py-4 text-xs font-black uppercase tracking-wider text-muted-foreground">Author</th>
-                          <th className="px-6 py-4 text-xs font-black uppercase tracking-wider text-muted-foreground">Target</th>
-                          <th className="px-6 py-4 text-xs font-black uppercase tracking-wider text-muted-foreground">Date</th>
-                          <th className="px-6 py-4 text-xs font-black uppercase tracking-wider text-muted-foreground">Actions</th>
+                          <th className="px-6 py-4 text-xs font-black uppercase tracking-wider text-muted-foreground">{t('announcements.admin.table.category')}</th>
+                          <th className="px-6 py-4 text-xs font-black uppercase tracking-wider text-muted-foreground">{t('announcements.admin.table.title')}</th>
+                          <th className="px-6 py-4 text-xs font-black uppercase tracking-wider text-muted-foreground">{t('announcements.admin.table.author')}</th>
+                          <th className="px-6 py-4 text-xs font-black uppercase tracking-wider text-muted-foreground">{t('announcements.admin.table.target')}</th>
+                          <th className="px-6 py-4 text-xs font-black uppercase tracking-wider text-muted-foreground">{t('announcements.admin.table.date')}</th>
+                          <th className="px-6 py-4 text-xs font-black uppercase tracking-wider text-muted-foreground">{t('announcements.admin.table.actions')}</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-border">
@@ -238,7 +240,7 @@ export default function AdminPage() {
                           </tr>
                         ) : announcements.length === 0 ? (
                           <tr>
-                            <td colSpan={6} className="px-6 py-12 text-center text-muted-foreground">No announcements yet.</td>
+                            <td colSpan={6} className="px-6 py-12 text-center text-muted-foreground">{t('dashboard.noResults')}</td>
                           </tr>
                         ) : (
                           announcements.map((a: any) => (
@@ -256,15 +258,15 @@ export default function AdminPage() {
                                 <span className="text-sm font-bold truncate max-w-xs block">{a.title}</span>
                               </td>
                               <td className="px-6 py-4">
-                                <span className="text-sm text-card-foreground font-medium">{a.author?.display_name || 'Admin'}</span>
+                                <span className="text-sm text-card-foreground font-medium">{a.author?.display_name || t('common.admin')}</span>
                               </td>
                               <td className="px-6 py-4">
                                 {a.category === 'user_notice' ? (
                                   <span className="text-[10px] font-bold text-muted-foreground italic">
-                                    {a.target_user_ids?.length || 0} Targeted
+                                    {t('announcements.admin.table.targeted').replace('{count}', (a.target_user_ids?.length || 0).toString())}
                                   </span>
                                 ) : (
-                                  <span className="text-[10px] font-bold text-muted-foreground uppercase opacity-50">Global</span>
+                                  <span className="text-[10px] font-bold text-muted-foreground uppercase opacity-50">{t('announcements.admin.table.global')}</span>
                                 )}
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap">
@@ -275,7 +277,7 @@ export default function AdminPage() {
                                   <button
                                     onClick={() => setPreviewId(a.id)}
                                     className="p-2 rounded-lg bg-blue-50 dark:bg-blue-900/10 text-blue-500 hover:text-blue-600 border border-blue-500/10 transition-colors"
-                                    title="Preview"
+                                    title={t('announcements.admin.actions.preview')}
                                   >
                                     <span className="material-symbols-outlined text-sm">visibility</span>
                                   </button>
@@ -285,18 +287,18 @@ export default function AdminPage() {
                                       setIsEditorOpen(true);
                                     }}
                                     className="p-2 rounded-lg bg-orange-50 dark:bg-orange-900/10 text-orange-500 hover:text-orange-600 border border-orange-500/10 transition-colors"
-                                    title="Edit"
+                                    title={t('announcements.admin.actions.edit')}
                                   >
                                     <span className="material-symbols-outlined text-sm">edit</span>
                                   </button>
                                   <button
                                     onClick={() => {
-                                      if (confirm('Are you sure you want to delete this announcement?')) {
+                                      if (confirm(t('announcements.admin.actions.confirmDelete'))) {
                                         deleteAnnouncement(a.id);
                                       }
                                     }}
                                     className="p-2 rounded-lg bg-red-50 dark:bg-red-900/10 text-red-500 hover:text-red-600 border border-red-500/10 transition-colors"
-                                    title="Delete"
+                                    title={t('announcements.admin.actions.delete')}
                                   >
                                     <span className="material-symbols-outlined text-sm">delete</span>
                                   </button>
@@ -304,6 +306,109 @@ export default function AdminPage() {
                               </td>
                             </tr>
                           ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'inquiries' && (
+                <div className="flex flex-col">
+                  <div className="p-6 border-b border-border bg-muted/10 flex items-center justify-between">
+                    <div>
+                      <h3 className="text-lg font-black text-card-foreground">{t('announcements.admin.inquiries.tabName')}</h3>
+                    </div>
+                    <div className="flex items-center gap-2 bg-muted/30 p-1 rounded-xl border border-border">
+                      {(['all', 'pending', 'completed'] as const).map((f) => (
+                        <button
+                          key={f}
+                          onClick={() => setInquiryFilter(f)}
+                          className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${inquiryFilter === f
+                            ? 'bg-card text-primary shadow-sm'
+                            : 'text-muted-foreground hover:text-foreground'
+                            }`}
+                        >
+                          {f === 'all' ? t('announcements.admin.inquiries.filterAll') :
+                            f === 'pending' ? t('announcements.admin.inquiries.filterPending') :
+                              t('announcements.admin.inquiries.filterCompleted')}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="bg-muted/30 border-b border-border">
+                          <th className="px-6 py-4 text-xs font-black uppercase tracking-wider text-muted-foreground">{t('announcements.admin.table.date')}</th>
+                          <th className="px-6 py-4 text-xs font-black uppercase tracking-wider text-muted-foreground">{t('inquiry.nameLabel')}</th>
+                          <th className="px-6 py-4 text-xs font-black uppercase tracking-wider text-muted-foreground">{t('inquiry.emailLabel')}</th>
+                          <th className="px-6 py-4 text-xs font-black uppercase tracking-wider text-muted-foreground">{t('inquiry.contentLabel')}</th>
+                          <th className="px-6 py-4 text-xs font-black uppercase tracking-wider text-muted-foreground">{t('announcements.admin.inquiries.tableHeaderStatus')}</th>
+                          <th className="px-6 py-4 text-xs font-black uppercase tracking-wider text-muted-foreground">{t('announcements.admin.inquiries.tableHeaderRespondedAt')}</th>
+                          <th className="px-6 py-4 text-xs font-black uppercase tracking-wider text-muted-foreground">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border">
+                        {isInquiriesLoading ? (
+                          <tr>
+                            <td colSpan={7} className="px-6 py-12 text-center text-muted-foreground">{t('announcements.admin.inquiries.loading')}</td>
+                          </tr>
+                        ) : inquiries.filter((inq: any) => {
+                          if (inquiryFilter === 'pending') return !inq.is_completed;
+                          if (inquiryFilter === 'completed') return inq.is_completed;
+                          return true;
+                        }).length === 0 ? (
+                          <tr>
+                            <td colSpan={7} className="px-6 py-12 text-center text-muted-foreground">{t('announcements.admin.inquiries.noResults')}</td>
+                          </tr>
+                        ) : (
+                          inquiries
+                            .filter((inq: any) => {
+                              if (inquiryFilter === 'pending') return !inq.is_completed;
+                              if (inquiryFilter === 'completed') return inq.is_completed;
+                              return true;
+                            })
+                            .map((inq: any) => (
+                              <tr key={inq.id} className="hover:bg-muted/10 transition-colors">
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <span className="text-xs text-muted-foreground font-medium">{formatDate(inq.created_at)}</span>
+                                </td>
+                                <td className="px-6 py-4">
+                                  <span className="text-sm font-bold">{inq.name}</span>
+                                </td>
+                                <td className="px-6 py-4">
+                                  <span className="text-sm text-card-foreground">{inq.email}</span>
+                                </td>
+                                <td className="px-6 py-4">
+                                  <p className="text-sm text-card-foreground line-clamp-2 max-w-xs">{inq.content}</p>
+                                </td>
+                                <td className="px-6 py-4">
+                                  {inq.is_completed ? (
+                                    <span className="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-[10px] font-black rounded-lg uppercase tracking-wider">
+                                      {t('announcements.admin.inquiries.filterCompleted')}
+                                    </span>
+                                  ) : (
+                                    <span className="px-2 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 text-[10px] font-black rounded-lg uppercase tracking-wider animate-pulse">
+                                      {t('announcements.admin.inquiries.filterPending')}
+                                    </span>
+                                  )}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <span className="text-xs text-muted-foreground">{formatDate(inq.responded_at)}</span>
+                                </td>
+                                <td className="px-6 py-4">
+                                  {!inq.is_completed && (
+                                    <button
+                                      onClick={() => updateInquiryStatus({ id: inq.id, is_completed: true })}
+                                      className="text-primary hover:underline text-xs font-black uppercase tracking-tighter transition-all active:scale-95"
+                                    >
+                                      {t('announcements.admin.inquiries.markAsCompleted')}
+                                    </button>
+                                  )}
+                                </td>
+                              </tr>
+                            ))
                         )}
                       </tbody>
                     </table>
