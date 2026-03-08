@@ -645,12 +645,6 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
 
       {isMobile ? (
         <div className="h-full flex flex-col pt-safe">
-          <div className="flex items-center justify-end px-6 py-2 border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-40">
-            <div className={`flex items-center gap-1.5 py-1 px-2.5 rounded-full text-[10px] font-bold ${isSaving ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30' : 'bg-green-100 text-green-700 dark:bg-green-900/30'}`}>
-              <div className={`w-1.5 h-1.5 rounded-full ${isSaving ? 'bg-orange-500 animate-pulse' : 'bg-green-500'}`} />
-              {isSaving ? 'Saving...' : lastSavedAt ? lastSavedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Ready'}
-            </div>
-          </div>
           <ErrorToast message={errorMessage} />
           <SuccessToast message={successMessage} />
           <div className="h-full relative flex-1 overflow-hidden">
@@ -659,7 +653,7 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
               className={`absolute h-full top-0 left-0 right-0 transition-transform duration-300 ease-in-out ${activeView === 'left' ? 'translate-x-0' : '-translate-x-full'
                 }`}
             >
-              <div className="h-full overflow-y-auto p-4 space-y-4">
+              <div className="h-full overflow-y-auto p-4 pb-24 space-y-4">
                 <div className="bg-card rounded-ios-lg shadow-ios">
                   <TodoList
                     items={todoList || []}
@@ -750,6 +744,14 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
             activeView={activeView}
             onViewToggle={() => setActiveView(activeView === 'left' ? 'right' : 'left')}
           />
+          {/* 하단 저장 상태 인디케이터 (모바일 화면 우측 하단 고정) */}
+          <div className="fixed bottom-[80px] right-4 z-50 pointer-events-none">
+            <div className={`flex items-center gap-1.5 py-1.5 px-3 rounded-full text-[10px] font-bold shadow-lg border backdrop-blur-md transition-all duration-300 ${isSaving ? 'bg-orange-500/90 text-white border-orange-400' : 'bg-card/90 text-muted-foreground border-border'
+              }`}>
+              <div className={`w-1.5 h-1.5 rounded-full ${isSaving ? 'bg-white animate-pulse' : 'bg-green-500'}`} />
+              {isSaving ? 'Saving' : lastSavedAt ? lastSavedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Ready'}
+            </div>
+          </div>
         </div>
       ) : (
         <div className="h-screen p-4 flex flex-col">
