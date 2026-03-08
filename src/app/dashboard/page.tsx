@@ -36,7 +36,7 @@ export default function Dashboard() {
         <Sidebar />
 
         {/* Main Content Area */}
-        <main className="flex-1 overflow-y-auto w-full pb-20 md:pb-0">
+        <main className="flex-1 overflow-y-auto overflow-x-hidden w-full pb-20 md:pb-0">
           {/* Header */}
           <header className="h-14 md:h-20 bg-card/80 backdrop-blur-md border-b border-border flex items-center justify-between px-4 sm:px-8 sticky top-0 z-40 transition-colors">
             <div className="flex items-center gap-4">

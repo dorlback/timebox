@@ -64,7 +64,7 @@ export function DailyPlanTracker() {
       </div>
 
       <div className="w-full pb-2 relative z-10">
-        <div className="grid grid-cols-10 md:grid-cols-15 gap-2 md:gap-3 mb-4">
+        <div className="grid grid-cols-10 sm:grid-cols-15 gap-1.5 sm:gap-3 mb-4">
           {(isLoading ? Array(30).fill({ date: '', score: 0, completedTasks: 0, totalTasks: 0 }) : history).map((item, idx) => {
             const isToday = item.date === todayKey;
 
