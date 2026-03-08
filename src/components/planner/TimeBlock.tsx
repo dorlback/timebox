@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { TimeBlock as TimeBlockType } from '@/types/planner';
 import { getColorByIndex } from '@/utils/colorUtils';
 import { formatTimeDisplay } from '@/utils/timeUtils';
@@ -24,6 +24,7 @@ export const TimeBlock: React.FC<TimeBlockProps> = React.memo(({
   isMobile = false,
   activeBlockId = null
 }) => {
+  const [isResizeHover, setIsResizeHover] = useState(false);
   const top = block.startTime * 1;
   const height = (block.endTime - block.startTime) * 1;
   const color = getColorByIndex(block.colorIndex);
@@ -120,8 +121,8 @@ export const TimeBlock: React.FC<TimeBlockProps> = React.memo(({
       className={`time-block-container absolute ${isMobile ? 'left-8 right-1' : 'left-12 right-0'} rounded px-2 py-1 ${isCompleted
         ? 'bg-gray-200 border-2 border-gray-400'
         : `${color.bg} border-2 ${color.border}`
-        } ${isDragging ? 'opacity-70 shadow-lg cursor-move z-40 scale-[1.02]' : ''} ${isResizing ? 'opacity-70 shadow-lg z-40' : ''
-        } ${isActive ? 'opacity-85 shadow-2xl z-40 ring-2 ring-blue-500 ring-offset-1' : ''} ${isCompleted ? '' : 'hover:brightness-95'}`}
+        } ${isDragging ? 'opacity-80 shadow-2xl cursor-move z-40 backdrop-blur-[2px]' : ''} ${isResizing ? 'opacity-70 shadow-lg z-40' : ''
+        } ${isActive ? 'opacity-85 shadow-2xl z-40 ring-2 ring-blue-500 ring-offset-1' : ''} ${isCompleted ? '' : 'hover:brightness-95'} ${isResizeHover ? 'ring-[6px] ring-blue-100/50 border-blue-200 shadow-xl z-50 transition-all duration-700' : ''}`}
       style={{
         top: `${top}px`,
         height: `${previewHeight}px`,
@@ -131,7 +132,7 @@ export const TimeBlock: React.FC<TimeBlockProps> = React.memo(({
         transition: 'none',
         willChange: (isDragging || isResizing) ? 'transform, height' : 'auto',
         cursor: isDragging ? 'move' : 'default',
-        zIndex: (isDragging || isResizing || isActive) ? 50 : 1,
+        zIndex: (isDragging || isResizing || isActive || isResizeHover) ? 50 : 1,
         ...interactionStyles
       }}
       onMouseDown={(e) => {
@@ -164,11 +165,14 @@ export const TimeBlock: React.FC<TimeBlockProps> = React.memo(({
 
         if (offsetY <= threshold || offsetY >= blockHeight - threshold) {
           e.currentTarget.style.cursor = 'ns-resize';
+          if (!isResizeHover) setIsResizeHover(true);
         } else {
           e.currentTarget.style.cursor = showContent ? 'move' : 'pointer';
+          if (isResizeHover) setIsResizeHover(false);
         }
       }}
       onMouseLeave={(e) => {
+        setIsResizeHover(false);
         if (!isDragging && !isResizing) {
           e.currentTarget.style.cursor = 'default';
         }
