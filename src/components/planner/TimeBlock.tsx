@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { TimeBlock as TimeBlockType } from '@/types/planner';
 import { getColorByIndex } from '@/utils/colorUtils';
 import { formatTimeDisplay } from '@/utils/timeUtils';
+import { NotebookPen } from 'lucide-react';
 
 interface TimeBlockProps {
   block: TimeBlockType;
@@ -118,7 +119,7 @@ export const TimeBlock: React.FC<TimeBlockProps> = React.memo(({
 
   return (
     <div
-      className={`time-block-container absolute ${isMobile ? 'left-8 right-1' : 'left-12 right-0'} rounded px-2 py-1 ${isCompleted
+      className={`time-block-container group absolute ${isMobile ? 'left-8 right-1' : 'left-12 right-0'} rounded px-2 py-1 ${isCompleted
         ? 'bg-gray-200 border-2 border-gray-400'
         : `${color.bg} border-2 ${color.border}`
         } ${isDragging ? 'opacity-80 shadow-2xl cursor-move z-40 backdrop-blur-[2px]' : ''} ${isResizing ? 'opacity-70 shadow-lg z-40' : ''
@@ -217,6 +218,19 @@ export const TimeBlock: React.FC<TimeBlockProps> = React.memo(({
             </div>
           )}
         </div>
+      )}
+
+      {/* Edit Button - Always visible indicator */}
+      {!isInteracting && duration >= 25 && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onEdit(block); }}
+          onMouseDown={(e) => e.stopPropagation()}
+          className="edit-button absolute top-1 right-1 p-1 rounded-full bg-white/20 hover:bg-white/40 text-current transition-colors"
+          style={{ color: isCompleted ? '#4b5563' : 'inherit' }}
+          title="상세 수정"
+        >
+          <NotebookPen size={16} />
+        </button>
       )}
     </div>
   );

@@ -1,5 +1,5 @@
 import React from 'react';
-import { GripVertical, Plus, Trash2, ArrowUp, Clock, Check, X } from 'lucide-react';
+import { GripVertical, Plus, Trash2, ArrowUp, Clock, Check, X, NotebookPen } from 'lucide-react';
 import { BrainDumpItem } from '@/types/planner';
 import { useTranslation } from '@/contexts/LanguageContext';
 
@@ -135,12 +135,21 @@ export const BrainDump: React.FC<BrainDumpProps> = React.memo(({
               >
                 {isInTimePlan ? <Clock size={14} /> : <Clock size={14} />}
               </button>
+              {/* 
               <button
                 onClick={(e) => { e.stopPropagation(); onMoveToTodo(item); }}
                 className="text-blue-500 hover:text-blue-700"
                 title={t('planner.moveBrainDump')}
               >
                 <ArrowUp size={14} />
+              </button>
+              */}
+              <button
+                onClick={(e) => { e.stopPropagation(); onItemDoubleClick?.(item); }}
+                className="edit-button text-muted-foreground hover:text-foreground p-1 transition-colors"
+                title={t('common.edit')}
+              >
+                <NotebookPen size={14} />
               </button>
               <button
                 onClick={(e) => { e.stopPropagation(); onDeleteItem(item.id); }}

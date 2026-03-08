@@ -18,6 +18,12 @@ export const useTimeBlockInteraction = (
   const gridTopAbsoluteRef = useRef<number>(0);
   const isDraggingRef = useRef<number | null>(null);
   const isResizingRef = useRef<number | null>(null);
+  const pendingInteractionRef = useRef<{
+    block: TimeBlock;
+    offsetY: number;
+    initialClientY: number;
+    type: 'drag' | 'resize-top' | 'resize-bottom';
+  } | null>(null);
 
   // 드래그 중 시각적 프리뷰 오프셋 (CSS transform용)
   const [dragPreviewOffset, setDragPreviewOffset] = useState<{ blockId: number; offsetY: number; type: 'drag' | 'resize-top' | 'resize-bottom' } | null>(null);
@@ -77,7 +83,7 @@ export const useTimeBlockInteraction = (
         });
       }
     }
-  }, [resizingBlock, draggingBlock, dragOffset, resizeEdge]);
+  }, [resizingBlock, draggingBlock, dragOffset, resizeEdge, timeBlocks]);
 
 
   // 고속 자동 스크롤 로직
@@ -138,7 +144,10 @@ export const useTimeBlockInteraction = (
   const handleBlockMouseDown = useCallback((e: React.MouseEvent, block: TimeBlock) => {
     // 편집 모드 활성화 (모바일 롱프레스 등을 통해 호출될 때)
     setActiveBlockId(block.id);
-    if ((e.target as HTMLElement).closest('.edit-button')) return;
+    if ((e.target as HTMLElement).closest('.edit-button')) {
+      e.stopPropagation();
+      return;
+    }
 
     const rect = e.currentTarget.getBoundingClientRect();
     const scrollContainer = document.getElementById('planner-scroll-container');
@@ -154,59 +163,73 @@ export const useTimeBlockInteraction = (
     const blockHeight = rect.height;
     lastClientYRef.current = e.clientY;
 
-    // 모바일이고 편집 모드인 블록인 경우, 핸들이 보여지므로 리사이즈 감지 영역을 조금 더 넓게 설정(8px)
-    // 일반 상태에서는 오클릭 방지를 위해 최소화(4px)
-    // 타임블록 사이즈 조절
     const resizeThreshold = (activeBlockId === block.id) ? 6 : 4;
+    const interactionType = offsetY <= resizeThreshold ? 'resize-top' : (offsetY >= blockHeight - resizeThreshold ? 'resize-bottom' : 'drag');
 
-    if (offsetY <= resizeThreshold) {
-      e.preventDefault();
-      e.stopPropagation();
-      setResizingBlock(block.id);
-      setResizeEdge('top');
-      isResizingRef.current = block.id;
-      // 상태 업데이트 대기 없이 즉시 위치 갱신
-      updateDragPreview(e.clientY, null, block.id, offsetY);
-      startScrollIfNeeded(e.clientY);
-      return;
-    } else if (offsetY >= blockHeight - resizeThreshold) {
-      e.preventDefault();
-      e.stopPropagation();
-      setResizingBlock(block.id);
-      setResizeEdge('bottom');
-      isResizingRef.current = block.id;
-      // 상태 업데이트 대기 없이 즉시 위치 갱신
-      updateDragPreview(e.clientY, null, block.id, offsetY);
+    // 모바일 롱프레스 등을 통한 강제 드래그인 경우(시뮬레이션 이벤트) 즉시 시작
+    if (e.clientX === 0 && e.clientY === 0) {
+      if (interactionType === 'drag') {
+        setDraggingBlock(block.id);
+        setDragOffset(offsetY);
+        isDraggingRef.current = block.id;
+        updateDragPreview(e.clientY, block.id, null, offsetY);
+      } else {
+        setResizingBlock(block.id);
+        setResizeEdge(interactionType === 'resize-top' ? 'top' : 'bottom');
+        isResizingRef.current = block.id;
+        updateDragPreview(e.clientY, null, block.id, offsetY);
+      }
       startScrollIfNeeded(e.clientY);
       return;
     }
 
-    setDraggingBlock(block.id);
-    setDragOffset(offsetY);
-    isDraggingRef.current = block.id;
-
-    // 상태 업데이트 대기 없이 즉시 위치 갱신 (모바일 롱프레스 즉시 드래그 연동 핵심)
-    updateDragPreview(e.clientY, block.id, null, offsetY);
-    startScrollIfNeeded(e.clientY);
+    // 일반 PC 마우스 interaction: 즉시 드래그하지 않고 대기 (이동 임계값 확인용)
+    pendingInteractionRef.current = {
+      block,
+      offsetY,
+      initialClientY: e.clientY,
+      type: interactionType
+    };
   }, [activeBlockId, updateDragPreview, startScrollIfNeeded]);
 
   const handleMouseMove = useCallback((e: MouseEvent | TouchEvent) => {
-    // Ref를 사용하여 상태 업데이트 대기 없이 즉시 반응 가능 (모바일 롱프레스 연동 핵심)
-    const isInteracting = isResizingRef.current !== null || isDraggingRef.current !== null;
-
-    if (!isInteracting) return;
-
-    // 상호작용 중에는 브라우저의 기본 스크롤 동작을 즉시 차단
-    if (e.cancelable) {
-      e.preventDefault();
-    }
-
     const clientY = 'touches' in e
       ? (e as TouchEvent).touches[0]?.clientY
       : (e as MouseEvent).clientY;
 
     if (clientY === undefined) return;
     lastClientYRef.current = clientY;
+
+    // 펜딩 중인 interaction 처리
+    if (pendingInteractionRef.current) {
+      const { block, offsetY, initialClientY, type } = pendingInteractionRef.current;
+      const moveDiff = Math.abs(clientY - initialClientY);
+
+      // 5px 이상 이동 시 실제 드래그/리사이즈 시작
+      if (moveDiff > 5) {
+        if (type === 'drag') {
+          setDraggingBlock(block.id);
+          setDragOffset(offsetY);
+          isDraggingRef.current = block.id;
+        } else {
+          setResizingBlock(block.id);
+          setResizeEdge(type === 'resize-top' ? 'top' : 'bottom');
+          isResizingRef.current = block.id;
+        }
+        pendingInteractionRef.current = null;
+      } else {
+        return; // 임계값 도달 전까지는 무시
+      }
+    }
+
+    // 상호작용 중인지 확인
+    const isInteracting = isResizingRef.current !== null || isDraggingRef.current !== null;
+    if (!isInteracting) return;
+
+    // 상호작용 중에는 브라우저의 기본 스크롤 동작을 즉시 차단
+    if (e.cancelable) {
+      e.preventDefault();
+    }
 
     // 드래그 중에는 프리뷰만 업데이트
     updateDragPreview(clientY);
@@ -221,7 +244,6 @@ export const useTimeBlockInteraction = (
 
       if (block) {
         if (type === 'drag') {
-          // 드래그: 시작 위치를 10분 단위로 스냅
           const snappedStart = Math.max(0, Math.min(1440, Math.round(offsetY / 10) * 10));
           const duration = block.endTime - block.startTime;
           const snappedEnd = snappedStart + duration;
@@ -233,14 +255,12 @@ export const useTimeBlockInteraction = (
             }
           }
         } else if (type === 'resize-top') {
-          // 상단 리사이즈: 시작 시간만 스냅
           const snappedStart = Math.max(0, Math.min(block.endTime - 10, Math.round(offsetY / 10) * 10));
           const hasConflict = checkTimeConflict(timeBlocks, blockId, snappedStart, block.endTime);
           if (!hasConflict) {
             updateBlockTime(blockId, snappedStart, block.endTime);
           }
         } else if (type === 'resize-bottom') {
-          // 하단 리사이즈: 종료 시간만 스냅
           const snappedEnd = Math.min(1440, Math.max(block.startTime + 10, Math.round(offsetY / 10) * 10));
           const hasConflict = checkTimeConflict(timeBlocks, blockId, block.startTime, snappedEnd);
           if (!hasConflict) {
@@ -258,6 +278,7 @@ export const useTimeBlockInteraction = (
     setResizeEdge(null);
     isDraggingRef.current = null;
     isResizingRef.current = null;
+    pendingInteractionRef.current = null;
 
     if (scrollIntervalRef.current) {
       cancelAnimationFrame(scrollIntervalRef.current);
@@ -268,7 +289,6 @@ export const useTimeBlockInteraction = (
   useEffect(() => {
     const options = { passive: false };
 
-    // 이벤트 리스너 상시 등록 (모바일 롱프레스 즉각 반응을 위함)
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
     document.addEventListener('touchmove', handleMouseMove, options);

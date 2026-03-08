@@ -1,5 +1,5 @@
 import React from 'react';
-import { GripVertical, Trash2, ArrowDown } from 'lucide-react';
+import { GripVertical, Trash2, ArrowDown, NotebookPen } from 'lucide-react';
 import { TodoItem } from '@/types/planner';
 import { useTranslation } from '@/contexts/LanguageContext';
 
@@ -93,12 +93,21 @@ export const TodoList: React.FC<TodoListProps> = React.memo(({
               <span className={`flex-1 text-sm ${item.completed ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
                 {item.text}
               </span>
+              {/* 
               <button
                 onClick={(e) => { e.stopPropagation(); onMoveToBrainDump(item); }}
                 className="text-orange-500 hover:text-orange-700"
                 title={t('planner.moveTodo')}
               >
                 <ArrowDown size={14} />
+              </button>
+              */}
+              <button
+                onClick={(e) => { e.stopPropagation(); onItemDoubleClick?.(item); }}
+                className="edit-button text-muted-foreground hover:text-foreground p-1 transition-colors"
+                title={t('common.edit')}
+              >
+                <NotebookPen size={14} />
               </button>
               <button
                 onClick={(e) => { e.stopPropagation(); onDeleteItem(item.id); }}
