@@ -52,8 +52,9 @@ export default function Dashboard() {
                 <button
                   onClick={() => setIsInquiryOpen(true)}
                   className="w-10 h-10 flex items-center justify-center rounded-xl bg-muted text-muted-foreground hover:text-primary transition-colors"
+                  title={t('inquiry.modalTitle')}
                 >
-                  <span className="material-symbols-outlined">chat_bubble</span>
+                  <span className="material-symbols-outlined">support_agent</span>
                 </button>
               </div>
             </div>
