@@ -11,6 +11,8 @@ export const usePlannerData = (currentDate: Date, userId: string, showSuccess: (
   // 1. 전체 날짜 데이터를 관리하는 상태 (날짜 키 기준)
   const [dailyData, setDailyData] = useState<Record<string, DailyData>>({});
   const [loading, setLoading] = useState<boolean>(false);
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
 
   const supabase = createClient();
 
@@ -72,14 +74,26 @@ export const usePlannerData = (currentDate: Date, userId: string, showSuccess: (
       showError('로그인이 필요합니다.');
       return;
     }
-    await savePlannerData(userId, dateKey, currentData, false, showSuccess, showError);
+    setIsSaving(true);
+    try {
+      await savePlannerData(userId, dateKey, currentData, false, showSuccess, showError);
+      setLastSavedAt(new Date());
+    } finally {
+      setIsSaving(false);
+    }
   }, [userId, dateKey, currentData, showSuccess, showError]);
 
   const handleAutoSave = useCallback(async () => {
     if (!userId) {
       return;
     }
-    await savePlannerData(userId, dateKey, currentData, true, showSuccess, showError);
+    setIsSaving(true);
+    try {
+      await savePlannerData(userId, dateKey, currentData, true, showSuccess, showError);
+      setLastSavedAt(new Date());
+    } finally {
+      setIsSaving(false);
+    }
   }, [userId, dateKey, currentData, showSuccess, showError]);
 
   // --- 상태 업데이트 함수들 ---
@@ -132,6 +146,8 @@ export const usePlannerData = (currentDate: Date, userId: string, showSuccess: (
     setTimeBlocks,
     handleSave,
     handleAutoSave,
-    loading
+    loading,
+    isSaving,
+    lastSavedAt,
   };
 };

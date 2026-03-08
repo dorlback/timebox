@@ -3,17 +3,16 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Moon, Sun, LayoutDashboard, User, Calendar, Save, RefreshCw } from 'lucide-react';
+import { Moon, Sun, LayoutDashboard, User, Calendar, Save, RefreshCw, Clock } from 'lucide-react';
 import { useDarkMode } from '@/hooks/useDarkMode';
 import { useTranslation } from '@/contexts/LanguageContext';
 
 interface MobileBottomNavProps {
-  onSave?: () => void;
   activeView?: 'left' | 'right';
   onViewToggle?: () => void;
 }
 
-export function MobileBottomNav({ onSave, activeView, onViewToggle }: MobileBottomNavProps) {
+export function MobileBottomNav({ activeView, onViewToggle }: MobileBottomNavProps) {
   const pathname = usePathname();
   const { t } = useTranslation();
   const { isDark, toggleDark, mounted } = useDarkMode();
@@ -59,7 +58,7 @@ export function MobileBottomNav({ onSave, activeView, onViewToggle }: MobileBott
             {activeView === 'left' ? (
               <Calendar size={28} strokeWidth={2.5} />
             ) : (
-              <Save size={28} strokeWidth={2.5} />
+              <Clock size={28} strokeWidth={2.5} />
             )}
           </button>
         )}
@@ -73,13 +72,6 @@ export function MobileBottomNav({ onSave, activeView, onViewToggle }: MobileBott
             >
               {mounted ? (isDark ? <Sun size={20} /> : <Moon size={20} />) : <div className="w-5 h-5" />}
               <span className="text-[10px] font-medium">{t('common.theme')}</span>
-            </button>
-            <button
-              onClick={onSave}
-              className="flex flex-col items-center justify-center gap-0.5 px-3 pb-1 transition-all text-muted-foreground hover:text-primary"
-            >
-              <Save size={20} />
-              <span className="text-[10px] font-medium">{t('common.save')}</span>
             </button>
           </>
         ) : (

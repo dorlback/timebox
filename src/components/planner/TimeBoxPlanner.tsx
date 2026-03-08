@@ -81,6 +81,8 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
     handleSave,
     handleAutoSave,
     loading,
+    isSaving,
+    lastSavedAt,
   } = usePlannerData(date, CurrentUser.id, showSuccess, showError);
 
   const [newDumpText, setNewDumpText] = useState('');
@@ -100,6 +102,19 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  // 페이지 이탈 시 저장되지 않은 데이터 경고
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isSaving) {
+        e.preventDefault();
+        e.returnValue = ''; // 브라우저 표준 경고창 표시
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [isSaving]);
 
   useEffect(() => {
     if (loading) return;
@@ -629,7 +644,13 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
       ) : null}
 
       {isMobile ? (
-        <div className="h-full flex flex-col">
+        <div className="h-full flex flex-col pt-safe">
+          <div className="flex items-center justify-end px-6 py-2 border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-40">
+            <div className={`flex items-center gap-1.5 py-1 px-2.5 rounded-full text-[10px] font-bold ${isSaving ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30' : 'bg-green-100 text-green-700 dark:bg-green-900/30'}`}>
+              <div className={`w-1.5 h-1.5 rounded-full ${isSaving ? 'bg-orange-500 animate-pulse' : 'bg-green-500'}`} />
+              {isSaving ? 'Saving...' : lastSavedAt ? lastSavedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Ready'}
+            </div>
+          </div>
           <ErrorToast message={errorMessage} />
           <SuccessToast message={successMessage} />
           <div className="h-full relative flex-1 overflow-hidden">
@@ -726,32 +747,19 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
           </div>
           {/* 하단 네비게이션 바 (통합 컴포넌트) */}
           <MobileBottomNav
-            onSave={handleSave}
             activeView={activeView}
             onViewToggle={() => setActiveView(activeView === 'left' ? 'right' : 'left')}
           />
         </div>
       ) : (
-        <div className="h-screen p-6 flex flex-col">
+        <div className="h-screen p-4 flex flex-col">
           <div className="max-w-7xl mx-auto w-full flex flex-col flex-grow overflow-hidden">
-            <div className="flex items-center justify-between px-4 py-2 mb-6 drop-shadow border border-border bg-card rounded-full flex-shrink-0">
-              <Link href="/">
-                <h1 className="text-sm font-bold tracking-tight text-muted-foreground uppercase">
-                  Daily <span className="text-foreground">Time Box</span>
-                </h1>
-              </Link>
-
-              <div className="flex items-center gap-3">
-                {/* <DarkModeToggle /> */}
-                <button
-                  onClick={handleSave}
-                  className="flex items-center gap-2 bg-primary hover:opacity-90 text-primary-foreground text-xs font-semibold px-5 py-2 rounded-full transition-all shadow-sm active:scale-95"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" /><polyline points="17 21 17 13 7 13 7 21" /><polyline points="7 3 7 8 15 8" />
-                  </svg>
-                  {t('common.save')}
-                </button>
+            <div className="flex items-center px-4 py-1 mb-3">
+              <div className="flex items-center gap-2 text-[10px] font-bold py-1 px-3 rounded-full bg-muted/50 border border-border/50 shadow-sm">
+                <div className={`w-1.5 h-1.5 rounded-full ${isSaving ? 'bg-orange-500 animate-pulse' : 'bg-green-500'}`} />
+                <span className="text-muted-foreground uppercase tracking-tighter">
+                  {isSaving ? 'Saving...' : lastSavedAt ? `Saved ${lastSavedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : 'Ready'}
+                </span>
               </div>
             </div>
 

@@ -36,7 +36,7 @@ export const TimeGrid: React.FC<TimeGridProps> = React.memo(({
     <div className="relative">
       <div className="border-b border-border mb-2" style={{ height: '1px' }}></div>
 
-      <div id="time-grid" className="relative" style={{ height: '1440px' }}>
+      <div id="time-grid" className="relative w-full" style={{ height: '1440px' }}>
         {/* 시간 그리드 배경 */}
         {hours.map((hour) => (
           <div key={hour} className="flex border-b border-border" style={{ height: '60px' }}>
