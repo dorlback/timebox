@@ -84,7 +84,7 @@ export function AnnouncementsBoardModal({ isOpen, onClose, initialAnnouncementId
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-0 sm:p-4">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-background/80 backdrop-blur-md animate-in fade-in duration-300"
@@ -92,7 +92,7 @@ export function AnnouncementsBoardModal({ isOpen, onClose, initialAnnouncementId
       />
 
       {/* Modal Content */}
-      <div className="relative w-full max-w-6xl h-full sm:h-[90vh] bg-background sm:rounded-[40px] border-x-0 sm:border border-border shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-300">
+      <div className="relative w-full max-w-6xl h-[85vh] sm:h-[90vh] bg-background rounded-[32px] sm:rounded-[40px] border border-border shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-300">
         {/* Header */}
         <header className="px-6 py-6 sm:px-10 sm:py-8 flex items-center justify-between border-b border-border bg-card/30 shrink-0">
           <div>

@@ -76,7 +76,7 @@ export function NotificationBell({ onViewAll }: NotificationBellProps) {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-3 w-80 sm:w-96 bg-card border border-border rounded-3xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+        <div className="fixed left-1/2 -translate-x-1/2 top-[72px] w-[calc(100%-2rem)] max-w-[400px] sm:absolute sm:right-0 sm:left-auto sm:top-auto sm:mt-3 sm:translate-x-0 sm:w-96 bg-card border border-border rounded-3xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
           <header className="px-6 py-4 border-b border-border bg-muted/10 flex items-center justify-between">
             <h3 className="text-sm font-black tracking-tight text-card-foreground">{t('announcements.notifications.title')}</h3>
             {unreadCount > 0 && (
