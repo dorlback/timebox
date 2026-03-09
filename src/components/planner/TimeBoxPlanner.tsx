@@ -777,7 +777,7 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
             <div className="grid grid-cols-3 gap-6 flex-grow overflow-hidden">
               <div className="flex flex-col h-full overflow-hidden">
                 <div className="flex-grow overflow-y-auto space-y-6 pr-2">
-                  <div className="bg-card rounded-lg shadow-sm">
+                  <div className="bg-card rounded-lg">
                     <TodoList
                       items={todoList || []}
                       onToggleComplete={toggleTodoComplete}
@@ -816,7 +816,7 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
                 </div>
               </div>
 
-              <div className="col-span-2 h-full overflow-hidden rounded-lg shadow">
+              <div className="col-span-2 h-full overflow-hidden ">
                 <TimePlan
                   date={date}
                   timeBlocks={timeBlocks || []}

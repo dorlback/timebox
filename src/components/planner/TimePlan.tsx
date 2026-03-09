@@ -78,7 +78,7 @@ export const TimePlan: React.FC<TimePlanProps> = React.memo(({
   };
 
   return (
-    <div className="flex flex-col h-full w-full min-w-0 bg-card/30 backdrop-blur-sm rounded-xl border border-border overflow-hidden">
+    <div className="flex flex-col h-full w-full min-w-0 bg-card/30 md:rounded-lg md:border md:border-border overflow-hidden">
 
       <div id="planner-scroll-container" className={`flex-1 overflow-y-auto overflow-x-hidden w-full custom-scrollbar ${isMobile ? 'pb-[3.8rem]' : ''}`} ref={scrollContainerRef}>
         <TimeGrid

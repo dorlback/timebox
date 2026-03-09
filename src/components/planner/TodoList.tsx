@@ -29,7 +29,7 @@ export const TodoList: React.FC<TodoListProps> = React.memo(({
 
   return (
     <div
-      className="todo-list-container bg-card rounded-lg shadow p-4 transition-colors border border-border min-h-[150px]"
+      className="todo-list-container bg-card rounded-lg p-4 transition-colors border border-border min-h-[150px]"
       onDragOver={onDragOver}
       onDrop={(e) => onDrop(e)}
     >

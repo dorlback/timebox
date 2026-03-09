@@ -44,7 +44,7 @@ export const BrainDump: React.FC<BrainDumpProps> = React.memo(({
 
   return (
     <div
-      className="brain-dump-container p-4 bg-card rounded-lg shadow border border-border transition-colors min-h-[150px]"
+      className="brain-dump-container p-4 bg-card rounded-lg border border-border transition-colors min-h-[150px]"
       onDragOver={onDragOver}
       onDrop={(e) => onDrop(e)}
     >
