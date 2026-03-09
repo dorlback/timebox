@@ -58,7 +58,7 @@ export const TodoList: React.FC<TodoListProps> = React.memo(({
 
               // 시각적 피드백이나 진동 추가 가능
               if ('vibrate' in navigator) navigator.vibrate(10);
-            }, 600);
+            }, 300);
           };
 
           const handleTouchEnd = () => {

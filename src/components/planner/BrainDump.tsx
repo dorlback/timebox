@@ -82,7 +82,7 @@ export const BrainDump: React.FC<BrainDumpProps> = React.memo(({
               onDragStart(dragEvent, item);
 
               if ('vibrate' in navigator) navigator.vibrate(10);
-            }, 600);
+            }, 300);
           };
 
           const handleTouchEnd = () => {

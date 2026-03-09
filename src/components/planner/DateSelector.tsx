@@ -67,8 +67,8 @@ export const DateSelector: React.FC<DateSelectorProps> = ({
   CustomInput.displayName = "CustomInput";
 
   return (
-    <div className={`flex w-full items-center  ${isMobile ? 'gap-1 justify-between' : 'gap-2 justify-end'}`}>
-      <div className={`flex items-center bg-card border border-border rounded-lg shadow-sm h-10 overflow-hidden ${isMobile ? 'scale-90 origin-right' : ''}`}>
+    <div className={`flex items-center ${isMobile ? 'gap-1.5' : 'gap-2 justify-end'}`}>
+      <div className={`flex items-center bg-card border border-border rounded-lg shadow-sm h-10 overflow-hidden ${isMobile ? 'scale-85 origin-right h-8' : ''}`}>
         {/* 어제 이동 버튼 */}
         <button
           onClick={goYesterday}
@@ -105,7 +105,7 @@ export const DateSelector: React.FC<DateSelectorProps> = ({
 
       <button
         onClick={() => handleDateUpdate(new Date())}
-        className={`${isMobile ? 'min-h-8' : 'min-h-10'} px-4  text-xs font-bold text-primary bg-primary/10 hover:bg-primary/20 rounded-lg transition-colors border border-primary/20`}
+        className={`${isMobile ? 'min-h-7 px-2.5 py-2.5 scale-85 origin-right' : 'min-h-10 py-1 px-4'} text-xs font-bold text-primary bg-primary/10 hover:bg-primary/20 rounded-lg transition-colors border border-primary/20`}
       >
         {t('common.today')}
       </button>

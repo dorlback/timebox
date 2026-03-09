@@ -101,7 +101,7 @@ export const TimeBlock: React.FC<TimeBlockProps> = React.memo(({
 
       // 롱프레스 성공 시 시각적으로 진동 효과나 소리 등을 주면 좋으나 여기서는 즉시 드래그 활성화
       onMouseDown(simulatedEvent, block);
-    }, 600);
+    }, 300);
   };
 
   const handleTouchEnd = () => {

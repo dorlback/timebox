@@ -8,6 +8,7 @@ import { useTimeBlockInteraction } from '@/hooks/useTimeBlockInteraction';
 import { findAvailableSlotAfterNow, checkTimeConflict } from '@/utils/timeUtils';
 import { PASTEL_COLORS } from '@/utils/colorUtils';
 import { BrainDump } from './BrainDump';
+import { DateSelector } from './DateSelector';
 import { TodoList } from './TodoList';
 import { TimeBlockEditor } from './TimeBlockEditor';
 import { ErrorToast } from './ErrorToast';
@@ -647,6 +648,18 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
         <div className="h-full flex flex-col pt-safe">
           <ErrorToast message={errorMessage} />
           <SuccessToast message={successMessage} />
+
+          {/* Mobile Header: Save Status + Date Selector */}
+          <div className="px-3 py-1.5 border-b border-border bg-card/50 flex items-center justify-between min-h-[44px]">
+            {/* Save Status (Top Left on Mobile) */}
+            <div className={`flex items-center gap-1.5 py-1 px-2.5 rounded-full text-[9px] font-bold border backdrop-blur-md transition-all duration-300 ${isSaving ? 'bg-orange-500/90 text-white border-orange-400' : 'bg-muted/50 text-muted-foreground border-border/50'}`}>
+              <div className={`w-1.5 h-1.5 rounded-full ${isSaving ? 'bg-white animate-pulse' : 'bg-green-500'}`} />
+              {isSaving ? 'Saving' : lastSavedAt ? lastSavedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Ready'}
+            </div>
+
+            <DateSelector date={date} onDateChange={handleDateChange} isMobile={true} />
+          </div>
+
           <div className="h-full relative flex-1 overflow-hidden">
             {/* 좌측 뷰 (할일/브레인덤프) */}
             <div
@@ -744,25 +757,18 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
             activeView={activeView}
             onViewToggle={() => setActiveView(activeView === 'left' ? 'right' : 'left')}
           />
-          {/* 하단 저장 상태 인디케이터 (모바일 화면 우측 하단 고정) */}
-          <div className="fixed bottom-[80px] right-4 z-50 pointer-events-none">
-            <div className={`flex items-center gap-1.5 py-1.5 px-3 rounded-full text-[10px] font-bold shadow-lg border backdrop-blur-md transition-all duration-300 ${isSaving ? 'bg-orange-500/90 text-white border-orange-400' : 'bg-card/90 text-muted-foreground border-border'
-              }`}>
-              <div className={`w-1.5 h-1.5 rounded-full ${isSaving ? 'bg-white animate-pulse' : 'bg-green-500'}`} />
-              {isSaving ? 'Saving' : lastSavedAt ? lastSavedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Ready'}
-            </div>
-          </div>
         </div>
       ) : (
         <div className="h-screen p-4 flex flex-col">
           <div className="max-w-7xl mx-auto w-full flex flex-col flex-grow overflow-hidden">
-            <div className="flex items-center px-4 py-1 mb-3">
+            <div className="flex items-center justify-between px-4 py-1 mb-3">
               <div className="flex items-center gap-2 text-[10px] font-bold py-1 px-3 rounded-full bg-muted/50 border border-border/50 shadow-sm">
                 <div className={`w-1.5 h-1.5 rounded-full ${isSaving ? 'bg-orange-500 animate-pulse' : 'bg-green-500'}`} />
                 <span className="text-muted-foreground uppercase tracking-tighter">
                   {isSaving ? 'Saving...' : lastSavedAt ? `Saved ${lastSavedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : 'Ready'}
                 </span>
               </div>
+              <DateSelector date={date} onDateChange={handleDateChange} isMobile={false} />
             </div>
 
             <ErrorToast message={errorMessage} />
