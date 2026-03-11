@@ -7,7 +7,7 @@ export default function PrivacyPage() {
   const { t } = useTranslation();
 
   return (
-    <div className="min-h-[calc(var(--vh,1vh)*100)] bg-background text-foreground flex flex-col">
+    <div className="100dvh bg-background text-foreground flex flex-col">
       {/* Header */}
       <header className="sticky top-0 z-30 bg-background/80 backdrop-blur-md border-b border-border py-4 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto flex items-center justify-between">

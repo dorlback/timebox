@@ -35,7 +35,7 @@ export default function AdminPage() {
 
   if (isUserLoading || !user || !user.isAdmin) {
     return (
-      <div className="min-h-[calc(var(--vh,1vh)*100)] bg-background flex items-center justify-center">
+      <div className="100dvh bg-background flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
           <p className="text-sm font-bold text-muted-foreground">{t('common.loading')}</p>
@@ -57,7 +57,7 @@ export default function AdminPage() {
   };
 
   return (
-    <div className="bg-background text-foreground min-h-[calc(var(--vh,1vh)*100)] antialiased transition-colors">
+    <div className="bg-background text-foreground 100dvh antialiased transition-colors">
       <div className="flex h-[calc(var(--vh,1vh)*100)] overflow-hidden">
         <Sidebar />
 

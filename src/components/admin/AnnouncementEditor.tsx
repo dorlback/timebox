@@ -81,7 +81,7 @@ export function AnnouncementEditor({ onClose, announcement }: AnnouncementEditor
 
   return (
     <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-      <div className="bg-card w-full max-w-4xl max-h-[90vh] rounded-3xl border border-border shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
+      <div className="bg-card w-full max-w-4xl max-h-[90dvh] rounded-3xl border border-border shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
         <header className="px-8 py-6 border-b border-border flex items-center justify-between bg-muted/30">
           <div>
             <h2 className="text-xl font-black text-card-foreground">

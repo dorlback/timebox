@@ -102,7 +102,7 @@ export default function MyPage() {
 
   return (
     <div
-      className="bg-background text-foreground min-h-[calc(var(--vh,1vh)*100)] antialiased transition-colors"
+      className="bg-background text-foreground 100dvh antialiased transition-colors"
       style={{ fontFamily: "'Space Grotesk', sans-serif" }}
     >
       <div className="flex h-[calc(var(--vh,1vh)*100)] overflow-hidden">

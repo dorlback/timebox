@@ -92,7 +92,7 @@ export function AnnouncementsBoardModal({ isOpen, onClose, initialAnnouncementId
       />
 
       {/* Modal Content */}
-      <div className="relative w-full max-w-6xl h-[85vh] sm:h-[90vh] bg-background rounded-[32px] sm:rounded-[40px] border border-border shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-300">
+      <div className="relative w-full max-w-6xl h-[85dvh] sm:h-[90dvh] bg-background rounded-[32px] sm:rounded-[40px] border border-border shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-300">
         {/* Header */}
         <header className="px-6 py-6 sm:px-10 sm:py-8 flex items-center justify-between border-b border-border bg-card/30 shrink-0">
           <div>
