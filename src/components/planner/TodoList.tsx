@@ -108,6 +108,7 @@ export const TodoList: React.FC<TodoListProps> = React.memo(({
               <button
                 onClick={(e) => { e.stopPropagation(); onItemDoubleClick?.(item); }}
                 className="edit-button text-muted-foreground hover:text-foreground p-1 transition-colors"
+                aria-label={t('common.edit')}
                 title={t('common.edit')}
               >
                 <NotebookPen size={14} />
@@ -115,6 +116,7 @@ export const TodoList: React.FC<TodoListProps> = React.memo(({
               <button
                 onClick={(e) => { e.stopPropagation(); onDeleteItem(item.id); }}
                 className="text-red-400 hover:text-red-600 p-1"
+                aria-label={t('common.delete')}
               >
                 <Trash2 size={14} />
               </button>

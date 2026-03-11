@@ -1,7 +1,12 @@
 'use client';
 
 import React, { forwardRef } from 'react';
-import DatePicker from 'react-datepicker';
+import dynamic from 'next/dynamic';
+
+const DatePicker = dynamic<any>(() => import('react-datepicker').then(mod => mod.default), {
+  ssr: false,
+  loading: () => <div className="h-10 w-32 bg-muted animate-pulse rounded-lg" />
+});
 import { addDays, subDays } from 'date-fns';
 import { ko, enUS } from 'date-fns/locale';
 import { useTranslation } from '@/contexts/LanguageContext';

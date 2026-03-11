@@ -134,6 +134,7 @@ export const BrainDump: React.FC<BrainDumpProps> = React.memo(({
                   ? 'text-red-500 hover:text-red-700'
                   : 'text-green-500 hover:text-green-700'
                   }`}
+                aria-label={isInTimePlan ? t('planner.removeFromTimePlan') : t('planner.addToTimePlan')}
                 title={isInTimePlan ? t('planner.removeFromTimePlan') : t('planner.addToTimePlan')}
               >
                 {isInTimePlan ? <Clock size={14} /> : <Clock size={14} />}
@@ -150,6 +151,7 @@ export const BrainDump: React.FC<BrainDumpProps> = React.memo(({
               <button
                 onClick={(e) => { e.stopPropagation(); onItemDoubleClick?.(item); }}
                 className="edit-button text-muted-foreground hover:text-foreground p-1 transition-colors"
+                aria-label={t('common.edit')}
                 title={t('common.edit')}
               >
                 <NotebookPen size={14} />
@@ -157,6 +159,7 @@ export const BrainDump: React.FC<BrainDumpProps> = React.memo(({
               <button
                 onClick={(e) => { e.stopPropagation(); onDeleteItem(item.id); }}
                 className="text-red-400 hover:text-red-600 p-1"
+                aria-label={t('common.delete')}
               >
                 <Trash2 size={14} />
               </button>
@@ -177,6 +180,7 @@ export const BrainDump: React.FC<BrainDumpProps> = React.memo(({
           <button
             onClick={onAddItem}
             className="bg-primary text-primary-foreground px-3 py-2 rounded hover:opacity-90 transition-colors"
+            aria-label={t('common.add')}
           >
             <Plus size={16} />
           </button>
