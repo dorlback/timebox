@@ -688,7 +688,7 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
 
 
   return (
-    <div className="h-[100dvh] bg-background transition-colors">
+    <div className="h-full bg-background transition-colors">
       {loading ? (
         <div className="absolute inset-0 bg-white/50 dark:bg-black/50 z-50 flex items-center justify-center">
           <div className="text-primary font-bold">{t('common.loading')}</div>
