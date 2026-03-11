@@ -24,7 +24,7 @@ export default async function HomePage() {
   const startHref = user ? "/timebox" : "/login";
 
   return (
-    <div className="min-h-screen bg-background transition-colors">
+    <div className="min-h-[calc(var(--vh,1vh)*100)] bg-background transition-colors">
       <NavBar user={user as any} />
 
       {/* Hero Section with Gradient Background */}

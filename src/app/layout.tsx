@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import Providers from "./providers";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
+import ViewportHeightFix from "@/components/ViewportHeightFix";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -65,6 +66,7 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <Providers>
+          <ViewportHeightFix />
           {children}
           <PWAInstallPrompt />
         </Providers>

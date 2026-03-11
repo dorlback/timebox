@@ -11,7 +11,7 @@ export default function Page() {
 
   if (isLoading) {
     return (
-      <div className="flex h-screen overflow-hidden bg-background text-foreground transition-colors">
+      <div className="flex h-[calc(var(--vh,1vh)*100)] overflow-hidden bg-background text-foreground transition-colors">
         <Sidebar />
         <main className="flex-1 w-full flex items-center justify-center">
           <div className="text-center">
@@ -27,7 +27,7 @@ export default function Page() {
 
   if (!user) {
     return (
-      <div className="flex h-screen overflow-hidden bg-background text-foreground transition-colors">
+      <div className="flex h-[calc(var(--vh,1vh)*100)] overflow-hidden bg-background text-foreground transition-colors">
         <Sidebar />
         <main className="flex-1 w-full flex items-center justify-center">
           <div className="text-center">
@@ -46,7 +46,7 @@ export default function Page() {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background text-foreground transition-colors">
+    <div className="flex h-[calc(var(--vh,1vh)*100)] overflow-hidden bg-background text-foreground transition-colors">
       <Sidebar defaultExpanded={false} />
       <main className="flex-1 overflow-y-auto w-full">
         <TimeBoxPlanner CurrentUser={user} />

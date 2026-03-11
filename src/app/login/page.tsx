@@ -9,7 +9,7 @@ export default async function Page() {
   const { data: { user } } = await supabase.auth.getUser();
 
   return (
-    <div className="w-full h-screen flex items-center justify-center bg-background transition-colors relative">
+    <div className="w-full h-[calc(var(--vh,1vh)*100)] flex items-center justify-center bg-background transition-colors relative">
       {!user && (
         <Link
           href="/"
