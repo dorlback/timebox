@@ -13,7 +13,6 @@ export const usePlannerData = (currentDate: Date, userId: string, showSuccess: (
   const [loading, setLoading] = useState<boolean>(false);
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
-  const [serverUpdatedAt, setServerUpdatedAt] = useState<string | null>(null);
 
   // Undo/Redo stacks
   const [history, setHistory] = useState<Record<string, { undo: DailyData[], redo: DailyData[] }>>({});
@@ -94,13 +93,15 @@ export const usePlannerData = (currentDate: Date, userId: string, showSuccess: (
   useEffect(() => {
     if (!userId) return;
 
-    const fetchPlannerData = async (isRevalidate = false) => {
-      // 리밸리데이션이 아닐 때만 로딩 표시
-      if (!isRevalidate) setLoading(true);
+    // 이미 메모리에 데이터가 로드되어 있다면 중복 호출 방지 (캐싱)
+    if (dailyData[dateKey]) return;
+
+    const fetchPlannerData = async () => {
+      setLoading(true);
       try {
         const { data, error } = await supabase
           .from('timebox')
-          .select('payload, updated_at')
+          .select('payload')
           .eq('user_id', userId)
           .eq('planned_date', dateKey)
           .single();
@@ -114,36 +115,21 @@ export const usePlannerData = (currentDate: Date, userId: string, showSuccess: (
             ...prev,
             [dateKey]: data.payload as DailyData
           }));
-          if (data.updated_at) {
-            setServerUpdatedAt(data.updated_at);
-          }
-        } else if (!error || error.code === 'PGRST116') {
+        } else {
           setDailyData(prev => ({
             ...prev,
             [dateKey]: { brainDump: [], todoList: [], timeBlocks: [] }
           }));
-          setServerUpdatedAt(null);
         }
       } catch (err) {
         showError('데이터를 불러오는 중 오류가 발생했습니다.');
       } finally {
-        if (!isRevalidate) setLoading(false);
+        setLoading(false);
       }
     };
 
     fetchPlannerData();
-
-    // Window Focus 시 데이터 리페치 (Refetch)
-    const handleFocus = () => {
-      console.log("화면이 활성화됨. 최신 데이터를 확인합니다.");
-      fetchPlannerData(true);
-    };
-
-    window.addEventListener('focus', handleFocus);
-    return () => {
-      window.removeEventListener('focus', handleFocus);
-    };
-  }, [dateKey, userId, supabase, showError]);
+  }, [dateKey, userId]);
 
   const handleSave = useCallback(async () => {
     if (!userId) {
@@ -152,46 +138,25 @@ export const usePlannerData = (currentDate: Date, userId: string, showSuccess: (
     }
     setIsSaving(true);
     try {
-      const result = await savePlannerData(userId, dateKey, currentData, false, showSuccess, showError, serverUpdatedAt || undefined);
-
-      if (result.conflict) {
-        // 충돌 발생 시 사용자에게 알림
-        if (confirm('다른 기기에서 수정된 최신 데이터가 있습니다. 서버의 데이터로 갱신하시겠습니까? (취소 시 현재 데이터를 유지하지만 저장은 되지 않습니다)')) {
-          if (result.serverData) {
-            setDailyData(prev => ({ ...prev, [dateKey]: result.serverData! }));
-          }
-          if (result.updated_at) {
-            setServerUpdatedAt(result.updated_at);
-          }
-        }
-        return;
-      }
-
-      if (result.success && result.updated_at) {
-        setServerUpdatedAt(result.updated_at);
-        setLastSavedAt(new Date());
-      }
+      await savePlannerData(userId, dateKey, currentData, false, showSuccess, showError);
+      setLastSavedAt(new Date());
     } finally {
       setIsSaving(false);
     }
-  }, [userId, dateKey, currentData, showSuccess, showError, serverUpdatedAt]);
+  }, [userId, dateKey, currentData, showSuccess, showError]);
 
   const handleAutoSave = useCallback(async () => {
     if (!userId) {
       return;
     }
-    const result = await savePlannerData(userId, dateKey, currentData, true, showSuccess, showError, serverUpdatedAt || undefined);
-
-    if (result.conflict) {
-      console.warn("자동 저장 중 충돌 발생. 사용자 방해를 피하기 위해 무시하거나 별도 UI 처리.");
-      return;
-    }
-
-    if (result.success && result.updated_at) {
-      setServerUpdatedAt(result.updated_at);
+    setIsSaving(true);
+    try {
+      await savePlannerData(userId, dateKey, currentData, true, showSuccess, showError);
       setLastSavedAt(new Date());
+    } finally {
+      setIsSaving(false);
     }
-  }, [userId, dateKey, currentData, showSuccess, showError, serverUpdatedAt]);
+  }, [userId, dateKey, currentData, showSuccess, showError]);
 
   // --- 상태 업데이트 함수들 ---
 
