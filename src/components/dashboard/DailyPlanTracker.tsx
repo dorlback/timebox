@@ -75,11 +75,11 @@ export function DailyPlanTracker() {
                 className={`aspect-square rounded-md hover:ring-2 ring-primary transition-all cursor-pointer relative group ${isLoading ? 'bg-muted animate-pulse pointer-events-none' : ''} ${isToday ? 'ring-2 ring-primary ring-offset-2 ring-offset-card' : ''}`}
                 style={{
                   backgroundColor: !isLoading ? (
-                    item.score === 0 ? 'rgba(59, 130, 246, 0.05)' :
-                      item.score <= 25 ? 'rgba(59, 130, 246, 0.2)' :
-                        item.score <= 50 ? 'rgba(59, 130, 246, 0.45)' :
-                          item.score <= 75 ? 'rgba(59, 130, 246, 0.7)' :
-                            'rgba(59, 130, 246, 1)'
+                    item.score === 0 ? 'rgba(74, 144, 226, 0.05)' :
+                      item.score <= 25 ? 'rgba(74, 144, 226, 0.2)' :
+                        item.score <= 50 ? 'rgba(74, 144, 226, 0.45)' :
+                          item.score <= 75 ? 'rgba(74, 144, 226, 0.7)' :
+                            'rgba(74, 144, 226, 1)'
                   ) : undefined
                 }}
               >

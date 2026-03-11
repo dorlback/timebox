@@ -28,9 +28,9 @@ export interface TimeBlock {
 }
 
 export interface DailyData {
-  brainDump?: BrainDumpItem[];
-  todoList?: TodoItem[];
-  timeBlocks?: TimeBlock[];
+  brainDump: BrainDumpItem[];
+  todoList: TodoItem[];
+  timeBlocks: TimeBlock[];
 }
 
 export interface PastelColor {

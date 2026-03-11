@@ -14,9 +14,80 @@ export const usePlannerData = (currentDate: Date, userId: string, showSuccess: (
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
 
+  // Undo/Redo stacks
+  const [history, setHistory] = useState<Record<string, { undo: DailyData[], redo: DailyData[] }>>({});
+
   const supabase = createClient();
 
   const dateKey = getDateKey(currentDate);
+
+  // 3. 현재 화면에 표시할 데이터 추출 (불러오기 전까지 빈 배열 반환)
+  const currentData: DailyData = useMemo(() => {
+    return dailyData[dateKey] || {
+      brainDump: [],
+      todoList: [],
+      timeBlocks: []
+    };
+  }, [dailyData, dateKey]);
+
+  // Helper to get stacks for current date
+  const currentStacks = useMemo(() => history[dateKey] || { undo: [], redo: [] }, [history, dateKey]);
+
+  const pushHistory = useCallback((data: DailyData) => {
+    setHistory(prev => {
+      const stacks = prev[dateKey] || { undo: [], redo: [] };
+      // Keep last 50 states
+      const newUndo = [...stacks.undo, data].slice(-50);
+      return {
+        ...prev,
+        [dateKey]: { undo: newUndo, redo: [] }
+      };
+    });
+  }, [dateKey]);
+
+  const undo = useCallback(() => {
+    setHistory(prev => {
+      const stacks = prev[dateKey];
+      if (!stacks || stacks.undo.length === 0) return prev;
+
+      const newUndo = [...stacks.undo];
+      const prevState = newUndo.pop()!;
+      const newRedo = [currentData, ...stacks.redo].slice(0, 50);
+
+      // Apply the previous state to dailyData
+      setDailyData(dPrev => ({
+        ...dPrev,
+        [dateKey]: prevState
+      }));
+
+      return {
+        ...prev,
+        [dateKey]: { undo: newUndo, redo: newRedo }
+      };
+    });
+  }, [dateKey, currentData]);
+
+  const redo = useCallback(() => {
+    setHistory(prev => {
+      const stacks = prev[dateKey];
+      if (!stacks || stacks.redo.length === 0) return prev;
+
+      const newRedo = [...stacks.redo];
+      const nextState = newRedo.shift()!;
+      const newUndo = [...stacks.undo, currentData].slice(-50);
+
+      // Apply the next state to dailyData
+      setDailyData(dPrev => ({
+        ...dPrev,
+        [dateKey]: nextState
+      }));
+
+      return {
+        ...prev,
+        [dateKey]: { undo: newUndo, redo: newRedo }
+      };
+    });
+  }, [dateKey, currentData]);
 
   // 2. [불러오기] 날짜가 변경될 때 DB에서 해당 날짜의 payload를 가져옴
   useEffect(() => {
@@ -60,15 +131,6 @@ export const usePlannerData = (currentDate: Date, userId: string, showSuccess: (
     fetchPlannerData();
   }, [dateKey, userId]);
 
-  // 3. 현재 화면에 표시할 데이터 추출 (불러오기 전까지 빈 배열 반환)
-  const currentData: DailyData = useMemo(() => {
-    return dailyData[dateKey] || {
-      brainDump: [],
-      todoList: [],
-      timeBlocks: []
-    };
-  }, [dailyData, dateKey]);
-
   const handleSave = useCallback(async () => {
     if (!userId) {
       showError('로그인이 필요합니다.');
@@ -99,6 +161,7 @@ export const usePlannerData = (currentDate: Date, userId: string, showSuccess: (
   // --- 상태 업데이트 함수들 ---
 
   const setBrainDump = useCallback((newBrainDump: BrainDumpItem[] | ((prev: BrainDumpItem[]) => BrainDumpItem[])) => {
+    pushHistory(currentData);
     setDailyData(prev => {
       const currentItems = prev[dateKey]?.brainDump || [];
       const updatedItems = typeof newBrainDump === 'function'
@@ -109,9 +172,10 @@ export const usePlannerData = (currentDate: Date, userId: string, showSuccess: (
         [dateKey]: { ...prev[dateKey], brainDump: updatedItems }
       };
     });
-  }, [dateKey]);
+  }, [dateKey, currentData, pushHistory]);
 
   const setTodoList = useCallback((newTodoList: TodoItem[] | ((prev: TodoItem[]) => TodoItem[])) => {
+    pushHistory(currentData);
     setDailyData(prev => {
       const currentItems = prev[dateKey]?.todoList || [];
       const updatedItems = typeof newTodoList === 'function'
@@ -122,9 +186,10 @@ export const usePlannerData = (currentDate: Date, userId: string, showSuccess: (
         [dateKey]: { ...prev[dateKey], todoList: updatedItems }
       };
     });
-  }, [dateKey]);
+  }, [dateKey, currentData, pushHistory]);
 
   const setTimeBlocks = useCallback((newTimeBlocks: TimeBlock[] | ((prev: TimeBlock[]) => TimeBlock[])) => {
+    pushHistory(currentData);
     setDailyData(prev => {
       const currentItems = prev[dateKey]?.timeBlocks || [];
       const updatedItems = typeof newTimeBlocks === 'function'
@@ -135,7 +200,19 @@ export const usePlannerData = (currentDate: Date, userId: string, showSuccess: (
         [dateKey]: { ...prev[dateKey], timeBlocks: updatedItems }
       };
     });
-  }, [dateKey]);
+  }, [dateKey, currentData, pushHistory]);
+
+  const setAllData = useCallback((newData: DailyData | ((prev: DailyData) => DailyData)) => {
+    pushHistory(currentData);
+    setDailyData(prev => {
+      const current = prev[dateKey] || { brainDump: [], todoList: [], timeBlocks: [] };
+      const updated = typeof newData === 'function' ? newData(current) : newData;
+      return {
+        ...prev,
+        [dateKey]: updated
+      };
+    });
+  }, [dateKey, currentData, pushHistory]);
 
   return {
     brainDump: currentData.brainDump,
@@ -144,6 +221,11 @@ export const usePlannerData = (currentDate: Date, userId: string, showSuccess: (
     setBrainDump,
     setTodoList,
     setTimeBlocks,
+    setAllData,
+    undo,
+    redo,
+    canUndo: currentStacks.undo.length > 0,
+    canRedo: currentStacks.redo.length > 0,
     handleSave,
     handleAutoSave,
     loading,

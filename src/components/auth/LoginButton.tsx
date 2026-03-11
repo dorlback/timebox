@@ -39,7 +39,7 @@ export default function GoogleLoginButton() {
       <button
         onClick={handleLogin}
         disabled={isLoading}
-        className="w-full px-6 py-4 border-2 border-gray-200 dark:border-gray-700 rounded-xl hover:border-[#3B82F6] dark:hover:border-blue-500 hover:bg-[#3B82F6]/5 dark:hover:bg-blue-500/10 focus-visible:ring-2 focus-visible:ring-[#3B82F6] focus-visible:ring-offset-2 transition-all duration-200 flex items-center justify-center gap-3 group disabled:opacity-50 disabled:cursor-not-allowed bg-white dark:bg-gray-800"
+        className="w-full px-6 py-4 border-2 border-gray-200 dark:border-gray-700 rounded-xl hover:border-primary dark:hover:border-primary hover:bg-primary/5 dark:hover:bg-primary/10 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 transition-all duration-200 flex items-center justify-center gap-3 group disabled:opacity-50 disabled:cursor-not-allowed bg-white dark:bg-gray-800"
         aria-label="Google로 로그인"
       >
         <svg className="w-6 h-6" viewBox="0 0 24 24" aria-hidden="true">
@@ -60,7 +60,7 @@ export default function GoogleLoginButton() {
             d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
           />
         </svg>
-        <span className="text-gray-700 dark:text-gray-300 group-hover:text-[#3B82F6] dark:group-hover:text-blue-400 transition-colors font-medium">
+        <span className="text-gray-700 dark:text-gray-300 group-hover:text-primary dark:group-hover:text-primary transition-colors font-medium">
           {isLoading ? '로그인 중…' : 'Google로 계속하기'}
         </span>
       </button>

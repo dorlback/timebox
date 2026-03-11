@@ -46,13 +46,12 @@ export default function Sidebar({
       </button>
 
       <div className={`p-6 flex items-center ${isExpanded ? "gap-3" : "justify-center px-0"} overflow-hidden h-20 shrink-0`}>
-        <div className="bg-primary w-10 h-10 rounded-lg flex items-center justify-center text-primary-foreground shrink-0 shadow-sm">
-          <span className="material-symbols-outlined">bolt</span>
+        <div className="w-10 h-10 flex items-center justify-center shrink-0">
+          <img src="/logo.png" alt="Logo" className="w-full h-full object-contain border border-border rounded-xl" />
         </div>
 
         <div className={`transition-all duration-300 whitespace-nowrap overflow-hidden ${isExpanded ? "opacity-100 max-w-full block" : "opacity-0 max-w-0 hidden"}`}>
           <h1 className="text-lg font-bold leading-tight tracking-tight text-card-foreground">TimeBox</h1>
-          {/* <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">{t('common.premium')}</p> */}
         </div>
       </div>
 

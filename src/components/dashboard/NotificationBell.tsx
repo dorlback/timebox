@@ -52,7 +52,7 @@ export function NotificationBell({ onViewAll }: NotificationBellProps) {
 
   const getCategoryColor = (category: string) => {
     switch (category) {
-      case 'notice': return 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400';
+      case 'notice': return 'bg-primary/10 text-primary dark:bg-primary/40 dark:text-primary-foreground';
       case 'user_notice': return 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-400';
       case 'patch_note': return 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400';
       default: return 'bg-muted text-muted-foreground';

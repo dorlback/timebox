@@ -79,6 +79,11 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
     setBrainDump,
     setTodoList,
     setTimeBlocks,
+    setAllData,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
     handleSave,
     handleAutoSave,
     loading,
@@ -141,15 +146,43 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
     setDate(newDate);
   }, [date]);
 
-  const updateBlockTime = useCallback((blockId: number, newStart: number, newEnd: number) => {
-    if (!timeBlocks) return;
+  // 키보드 단축키 처리 (Undo/Redo)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+      const modifier = isMac ? e.metaKey : e.ctrlKey;
 
-    setTimeBlocks(timeBlocks.map(block =>
-      block.id === blockId
-        ? { ...block, startTime: newStart, endTime: newEnd }
-        : block
-    ));
-  }, [timeBlocks, setTimeBlocks]);
+      if (modifier && e.key.toLowerCase() === 'z') {
+        if (e.shiftKey) {
+          // Redo (Cmd+Shift+Z)
+          e.preventDefault();
+          redo();
+        } else {
+          // Undo (Cmd+Z)
+          e.preventDefault();
+          undo();
+        }
+      } else if (modifier && e.key.toLowerCase() === 'y') {
+        // Redo (Cmd+Y)
+        e.preventDefault();
+        redo();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [undo, redo]);
+
+  const updateBlockTime = useCallback((blockId: number, newStart: number, newEnd: number) => {
+    setAllData(prev => ({
+      ...prev,
+      timeBlocks: prev.timeBlocks.map(block =>
+        block.id === blockId
+          ? { ...block, startTime: newStart, endTime: newEnd }
+          : block
+      )
+    }));
+  }, [setAllData]);
 
   const {
     draggingBlock,
@@ -189,139 +222,145 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
 
   const addBrainDump = useCallback(() => {
     if (newDumpText.trim()) {
-      setBrainDump([...brainDump || [], {
-        id: Date.now(),
-        text: newDumpText,
-        completed: false
-      }]);
+      setAllData(prev => ({
+        ...prev,
+        brainDump: [...prev.brainDump, {
+          id: Date.now(),
+          text: newDumpText,
+          completed: false
+        }]
+      }));
       setNewDumpText('');
     }
-  }, [newDumpText, brainDump, setBrainDump]);
+  }, [newDumpText, setAllData]);
 
   const deleteBrainDump = useCallback((id: number) => {
-    setBrainDump((brainDump || []).filter(item => item.id !== id));
-
-    if (timeBlocks) {
-      setTimeBlocks(timeBlocks.filter(block =>
+    setAllData(prev => ({
+      ...prev,
+      brainDump: prev.brainDump.filter(item => item.id !== id),
+      timeBlocks: prev.timeBlocks.filter(block =>
         !(block.todoId === id && block.isDirectFromBrainDump)
-      ));
-    }
-  }, [brainDump, timeBlocks, setBrainDump, setTimeBlocks]);
+      )
+    }));
+  }, [setAllData]);
 
   const toggleBrainDumpComplete = useCallback((id: number) => {
     if (!brainDump) return;
 
-    setBrainDump(brainDump.map(item =>
-      item.id === id ? { ...item, completed: !item.completed } : item
-    ));
+    setAllData(prev => {
+      const updatedBrainDump = prev.brainDump.map(item =>
+        item.id === id ? { ...item, completed: !item.completed } : item
+      );
+      const updatedItem = updatedBrainDump.find(item => item.id === id);
 
-    if (!timeBlocks) return;
-    const updatedItem = brainDump.find(item => item.id === id);
-    if (updatedItem) {
-      setTimeBlocks(timeBlocks.map(block =>
-        block.todoId === id && block.isDirectFromBrainDump
-          ? { ...block, completed: !updatedItem.completed }
+      const updatedTimeBlocks = prev.timeBlocks.map(block =>
+        block.todoId === id && block.isDirectFromBrainDump && updatedItem
+          ? { ...block, completed: updatedItem.completed }
           : block
-      ));
-    }
-  }, [brainDump, timeBlocks, setBrainDump, setTimeBlocks]);
+      );
+
+      return {
+        ...prev,
+        brainDump: updatedBrainDump,
+        timeBlocks: updatedTimeBlocks
+      };
+    });
+  }, [brainDump, setAllData]);
 
   // Todo 핸들러
   const deleteTodo = useCallback((id: number) => {
-    setTodoList((prev: TodoItem[] | null) => (prev || []).filter(item => item.id !== id));
-    setTimeBlocks((prev: TimeBlock[] | null) => (prev || []).filter(block => block.todoId !== id));
-  }, [setTodoList, setTimeBlocks]);
+    setAllData(prev => ({
+      ...prev,
+      todoList: prev.todoList.filter(item => item.id !== id),
+      timeBlocks: prev.timeBlocks.filter(block => block.todoId !== id)
+    }));
+  }, [setAllData]);
 
   const toggleTodoComplete = useCallback((id: number) => {
-    setTodoList((prev: TodoItem[] | null) => {
-      const items = prev || [];
-      const updated = items.map(item =>
+    setAllData(prev => {
+      const updatedTodoList = prev.todoList.map(item =>
         item.id === id ? { ...item, completed: !item.completed } : item
       );
+      const targetItem = updatedTodoList.find(i => i.id === id);
 
-      // 연동된 타임블록들도 함께 업데이트
-      const targetItem = updated.find(i => i.id === id);
-      if (targetItem) {
-        setTimeBlocks((blocks: TimeBlock[] | null) =>
-          (blocks || []).map(block =>
-            block.todoId === id ? { ...block, completed: targetItem.completed } : block
-          )
-        );
-      }
+      const updatedTimeBlocks = targetItem
+        ? prev.timeBlocks.map(block => block.todoId === id ? { ...block, completed: targetItem.completed } : block)
+        : prev.timeBlocks;
 
-      return updated;
+      return {
+        ...prev,
+        todoList: updatedTodoList,
+        timeBlocks: updatedTimeBlocks
+      };
     });
-  }, [setTodoList, setTimeBlocks]);
+  }, [setAllData]);
 
   const handleItemDetailSave = useCallback((updatedItem: any) => {
     if (!updatedItem) return;
 
-    if (updatedItem.type === 'time-block') {
-      const hasConflict = checkTimeConflict(timeBlocks || [], updatedItem.id, updatedItem.startTime, updatedItem.endTime);
-      if (hasConflict) {
-        showError('다른 일정과 시간이 겹칩니다. 시간을 다시 설정해주세요.');
-        return;
-      }
+    setAllData(prev => {
+      let nextBrainDump = [...prev.brainDump];
+      let nextTodoList = [...prev.todoList];
+      let nextTimeBlocks = [...prev.timeBlocks];
 
-      setTimeBlocks((prev: TimeBlock[] | null) =>
-        (prev || []).map((block: TimeBlock) =>
+      if (updatedItem.type === 'time-block') {
+        const hasConflict = checkTimeConflict(prev.timeBlocks, updatedItem.id, updatedItem.startTime, updatedItem.endTime);
+        if (hasConflict) {
+          showError('다른 일정과 시간이 겹칩니다. 시간을 다시 설정해주세요.');
+          return prev;
+        }
+
+        nextTimeBlocks = prev.timeBlocks.map((block: TimeBlock) =>
           block.id === updatedItem.id
             ? { ...block, text: updatedItem.text, notes: updatedItem.notes, startTime: updatedItem.startTime, endTime: updatedItem.endTime }
             : block
-        )
-      );
+        );
 
-      // 연동된 원본 항목(Brain Dump 또는 Todo) 업데이트
-      const targetBlock = (timeBlocks || []).find(b => b.id === updatedItem.id);
-      if (targetBlock?.todoId) {
-        if (targetBlock.isDirectFromBrainDump) {
-          setBrainDump((prev: BrainDumpItem[] | null) =>
-            (prev || []).map((item: BrainDumpItem) =>
+        const targetBlock = prev.timeBlocks.find(b => b.id === updatedItem.id);
+        if (targetBlock?.todoId) {
+          if (targetBlock.isDirectFromBrainDump) {
+            nextBrainDump = prev.brainDump.map((item: BrainDumpItem) =>
               item.id === targetBlock.todoId ? { ...item, text: updatedItem.text, notes: updatedItem.notes } : item
-            )
-          );
-        } else {
-          setTodoList((prev: TodoItem[] | null) =>
-            (prev || []).map((item: TodoItem) =>
+            );
+          } else {
+            nextTodoList = prev.todoList.map((item: TodoItem) =>
               item.id === targetBlock.todoId ? { ...item, text: updatedItem.text, notes: updatedItem.notes } : item
-            )
-          );
-        }
+            );
+          }
 
-        // 동일한 todoId를 공유하는 다른 타임블록들도 함께 업데이트 (일관성 유지)
-        setTimeBlocks((prev: TimeBlock[] | null) =>
-          (prev || []).map((block: TimeBlock) =>
+          nextTimeBlocks = nextTimeBlocks.map((block: TimeBlock) =>
             block.todoId === targetBlock.todoId
               ? { ...block, text: updatedItem.text, notes: updatedItem.notes }
               : block
-          )
+          );
+        }
+      } else if (updatedItem.type === 'brain-dump') {
+        nextBrainDump = prev.brainDump.map((item: BrainDumpItem) =>
+          item.id === updatedItem.id ? { ...item, text: updatedItem.text, notes: updatedItem.notes } : item
+        );
+        nextTimeBlocks = prev.timeBlocks.map((block: TimeBlock) =>
+          block.todoId === updatedItem.id ? { ...block, text: updatedItem.text, notes: updatedItem.notes } : block
+        );
+      } else if (updatedItem.type === 'todo-list') {
+        nextTodoList = prev.todoList.map((item: TodoItem) =>
+          item.id === updatedItem.id ? { ...item, text: updatedItem.text, notes: updatedItem.notes } : item
+        );
+        nextTimeBlocks = prev.timeBlocks.map((block: TimeBlock) =>
+          block.todoId === updatedItem.id ? { ...block, text: updatedItem.text, notes: updatedItem.notes } : block
         );
       }
-    } else if (updatedItem.type === 'brain-dump') {
-      setBrainDump((prev: BrainDumpItem[] | null) =>
-        (prev || []).map((item: BrainDumpItem) => item.id === updatedItem.id ? { ...item, text: updatedItem.text, notes: updatedItem.notes } : item)
-      );
-      // 타임플랜에 등록된 연동 블록들도 전체 업데이트
-      setTimeBlocks((prev: TimeBlock[] | null) =>
-        (prev || []).map((block: TimeBlock) =>
-          block.todoId === updatedItem.id ? { ...block, text: updatedItem.text, notes: updatedItem.notes } : block
-        )
-      );
-    } else if (updatedItem.type === 'todo-list') {
-      setTodoList((prev: TodoItem[] | null) =>
-        (prev || []).map((item: TodoItem) => item.id === updatedItem.id ? { ...item, text: updatedItem.text, notes: updatedItem.notes } : item)
-      );
-      // 연동된 타임블록들도 전체 업데이트
-      setTimeBlocks((prev: TimeBlock[] | null) =>
-        (prev || []).map((block: TimeBlock) =>
-          block.todoId === updatedItem.id ? { ...block, text: updatedItem.text, notes: updatedItem.notes } : block
-        )
-      );
-    }
+
+      return {
+        ...prev,
+        brainDump: nextBrainDump,
+        todoList: nextTodoList,
+        timeBlocks: nextTimeBlocks
+      };
+    });
 
     setIsDetailModalOpen(false);
     setSelectedItem(null);
-  }, [timeBlocks, setTimeBlocks, setBrainDump, setTodoList, showError]);
+  }, [setAllData, showError]);
 
   // 이동 핸들러 - 체크 상태 유지 + 현재 시간 이후 배치
   const moveBrainDumpToTodo = useCallback((item: BrainDumpItem) => {
@@ -332,12 +371,10 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
       return;
     }
 
-    // Brain Dump에서 직접 추가된 기존 타임블록 제거
     const existingDirectBlock = timeBlocks.find(block =>
       block.todoId === item.id && block.isDirectFromBrainDump
     );
 
-    // 현재 시간 이후 슬롯 찾기
     const slot = findAvailableSlotAfterNow(
       existingDirectBlock
         ? timeBlocks.filter(block => block.id !== existingDirectBlock.id)
@@ -350,44 +387,44 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
       return;
     }
 
-    const newTodo = {
-      id: item.id,
-      text: item.text,
-      completed: item.completed
-    };
-    setTodoList([...todoList, newTodo]);
-    setBrainDump(brainDump.filter(i => i.id !== item.id));
+    setAllData(prev => {
+      const newTodo = {
+        id: item.id,
+        text: item.text,
+        completed: item.completed
+      };
 
-    const colorIndex = timeBlocks.length % PASTEL_COLORS.length;
+      const colorIndex = prev.timeBlocks.length % PASTEL_COLORS.length;
 
-    // 기존 Brain Dump 직접 추가 블록 제거하고 새로운 Todo 블록 생성
-    setTimeBlocks([
-      ...timeBlocks.filter(block => !(block.todoId === item.id && block.isDirectFromBrainDump)),
-      {
-        id: Date.now(),
-        todoId: newTodo.id,
-        text: newTodo.text,
-        startTime: slot.startTime,
-        endTime: slot.endTime,
-        colorIndex,
-        completed: item.completed,
-        isDirectFromBrainDump: false
-      }
-    ]);
-  }, [todoList, timeBlocks, brainDump, showError, setTodoList, setBrainDump, setTimeBlocks]);
+      return {
+        ...prev,
+        todoList: [...prev.todoList, newTodo],
+        brainDump: prev.brainDump.filter(i => i.id !== item.id),
+        timeBlocks: [
+          ...prev.timeBlocks.filter(block => !(block.todoId === item.id && block.isDirectFromBrainDump)),
+          {
+            id: Date.now(),
+            todoId: newTodo.id,
+            text: newTodo.text,
+            startTime: slot.startTime,
+            endTime: slot.endTime,
+            colorIndex,
+            completed: item.completed,
+            isDirectFromBrainDump: false
+          }
+        ]
+      };
+    });
+  }, [todoList, timeBlocks, brainDump, showError, setAllData]);
 
   const moveTodoToBrainDump = useCallback((item: TodoItem) => {
-    const newBrainDumpItem = {
-      id: item.id,
-      text: item.text,
-      completed: item.completed
-    };
-    setBrainDump((prev: BrainDumpItem[] | null) => [...prev || [], newBrainDumpItem]);
-    setTodoList((prev: TodoItem[] | null) => (prev || []).filter(i => i.id !== item.id));
-
-    // Todo에서 온 타임블록은 완전히 제거 (isDirectFromBrainDump가 false인 것)
-    setTimeBlocks((prev: TimeBlock[] | null) => (prev || []).filter(block => block.todoId !== item.id));
-  }, [setBrainDump, setTodoList, setTimeBlocks]);
+    setAllData(prev => ({
+      ...prev,
+      todoList: prev.todoList.filter(i => i.id !== item.id),
+      brainDump: [...prev.brainDump, { id: item.id, text: item.text, completed: item.completed, notes: item.notes }],
+      timeBlocks: prev.timeBlocks.filter(block => block.todoId !== item.id)
+    }));
+  }, [setAllData]);
 
   // 드래그앤드롭 핸들러
   const handleDragStart = useCallback((e: React.DragEvent, item: BrainDumpItem | TodoItem, source: 'brain-dump' | 'todo-list') => {
@@ -407,12 +444,9 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
   }, []);
 
   const handleDropToTodo = useCallback((e: React.DragEvent, targetId?: number) => {
-    if (!todoList || !timeBlocks || !brainDump) return;
-
     e.preventDefault();
     if (draggedItem) {
       if (dragSource === 'brain-dump') {
-        // 다른 리스트에서 이동
         if (todoList.length >= 5) {
           showError('할 일 목록은 최대 5개까지만 추가할 수 있습니다.');
           setDraggedItem(null);
@@ -438,138 +472,155 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
           return;
         }
 
-        const newTodo = { ...draggedItem }; // 모든 속성(notes 포함) 보존
+        setAllData(prev => {
+          const newTodo = { ...draggedItem };
+          let nextTodoList = [...prev.todoList];
 
-        let newTodoList = [...todoList];
-        if (targetId !== undefined) {
-          const targetIndex = newTodoList.findIndex(item => item.id === targetId);
-          newTodoList.splice(targetIndex, 0, newTodo);
-        } else {
-          newTodoList.push(newTodo);
-        }
-
-        setTodoList(newTodoList);
-        setBrainDump(brainDump.filter(item => item.id !== draggedItem.id));
-
-        const colorIndex = timeBlocks.length % PASTEL_COLORS.length;
-        setTimeBlocks([
-          ...timeBlocks.filter(block => !(block.todoId === draggedItem.id && block.isDirectFromBrainDump)),
-          {
-            id: Date.now(),
-            todoId: newTodo.id,
-            text: newTodo.text,
-            startTime: slot.startTime,
-            endTime: slot.endTime,
-            colorIndex,
-            completed: draggedItem.completed,
-            isDirectFromBrainDump: false,
-            notes: draggedItem.notes // 메모 보존
+          if (targetId !== undefined) {
+            const targetIndex = nextTodoList.findIndex(item => item.id === targetId);
+            nextTodoList.splice(targetIndex, 0, newTodo);
+          } else {
+            nextTodoList.push(newTodo);
           }
-        ]);
+
+          const colorIndex = prev.timeBlocks.length % PASTEL_COLORS.length;
+          const nextTimeBlocks = [
+            ...prev.timeBlocks.filter(block => !(block.todoId === draggedItem.id && block.isDirectFromBrainDump)),
+            {
+              id: Date.now(),
+              todoId: newTodo.id,
+              text: newTodo.text,
+              startTime: slot.startTime,
+              endTime: slot.endTime,
+              colorIndex,
+              completed: draggedItem.completed,
+              isDirectFromBrainDump: false,
+              notes: draggedItem.notes
+            }
+          ];
+
+          return {
+            ...prev,
+            todoList: nextTodoList,
+            brainDump: prev.brainDump.filter(item => item.id !== draggedItem.id),
+            timeBlocks: nextTimeBlocks
+          };
+        });
       } else if (dragSource === 'todo-list') {
-        // 동일 리스트 내 순서 변경
         if (targetId === undefined || targetId === draggedItem.id) {
           setDraggedItem(null);
           setDragSource(null);
           return;
         }
 
-        const newTodoList = [...todoList];
-        const currentIndex = newTodoList.findIndex(item => item.id === draggedItem.id);
-        const targetIndex = newTodoList.findIndex(item => item.id === targetId);
+        setAllData(prev => {
+          const newTodoList = [...prev.todoList];
+          const currentIndex = newTodoList.findIndex(item => item.id === draggedItem.id);
+          const targetIndex = newTodoList.findIndex(item => item.id === targetId);
 
-        if (currentIndex > -1 && targetIndex > -1) {
-          const [movedItem] = newTodoList.splice(currentIndex, 1);
-          newTodoList.splice(targetIndex, 0, movedItem);
-          setTodoList(newTodoList);
-        }
+          if (currentIndex > -1 && targetIndex > -1) {
+            const [movedItem] = newTodoList.splice(currentIndex, 1);
+            newTodoList.splice(targetIndex, 0, movedItem);
+          }
+          return { ...prev, todoList: newTodoList };
+        });
       }
     }
     setDraggedItem(null);
     setDragSource(null);
-  }, [todoList, timeBlocks, brainDump, draggedItem, dragSource, showError, setTodoList, setBrainDump, setTimeBlocks]);
+  }, [todoList, timeBlocks, draggedItem, dragSource, showError, setAllData]);
 
   const handleDropToBrainDump = useCallback((e: React.DragEvent, targetId?: number) => {
-    if (!todoList || !timeBlocks || !brainDump) return;
-
     e.preventDefault();
     if (draggedItem) {
       if (dragSource === 'todo-list') {
-        // 다른 리스트에서 이동
-        const newBrainDumpItem = { ...draggedItem }; // 모든 속성 보존
+        setAllData(prev => {
+          const newBrainDumpItem = { ...draggedItem };
+          let nextBrainDump = [...prev.brainDump];
 
-        let newBrainDump = [...brainDump];
-        if (targetId !== undefined) {
-          const targetIndex = newBrainDump.findIndex(item => item.id === targetId);
-          newBrainDump.splice(targetIndex, 0, newBrainDumpItem);
-        } else {
-          newBrainDump.push(newBrainDumpItem);
-        }
+          if (targetId !== undefined) {
+            const targetIndex = nextBrainDump.findIndex(item => item.id === targetId);
+            nextBrainDump.splice(targetIndex, 0, newBrainDumpItem);
+          } else {
+            nextBrainDump.push(newBrainDumpItem);
+          }
 
-        setBrainDump(newBrainDump);
-        setTodoList(todoList.filter(item => item.id !== draggedItem.id));
-        setTimeBlocks(timeBlocks.filter(block => block.todoId !== draggedItem.id));
+          return {
+            ...prev,
+            brainDump: nextBrainDump,
+            todoList: prev.todoList.filter(item => item.id !== draggedItem.id),
+            timeBlocks: prev.timeBlocks.filter(block => block.todoId !== draggedItem.id)
+          };
+        });
       } else if (dragSource === 'brain-dump') {
-        // 동일 리스트 내 순서 변경
         if (targetId === undefined || targetId === draggedItem.id) {
           setDraggedItem(null);
           setDragSource(null);
           return;
         }
 
-        const newBrainDump = [...brainDump];
-        const currentIndex = newBrainDump.findIndex(item => item.id === draggedItem.id);
-        const targetIndex = newBrainDump.findIndex(item => item.id === targetId);
+        setAllData(prev => {
+          const newBrainDump = [...prev.brainDump];
+          const currentIndex = newBrainDump.findIndex(item => item.id === draggedItem.id);
+          const targetIndex = newBrainDump.findIndex(item => item.id === targetId);
 
-        if (currentIndex > -1 && targetIndex > -1) {
-          const [movedItem] = newBrainDump.splice(currentIndex, 1);
-          newBrainDump.splice(targetIndex, 0, movedItem);
-          setBrainDump(newBrainDump);
-        }
+          if (currentIndex > -1 && targetIndex > -1) {
+            const [movedItem] = newBrainDump.splice(currentIndex, 1);
+            newBrainDump.splice(targetIndex, 0, movedItem);
+          }
+          return { ...prev, brainDump: newBrainDump };
+        });
       }
     }
     setDraggedItem(null);
     setDragSource(null);
-  }, [todoList, timeBlocks, brainDump, draggedItem, dragSource, setBrainDump, setTodoList, setTimeBlocks]);
+  }, [draggedItem, dragSource, setAllData]);
 
   // Brain Dump를 타임플랜에 직접 추가 - 현재 시간 이후 배치
   const addBrainDumpToTimePlan = useCallback((item: BrainDumpItem) => {
-    if (!timeBlocks || !brainDump) return;
+    if (!timeBlocks) return;
 
-    // 이미 시간표에 있는지 확인
     const existingBlock = timeBlocks.find(block =>
       block.todoId === item.id && block.isDirectFromBrainDump
     );
 
     if (existingBlock) {
-      // 이미 있으면 제거
-      setTimeBlocks(timeBlocks.filter(block => block.id !== existingBlock.id));
+      setAllData(prev => ({
+        ...prev,
+        timeBlocks: prev.timeBlocks.filter(block => block.id !== existingBlock.id)
+      }));
       showSuccess('시간표에서 제거되었습니다!');
       return;
     }
 
-    // 현재 시간 이후 슬롯 찾기
     const slot = findAvailableSlotAfterNow(timeBlocks, 60);
     if (!slot) {
       showError('타임 플랜에 사용 가능한 시간이 없습니다. 기존 일정을 조정해주세요.');
       return;
     }
 
-    const colorIndex = timeBlocks.length % PASTEL_COLORS.length;
-
-    setTimeBlocks([...timeBlocks, {
-      id: Date.now(),
-      todoId: item.id,
-      text: item.text,
-      startTime: slot.startTime,
-      endTime: slot.endTime,
-      colorIndex,
-      completed: item.completed,
-      isDirectFromBrainDump: true
-    }]);
-
+    setAllData(prev => {
+      const colorIndex = prev.timeBlocks.length % PASTEL_COLORS.length;
+      return {
+        ...prev,
+        timeBlocks: [
+          ...prev.timeBlocks,
+          {
+            id: Date.now(),
+            todoId: item.id,
+            text: item.text,
+            startTime: slot.startTime,
+            endTime: slot.endTime,
+            colorIndex,
+            completed: item.completed,
+            isDirectFromBrainDump: true,
+            notes: item.notes
+          }
+        ]
+      };
+    });
     showSuccess('시간표에 추가되었습니다!');
-  }, [timeBlocks, brainDump, setTimeBlocks, showSuccess, showError]);
+  }, [timeBlocks, setAllData, showSuccess, showError]);
 
   // 모바일 드래그 앤 드롭을 위한 전역 터치 핸들러
   useEffect(() => {
@@ -640,7 +691,7 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
     <div className="h-[100dvh] bg-background transition-colors">
       {loading ? (
         <div className="absolute inset-0 bg-white/50 dark:bg-black/50 z-50 flex items-center justify-center">
-          <div className="text-blue-500 font-bold">{t('common.loading')}</div>
+          <div className="text-primary font-bold">{t('common.loading')}</div>
         </div>
       ) : null}
 
@@ -742,13 +793,14 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
               isOpen={isAddModalOpen}
               onClose={() => setIsAddModalOpen(false)}
               onAdd={(text) => {
-                if (!brainDump) return;
-                const newItem: BrainDumpItem = {
-                  id: Date.now(),
-                  text: text,
-                  completed: false
-                };
-                setBrainDump([...brainDump, newItem]);
+                setAllData(prev => ({
+                  ...prev,
+                  brainDump: [...prev.brainDump, {
+                    id: Date.now(),
+                    text: text,
+                    completed: false
+                  }]
+                }));
               }}
             />
           </div>
@@ -854,7 +906,10 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
             } else if (selectedItem?.type === 'todo-list') {
               deleteTodo(id);
             } else if (selectedItem?.type === 'time-block') {
-              setTimeBlocks((prev: TimeBlock[] | null) => (prev || []).filter((b: TimeBlock) => b.id !== id));
+              setAllData(prev => ({
+                ...prev,
+                timeBlocks: prev.timeBlocks.filter((b: TimeBlock) => b.id !== id)
+              }));
             }
           }}
         />

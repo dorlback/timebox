@@ -13,8 +13,9 @@ export default function NavBar({ user }: NavBarProps) {
     <nav className="w-full px-6 py-4 flex justify-between items-center bg-background border-b border-border transition-colors" role="navigation" aria-label="메인 네비게이션">
       <Link
         href="/"
-        className="focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 rounded transition-all"
+        className="focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded transition-all flex items-center gap-2"
       >
+        <img src="/logo.png" alt="TimeBox Logo" className="w10 h-10 object-contain border border-border rounded-xl" />
         <h1 className="text-sm font-bold tracking-tight text-muted-foreground uppercase">
           Daily <span className="text-foreground">Time Box</span>
         </h1>
@@ -27,7 +28,7 @@ export default function NavBar({ user }: NavBarProps) {
             <span className="text-sm text-muted-foreground">{user.email}</span>
           </Link>
         ) : (
-          <Link href="/login" className="text-sm text-primary hover:text-blue-700 dark:hover:text-blue-300 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 rounded transition-all">
+          <Link href="/login" className="text-sm text-primary hover:opacity-80 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded transition-all">
             로그인
           </Link>
         )}

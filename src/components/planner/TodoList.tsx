@@ -1,5 +1,5 @@
 import React from 'react';
-import { GripVertical, Trash2, ArrowDown, NotebookPen } from 'lucide-react';
+import { GripVertical, Trash2, ArrowDown, NotebookPen, Check } from 'lucide-react';
 import { TodoItem } from '@/types/planner';
 import { useTranslation } from '@/contexts/LanguageContext';
 
@@ -78,18 +78,21 @@ export const TodoList: React.FC<TodoListProps> = React.memo(({
               onContextMenu={(e) => e.preventDefault()}
               className={`flex items-center gap-2 p-2 bg-muted/30 rounded border border-border cursor-move hover:bg-muted transition-colors select-none ${
                 // 드래그 중인 아이템 강조
-                false ? 'opacity-50 border-blue-500 bg-blue-50' : ''
+                false ? 'opacity-50 border-primary bg-primary/10' : ''
                 }`}
               style={{ WebkitUserSelect: 'none', WebkitTouchCallout: 'none', touchAction: 'pan-y' }}
             >
               <GripVertical size={16} className="text-gray-400" />
-              <input
-                type="checkbox"
-                checked={item.completed}
-                onChange={() => onToggleComplete(item.id)}
-                className="w-4 h-4"
-                onClick={(e) => e.stopPropagation()}
-              />
+              <button
+                onClick={(e) => { e.stopPropagation(); onToggleComplete(item.id); }}
+                className="relative flex items-center justify-center w-5 h-5 shrink-0 group/check"
+                title={item.completed ? t('planner.markIncomplete') : t('planner.markComplete')}
+              >
+                <div className={`w-5 h-5 rounded border-2 transition-all flex items-center justify-center ${item.completed ? 'bg-white dark:bg-card border-primary shadow-sm' : 'bg-white dark:bg-card border-border group-hover/check:border-primary/50'
+                  }`}>
+                  {item.completed && <Check size={14} className="text-amber-500 stroke-[4] animate-scale-in" />}
+                </div>
+              </button>
               <span className={`flex-1 text-sm ${item.completed ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
                 {item.text}
               </span>

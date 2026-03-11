@@ -39,6 +39,31 @@ export async function updateSession(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
 
+  // 1. 로그인 상태인 경우 '/', '/login' 접근 시 '/timebox'로 리다이렉트
+  if (user && (pathname === "/" || pathname === "/login")) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/timebox";
+    return NextResponse.redirect(url);
+  }
+
+  // 2. 로그인되지 않은 경우 '/' 접근 처리
+  if (!user && pathname === "/") {
+    const hasVisited = request.cookies.get("has_visited");
+    if (hasVisited) {
+      // 재방문인 경우 '/login'으로 리다이렉트
+      const url = request.nextUrl.clone();
+      url.pathname = "/login";
+      return NextResponse.redirect(url);
+    } else {
+      // 첫 방문인 경우 쿠키 설정 후 '/' 허용
+      supabaseResponse.cookies.set("has_visited", "true", {
+        maxAge: 60 * 60 * 24 * 365, // 1년
+        path: "/",
+      });
+      return supabaseResponse;
+    }
+  }
+
   // 로그인 없이 접근 가능한 페이지
   const publicRoutes = ["/", "/login", "/signin", "/auth", "/terms", "/privacy"];
   const isPublicRoute = publicRoutes.some((route) =>

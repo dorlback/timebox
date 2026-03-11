@@ -4,16 +4,18 @@
 @variant dark (&:where(.dark, .dark *));
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #F8F9FA;
+  --foreground: #212529;
   --card: #ffffff;
-  --card-foreground: #171717;
-  --border: #e5e7eb;
-  --input: #e5e7eb;
-  --primary: #3b82f6;
+  --card-foreground: #212529;
+  --border: #dee2e6;
+  --input: #dee2e6;
+  --primary: #4A90E2;
   --primary-foreground: #ffffff;
-  --muted: #f3f4f6;
-  --muted-foreground: #6b7280;
+  --point: #FFD700;
+  --point-foreground: #212529;
+  --muted: #e9ecef;
+  --muted-foreground: #6c757d;
   color-scheme: light;
 }
 
@@ -24,8 +26,11 @@
   --card-foreground: #fafafa;
   --border: #3f3f46;
   --input: #3f3f46;
-  --primary: #3b82f6;
+  --primary: #4A90E2;
+  /* Unified primary for dark mode as well for consistency */
   --primary-foreground: #ffffff;
+  --point: #FFD700;
+  --point-foreground: #18181b;
   --muted: #27272a;
   --muted-foreground: #a1a1aa;
   color-scheme: dark;
@@ -40,6 +45,8 @@
   --color-input: var(--input);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-point: var(--point);
+  --color-point-foreground: var(--point-foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
 

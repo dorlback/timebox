@@ -65,7 +65,7 @@ export function AnnouncementsBoardModal({ isOpen, onClose, initialAnnouncementId
 
   const getCategoryColor = (category: string) => {
     switch (category) {
-      case 'notice': return 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400';
+      case 'notice': return 'bg-primary/10 dark:bg-primary/30 text-primary dark:text-primary-foreground';
       case 'user_notice': return 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400';
       case 'patch_note': return 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400';
       default: return 'bg-muted text-muted-foreground';

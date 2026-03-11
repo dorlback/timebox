@@ -246,7 +246,7 @@ export default function AdminPage() {
                           announcements.map((a: any) => (
                             <tr key={a.id} className="hover:bg-muted/10 transition-colors group">
                               <td className="px-6 py-4 whitespace-nowrap">
-                                <span className={`px-2 py-1 text-[10px] font-black rounded-lg uppercase tracking-wider ${a.category === 'notice' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' :
+                                <span className={`px-2 py-1 text-[10px] font-black rounded-lg uppercase tracking-wider ${a.category === 'notice' ? 'bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary-foreground' :
                                   a.category === 'user_notice' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400' :
                                     a.category === 'patch_note' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' :
                                       'bg-muted text-muted-foreground'
@@ -276,7 +276,7 @@ export default function AdminPage() {
                                 <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                   <button
                                     onClick={() => setPreviewId(a.id)}
-                                    className="p-2 rounded-lg bg-blue-50 dark:bg-blue-900/10 text-blue-500 hover:text-blue-600 border border-blue-500/10 transition-colors"
+                                    className="p-2 rounded-lg bg-primary/5 dark:bg-primary/10 text-primary hover:opacity-80 border border-primary/10 transition-colors"
                                     title={t('announcements.admin.actions.preview')}
                                   >
                                     <span className="material-symbols-outlined text-sm">visibility</span>

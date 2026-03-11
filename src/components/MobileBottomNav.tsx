@@ -62,7 +62,7 @@ export function MobileBottomNav({ activeView, onViewToggle }: MobileBottomNavPro
             <button
               onClick={onViewToggle}
               className="w-14 h-14 bg-primary text-primary-foreground rounded-full shadow-lg hover:shadow-xl active:scale-95 transition-all flex items-center justify-center z-20 pointer-events-auto"
-              style={{ boxShadow: '0 4px 14px 0 rgba(59, 130, 246, 0.4)' }}
+              style={{ boxShadow: '0 4px 14px 0 rgba(74, 144, 226, 0.4)' }}
             >
               {activeView === 'left' ? (
                 <Calendar size={28} strokeWidth={2.5} />

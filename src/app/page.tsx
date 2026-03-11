@@ -104,8 +104,8 @@ export default async function HomePage() {
             <div className="glass rounded-ios-lg sm:rounded-2xl shadow-ios-xl p-4 sm:p-6 lg:p-8 border border-border/50 transition-all hover:shadow-ios-xl hover:scale-[1.02] duration-300">
               {/* Mock TimeBox Preview */}
               <div className="space-y-3 sm:space-y-4">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-blue-50 dark:bg-blue-950/30 border-l-4 border-blue-500 rounded-ios transition-all hover:shadow-ios">
-                  <div className="text-sm font-semibold text-blue-700 dark:text-blue-400 w-full sm:w-20">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-primary/5 dark:bg-primary/10 border-l-4 border-primary rounded-ios transition-all hover:shadow-ios">
+                  <div className="text-sm font-semibold text-primary dark:text-primary-foreground w-full sm:w-20">
                     09:00
                   </div>
                   <div className="flex-1 w-full">

@@ -120,10 +120,10 @@ export const TimeBlock: React.FC<TimeBlockProps> = React.memo(({
   return (
     <div
       className={`time-block-container group absolute ${isMobile ? 'left-8 right-1' : 'left-12 right-0'} rounded px-2 py-1 ${isCompleted
-        ? 'bg-gray-200 border-2 border-gray-400'
+        ? 'bg-muted/80 border-2 border-point'
         : `${color.bg} border-2 ${color.border}`
         } ${isDragging ? 'opacity-80 shadow-2xl cursor-move z-40 backdrop-blur-[2px]' : ''} ${isResizing ? 'opacity-70 shadow-lg z-40' : ''
-        } ${isActive ? 'opacity-85 shadow-2xl z-40 ring-2 ring-blue-500 ring-offset-1' : ''} ${isCompleted ? '' : 'hover:brightness-95'} ${isResizeHover ? 'ring-[6px] ring-blue-100/50 border-blue-200 shadow-xl z-50 transition-all duration-700' : ''}`}
+        } ${isActive ? 'opacity-85 shadow-2xl z-40 ring-2 ring-primary ring-offset-1' : ''} ${isCompleted ? '' : 'hover:brightness-95'} ${isResizeHover ? 'ring-[6px] ring-primary/20 border-primary/30 shadow-xl z-50 transition-all duration-700' : ''}`}
       style={{
         top: `${top}px`,
         height: `${previewHeight}px`,
@@ -189,8 +189,8 @@ export const TimeBlock: React.FC<TimeBlockProps> = React.memo(({
       {/* 모바일 사이즈 조절 핸들 (편집 모드 활성화 시 계속 표시) */}
       {isActive && !isCompleted && (
         <>
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-white border-[3px] border-blue-600 rounded-full z-50 shadow-lg active:scale-125 transition-transform" />
-          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-4 h-4 bg-white border-[3px] border-blue-600 rounded-full z-50 shadow-lg active:scale-125 transition-transform" />
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-white border-[3px] border-primary rounded-full z-50 shadow-lg active:scale-125 transition-transform" />
+          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-4 h-4 bg-white border-[3px] border-primary rounded-full z-50 shadow-lg active:scale-125 transition-transform" />
         </>
       )}
 

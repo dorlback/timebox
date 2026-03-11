@@ -101,25 +101,28 @@ export const BrainDump: React.FC<BrainDumpProps> = React.memo(({
               onTouchMove={handleTouchEnd}
               onContextMenu={(e) => e.preventDefault()}
               className={`flex items-center gap-2 p-2 rounded border cursor-move transition-colors select-none ${isInTimePlan
-                ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/30'
+                ? 'bg-primary/10 dark:bg-primary/20 border-primary/20 dark:border-primary/40 hover:bg-primary/20 dark:hover:bg-primary/30'
                 : 'bg-muted/50 border-border hover:bg-muted'
-                } ${item.id === draggedItemId ? 'opacity-40 border-blue-500 bg-blue-50/50 scale-[0.98]' : ''}`}
+                } ${item.id === draggedItemId ? 'opacity-40 border-primary bg-primary/10 scale-[0.98]' : ''}`}
               style={{ WebkitUserSelect: 'none', WebkitTouchCallout: 'none', touchAction: 'pan-y' }}
             >
               <GripVertical size={16} className="text-gray-400" />
-              <input
-                type="checkbox"
-                checked={item.completed}
-                onChange={() => onToggleComplete(item.id)}
-                className="w-4 h-4"
-                onClick={(e) => e.stopPropagation()}
-              />
+              <button
+                onClick={(e) => { e.stopPropagation(); onToggleComplete(item.id); }}
+                className="relative flex items-center justify-center w-5 h-5 shrink-0 group/check"
+                title={item.completed ? t('planner.markIncomplete') : t('planner.markComplete')}
+              >
+                <div className={`w-5 h-5 rounded border-2 transition-all flex items-center justify-center ${item.completed ? 'bg-white dark:bg-card border-primary shadow-sm' : 'bg-white dark:bg-card border-border group-hover/check:border-primary/50'
+                  }`}>
+                  {item.completed && <Check size={14} className="text-amber-500 stroke-[4] animate-scale-in" />}
+                </div>
+              </button>
               <span className={`flex-1 text-sm ${item.completed ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
                 {item.text}
               </span>
 
               {isInTimePlan ? (
-                <span className="flex items-center gap-1 text-xs text-blue-600 bg-blue-100 px-2 py-0.5 rounded-full">
+                <span className="flex items-center gap-1 text-xs text-primary bg-primary/10 px-2 py-0.5 rounded-full">
                   <Check size={12} />
                   {t('planner.timePlan')}
                 </span>
@@ -138,7 +141,7 @@ export const BrainDump: React.FC<BrainDumpProps> = React.memo(({
               {/* 
               <button
                 onClick={(e) => { e.stopPropagation(); onMoveToTodo(item); }}
-                className="text-blue-500 hover:text-blue-700"
+                className="text-primary hover:opacity-80"
                 title={t('planner.moveBrainDump')}
               >
                 <ArrowUp size={14} />
