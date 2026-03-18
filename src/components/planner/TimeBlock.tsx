@@ -225,12 +225,14 @@ export const TimeBlock: React.FC<TimeBlockProps> = React.memo(({
         <button
           onClick={(e) => { e.stopPropagation(); onEdit(block); }}
           onMouseDown={(e) => e.stopPropagation()}
-          className="edit-button absolute top-1 right-1 p-1 rounded-full bg-white/20 hover:bg-white/40 text-current transition-colors"
-          style={{ color: isCompleted ? '#4b5563' : 'inherit' }}
+          className={`edit-button absolute top-1 right-1 p-1.5 rounded-full transition-colors backdrop-blur-md ${isCompleted
+            ? 'bg-foreground/5 hover:bg-foreground/10 text-foreground/40 hover:text-foreground/70'
+            : 'bg-black/20 dark:bg-white/10 hover:bg-black/20 dark:hover:bg-white/20 text-black/60 dark:text-gray-10 hover:text-black/90 dark:hover:text-gray-20'
+            }`}
           aria-label="상세 수정"
           title="상세 수정"
         >
-          <NotebookPen size={16} />
+          <NotebookPen size={14} />
         </button>
       )}
     </div>
