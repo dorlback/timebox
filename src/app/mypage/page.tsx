@@ -224,33 +224,17 @@ export default function MyPage() {
                 </div>
               </section>
 
-              {/* Account Management Section */}
-              <section>
-                <div className="flex items-center gap-2 mb-4 mt-8">
-                  <span className="material-symbols-outlined text-primary">account_circle</span>
-                  <h2 className="text-xl font-bold tracking-tight text-foreground">{t('profile.accountManagement') || '계정 관리'}</h2>
-                </div>
-                <div className="bg-card rounded-xl border border-border overflow-hidden shadow-sm">
-                  <div className="p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-muted/50 transition-colors">
-                    <div className="flex items-center gap-4">
-                      <div className="bg-muted p-2 rounded-lg text-muted-foreground shrink-0">
-                        <span className="material-symbols-outlined">logout</span>
-                      </div>
-                      <div>
-                        <h3 className="font-bold text-foreground">{t('profile.logout')}</h3>
-                        <p className="text-muted-foreground text-sm">{t('profile.logoutDesc')}</p>
-                      </div>
-                    </div>
-                    <button
-                      onClick={handleLogout}
-                      disabled={isLoggingOut}
-                      className="w-full sm:w-auto px-4 py-2 text-foreground font-semibold hover:bg-muted rounded-lg transition-colors border border-border sm:border-transparent disabled:opacity-50"
-                    >
-                      {isLoggingOut ? t('common.loading') : t('profile.logout')}
-                    </button>
-                  </div>
-                </div>
-              </section>
+              {/* Simple Logout Button */}
+              <div className="flex justify-end mt-8 border-t border-border/40 pt-6">
+                <button
+                  onClick={handleLogout}
+                  disabled={isLoggingOut}
+                  className="flex items-center gap-1.5 text-sm text-muted-foreground/60 hover:text-muted-foreground transition-colors disabled:opacity-50 px-3 py-1.5 rounded-md hover:bg-muted/30"
+                >
+                  <span className="material-symbols-outlined text-[16px]">logout</span>
+                  {isLoggingOut ? t('common.loading') : t('profile.logout')}
+                </button>
+              </div>
 
               {/* Danger Zone Section */}
               <section className="mt-8">
