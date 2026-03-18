@@ -31,11 +31,8 @@ export const ItemDetailModal: React.FC<ItemDetailModalProps> = ({
   timeBlocks = []
 }) => {
   const { t } = useTranslation();
-  const [isEditing, setIsEditing] = useState(false);
   const [editedText, setEditedText] = useState('');
   const [editedNotes, setEditedNotes] = useState('');
-
-  // 시간 관련 상태
   const [startMinutes, setStartMinutes] = useState(0);
   const [endMinutes, setEndMinutes] = useState(0);
 
@@ -45,26 +42,33 @@ export const ItemDetailModal: React.FC<ItemDetailModalProps> = ({
       setEditedNotes(item.notes || '');
       setStartMinutes(item.startTime || 0);
       setEndMinutes(item.endTime || 0);
-      setIsEditing(false);
     }
   }, [item, isOpen]);
 
   if (!isOpen || !item) return null;
 
-  const handleSave = () => {
-    if (item.type === 'time-block' && endMinutes <= startMinutes) {
-      alert(t('planner.timeError'));
-      return;
-    }
+  const handleCloseWithSave = () => {
+    const hasChanged =
+      editedText !== item.text ||
+      editedNotes !== (item.notes || '') ||
+      startMinutes !== item.startTime ||
+      endMinutes !== item.endTime;
 
-    onSave({
-      ...item,
-      text: editedText,
-      notes: editedNotes,
-      startTime: item.type === 'time-block' ? startMinutes : item.startTime,
-      endTime: item.type === 'time-block' ? endMinutes : item.endTime
-    });
-    setIsEditing(false);
+    if (hasChanged) {
+      if (item.type === 'time-block' && endMinutes <= startMinutes) {
+        alert(t('planner.timeError'));
+        return; // Prevent closing if time is invalid
+      }
+      onSave({
+        ...item,
+        text: editedText || 'Untitled',
+        notes: editedNotes,
+        startTime: item.type === 'time-block' ? startMinutes : item.startTime,
+        endTime: item.type === 'time-block' ? endMinutes : item.endTime
+      });
+    } else {
+      onClose();
+    }
   };
 
   const getTitle = () => {
@@ -173,12 +177,18 @@ export const ItemDetailModal: React.FC<ItemDetailModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-300">
+    <div
+      className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-300"
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget) {
+          handleCloseWithSave();
+        }
+      }}
+    >
       <div
-        className="bg-card w-full max-w-[420px] mx-auto rounded-[2.5rem] shadow-2xl border border-white/10 overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-10 duration-500 max-h-[90dvh] flex flex-col"
-        onClick={(e) => e.stopPropagation()}
+        className="bg-card w-full max-w-[420px] sm:max-w-[520px] md:max-w-[600px] mx-auto rounded-[2.5rem] shadow-2xl border border-border/50 dark:border-white/10 overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-10 duration-500 max-h-[90dvh] flex flex-col"
       >
-        {/* 헤더 */}
+        {/* Header */}
         <div className="flex items-center justify-between p-6 pb-2">
           <div className="flex items-center gap-2">
             <span className="px-3 py-1 bg-primary/20 text-primary text-[9px] font-black rounded-full uppercase tracking-widest leading-none">
@@ -186,141 +196,57 @@ export const ItemDetailModal: React.FC<ItemDetailModalProps> = ({
             </span>
           </div>
           <button
-            onClick={onClose}
+            onClick={handleCloseWithSave}
             className="p-2 flex justify-center items-center rounded-full bg-muted/50 text-muted-foreground hover:bg-muted transition-all active:scale-90"
           >
             <X size={18} />
           </button>
         </div>
 
-        {/* 본문 (스크롤 가능하도록) */}
+        {/* Body (Scrollable) */}
         <div className={`${isMobile ? 'p-5' : 'p-8'} pt-2 space-y-6 overflow-y-auto custom-scrollbar`}>
-          {/* 제목 섹션 */}
+          {/* Title Section */}
           <div className="space-y-2">
-            {isEditing ? (
-              <input
-                type="text"
-                value={editedText}
-                onChange={(e) => setEditedText(e.target.value)}
-                className="w-full bg-transparent text-xl font-black text-foreground placeholder-muted-foreground/20 outline-none border-b-2 border-primary/30 focus:border-primary transition-all pb-2"
-                placeholder={t('planner.addGoalPlaceholder')}
-                autoFocus
-              />
-            ) : (
-              <h1 className="text-2xl font-black text-foreground tracking-tight leading-tight break-words">
-                {item.text}
-              </h1>
-            )}
+            <input
+              type="text"
+              value={editedText}
+              onChange={(e) => setEditedText(e.target.value)}
+              className="w-full bg-transparent text-xl font-black text-foreground placeholder-muted-foreground/30 border-none outline-none focus:ring-0 p-0 hover:bg-muted/50 focus:bg-muted/50 dark:hover:bg-white/5 dark:focus:bg-white/5 transition-colors rounded-lg px-3 -ml-3 py-2"
+              placeholder={t('planner.addGoalPlaceholder')}
+            />
           </div>
 
-          {/* 시간 섹션 (타임블록인 경우) */}
-          {item.type === 'time-block' ? (
+          {/* Time Section (For Time Blocks) */}
+          {item.type === 'time-block' && (
             <div className="space-y-4">
               <div className="flex flex-row gap-2 items-stretch">
-                {isEditing ? (
-                  <>
-                    <TimeEditor label="시작" totalMinutes={startMinutes} onChange={setStartMinutes} />
-                    <TimeEditor label="종료" totalMinutes={endMinutes} onChange={setEndMinutes} />
-                  </>
-                ) : (
-                  <div className="p-4 rounded-[1.8rem] bg-muted/30 border border-border/40 w-full flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="p-3 rounded-2xl bg-primary/10 text-primary shadow-inner">
-                        <Clock size={20} />
-                      </div>
-                      <div>
-                        <p className="text-[9px] font-black text-muted-foreground/60 uppercase tracking-widest mb-0.5">Time Range</p>
-                        <p className={`${isMobile ? 'text-sm' : 'text-lg'} font-black text-foreground tabular-nums`}>
-                          {formatTimeDisplay(item.startTime!)} — {formatTimeDisplay(item.endTime!)}
-                        </p>
-                      </div>
-                    </div>
-                    <div className={`${isMobile ? 'text-[9px]' : 'text-[10px]'} px-3 py-1 rounded-full bg-primary/10 text-primary font-black tracking-wider`}>
-                      {formatDuration(item.startTime!, item.endTime!)}
-                    </div>
-                  </div>
-                )}
+                <TimeEditor label="시작" totalMinutes={startMinutes} onChange={setStartMinutes} />
+                <TimeEditor label="종료" totalMinutes={endMinutes} onChange={setEndMinutes} />
               </div>
-
-              {isEditing ? (
-                <div className="flex justify-center">
-                  <div className="px-4 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-black tracking-widest">
-                    TOTAL: {formatDuration(startMinutes, endMinutes)}
-                  </div>
+              <div className="flex justify-center">
+                <div className="px-4 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-black tracking-widest">
+                  TOTAL: {formatDuration(startMinutes, endMinutes)}
                 </div>
-              ) : null}
+              </div>
             </div>
-          ) : null}
+          )}
 
-          {/* 메모 섹션 */}
+          {/* Memo Section */}
           <div className="space-y-2">
             <div className="flex items-center justify-between px-2">
               <label className="text-[9px] font-black text-muted-foreground/40 uppercase tracking-[0.2em]">Detailed Memo</label>
             </div>
-            {isEditing ? (
-              <textarea
-                value={editedNotes}
-                onChange={(e) => setEditedNotes(e.target.value)}
-                rows={4}
-                className="w-full p-5 rounded-[1.8rem] bg-muted/40 text-foreground placeholder-muted-foreground/30 outline-none focus:ring-4 focus:ring-primary/5 transition-all resize-none text-base md:text-sm leading-relaxed border-2 border-transparent focus:border-primary/10"
-                placeholder={t('planner.addGoalPlaceholder')}
-              />
-            ) : (
-              <div className="p-5 rounded-[1.8rem] bg-muted/20 text-foreground text-sm leading-relaxed min-h-[100px] border border-border/20 shadow-inner">
-                {item.notes ? (
-                  item.notes
-                ) : (
-                  <span className="text-muted-foreground/30 italic font-medium">No details recorded.</span>
-                )}
-              </div>
-            )}
+            <textarea
+              value={editedNotes}
+              onChange={(e) => setEditedNotes(e.target.value)}
+              rows={5}
+              className="w-full p-5 rounded-[1.8rem] bg-muted/40 hover:bg-muted/80 dark:bg-white/5 dark:hover:bg-white/10 text-foreground placeholder-muted-foreground/30 outline-none focus:ring-4 focus:ring-primary/10 transition-all resize-none text-base md:text-sm leading-relaxed border border-border/60 dark:border-white/10 focus:border-primary/40 dark:focus:border-primary/50"
+              placeholder={t('planner.addGoalPlaceholder')}
+            />
           </div>
         </div>
 
-        {/* 푸터 */}
-        <div className="p-8 pt-4 flex gap-3">
-          {isEditing ? (
-            <>
-              <button
-                onClick={() => setIsEditing(false)}
-                className="flex-1 py-4 rounded-[1.5rem] text-xs font-black text-muted-foreground/60 hover:bg-muted transition-all active:scale-95"
-              >
-                {t('common.cancel')}
-              </button>
-              <button
-                onClick={handleSave}
-                className="flex-[2] py-4 rounded-[1.5rem] bg-primary text-primary-foreground text-xs font-black shadow-xl shadow-primary/20 hover:opacity-95 transition-all active:scale-95 flex items-center justify-center gap-2"
-              >
-                <Save size={16} />
-                {t('common.save')}
-              </button>
-            </>
-          ) : (
-            <>
-              {onDelete && (
-                <button
-                  onClick={() => {
-                    if (confirm(t('common.deleteConfirm'))) {
-                      onDelete(item.id);
-                      onClose();
-                    }
-                  }}
-                  className="p-4 rounded-[1.5rem] text-red-500 bg-red-500/10 hover:bg-red-500/20 transition-all active:scale-95"
-                >
-                  <Trash2 size={20} />
-                </button>
-              )}
-              <button
-                onClick={() => setIsEditing(true)}
-                className="flex-1 py-4 rounded-[1.5rem] bg-primary text-background text-xs font-black shadow-xl hover:opacity-90 transition-all active:scale-95 flex items-center justify-center gap-1.5"
-              >
-                <Edit2 size={16} />
-                {t('common.edit')}
-              </button>
-            </>
-          )}
-        </div>
       </div>
-    </div >
+    </div>
   );
 };

@@ -12,7 +12,7 @@ export default function Page() {
   if (isLoading) {
     return (
       <div className="flex h-[calc(var(--vh,1vh)*100)] overflow-hidden bg-background text-foreground transition-colors">
-        <Sidebar />
+        <Sidebar defaultExpanded={false} />
         <main className="flex-1 w-full flex items-center justify-center">
           <div className="text-center">
             <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]" role="status">
@@ -28,7 +28,7 @@ export default function Page() {
   if (!user) {
     return (
       <div className="flex h-[calc(var(--vh,1vh)*100)] overflow-hidden bg-background text-foreground transition-colors">
-        <Sidebar />
+        <Sidebar defaultExpanded={false} />
         <main className="flex-1 w-full flex items-center justify-center">
           <div className="text-center">
             <h2 className="text-2xl font-semibold text-foreground mb-4">{t('profile.loginRequired')}</h2>

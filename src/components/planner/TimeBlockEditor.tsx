@@ -76,7 +76,7 @@ export const TimeBlockEditor: React.FC<TimeBlockEditorProps> = ({
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-black/20 z-40"
-        onClick={onClose}
+        onMouseDown={handleSave}
       />
 
       {/* Modal */}
@@ -88,7 +88,7 @@ export const TimeBlockEditor: React.FC<TimeBlockEditorProps> = ({
             <div className="flex items-center justify-between">
               <h3 className="font-semibold text-foreground">{block.text}</h3>
               <button
-                onClick={onClose}
+                onClick={handleSave}
                 className="text-muted-foreground hover:text-foreground transition-colors"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -174,7 +174,7 @@ export const TimeBlockEditor: React.FC<TimeBlockEditorProps> = ({
             </div>
 
             {/* Duration Display */}
-            <div className="pt-3 border-t border-border">
+            <div className="pt-3 border-t border-border mt-4">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">소요 시간</span>
                 <span className="font-medium text-foreground">
@@ -184,22 +184,6 @@ export const TimeBlockEditor: React.FC<TimeBlockEditorProps> = ({
                 </span>
               </div>
             </div>
-          </div>
-
-          {/* Footer */}
-          <div className="px-5 py-4 bg-muted/30 flex gap-2 rounded-b-lg">
-            <button
-              onClick={onClose}
-              className="flex-1 px-4 py-2 text-sm font-medium text-foreground bg-card border border-border rounded-md hover:bg-muted transition-colors"
-            >
-              취소
-            </button>
-            <button
-              onClick={handleSave}
-              className="flex-1 px-4 py-2 text-sm font-medium text-primary-foreground bg-primary rounded-md hover:opacity-90 transition-colors"
-            >
-              저장
-            </button>
           </div>
         </div>
       </div>

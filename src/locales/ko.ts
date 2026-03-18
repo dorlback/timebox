@@ -21,6 +21,10 @@ export const ko = {
     theme: "테마",
     next: "다음",
   },
+  theme: {
+    lightText: "데이모드",
+    darkText: "나이트모드",
+  },
   sidebar: {
     planner: "플래너",
     dashboard: "대시보드",

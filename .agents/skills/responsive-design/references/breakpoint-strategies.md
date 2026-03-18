@@ -371,7 +371,7 @@ function useBreakpoint() {
 
 ```css
 .hero {
-  min-height: 50vh;
+  min-height: 50dvh;
   padding: var(--space-lg) var(--space-md);
   text-align: center;
 }
@@ -386,7 +386,7 @@ function useBreakpoint() {
 
 @media (min-width: 768px) {
   .hero {
-    min-height: 70vh;
+    min-height: 70dvh;
     display: flex;
     align-items: center;
     text-align: left;
@@ -399,7 +399,7 @@ function useBreakpoint() {
 
 @media (min-width: 1024px) {
   .hero {
-    min-height: 80vh;
+    min-height: 80dvh;
   }
 
   .hero-content {

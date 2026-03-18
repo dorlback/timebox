@@ -24,6 +24,7 @@ export default function MyPage() {
   const { user, updateProfile, isUpdating, isLoading } = useUser();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
+  const [isDangerZoneOpen, setIsDangerZoneOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isWithdrawing, setIsWithdrawing] = useState(false);
   const [isRecovering, setIsRecovering] = useState(false);
@@ -176,38 +177,7 @@ export default function MyPage() {
                   <span className="material-symbols-outlined text-primary">settings</span>
                   <h2 className="text-xl font-bold tracking-tight text-foreground">{t('profile.settings')}</h2>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Language Selection Card */}
-                  <div className="bg-card rounded-xl border border-border p-6 shadow-sm hover:shadow-md transition-shadow">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="bg-primary/10 p-2 rounded-lg text-primary">
-                        <span className="material-symbols-outlined">language</span>
-                      </div>
-                      <div>
-                        <h3 className="font-bold text-card-foreground">{t('profile.language')}</h3>
-                        <p className="text-muted-foreground text-xs">{t('profile.languageDesc')}</p>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-col gap-2">
-                      {(Object.keys(LANGUAGE_NAMES) as Locale[]).map((lang) => (
-                        <button
-                          key={lang}
-                          onClick={() => setLocale(lang)}
-                          className={`flex items-center justify-between px-4 py-2 rounded-lg border transition-all ${locale === lang
-                            ? 'bg-primary/5 border-primary text-primary'
-                            : 'bg-background border-border text-muted-foreground hover:border-primary/50'
-                            }`}
-                        >
-                          <span className="font-medium">{LANGUAGE_NAMES[lang]}</span>
-                          {locale === lang && (
-                            <span className="material-symbols-outlined text-sm">check_circle</span>
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
+                <div className="grid grid-cols-1 gap-4">
                   {/* Pricing Card (Mock) */}
                   <div className="bg-card rounded-xl border border-border overflow-hidden shadow-sm hover:shadow-md transition-shadow group flex flex-col justify-between relative">
                     <div className="blur-[2px] opacity-60 flex flex-col h-full pointer-events-none p-6">
@@ -254,51 +224,72 @@ export default function MyPage() {
                 </div>
               </section>
 
-              {/* Danger Zone Section */}
+              {/* Account Management Section */}
               <section>
                 <div className="flex items-center gap-2 mb-4 mt-8">
-                  <span className="material-symbols-outlined text-red-500">warning</span>
-                  <h2 className="text-xl font-bold tracking-tight text-foreground">{t('profile.dangerZone')}</h2>
+                  <span className="material-symbols-outlined text-primary">account_circle</span>
+                  <h2 className="text-xl font-bold tracking-tight text-foreground">{t('profile.accountManagement') || '계정 관리'}</h2>
                 </div>
-                <div className="bg-card rounded-xl border border-red-900/10 dark:border-red-900/30 overflow-hidden shadow-sm">
-                  <div className="divide-y divide-border">
-                    {/* Logout */}
-                    <div className="p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-muted/50 transition-colors">
-                      <div className="flex items-center gap-4">
-                        <div className="bg-muted p-2 rounded-lg text-muted-foreground shrink-0">
-                          <span className="material-symbols-outlined">logout</span>
-                        </div>
-                        <div>
-                          <h3 className="font-bold text-foreground">{t('profile.logout')}</h3>
-                          <p className="text-muted-foreground text-sm">{t('profile.logoutDesc')}</p>
-                        </div>
+                <div className="bg-card rounded-xl border border-border overflow-hidden shadow-sm">
+                  <div className="p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-muted/50 transition-colors">
+                    <div className="flex items-center gap-4">
+                      <div className="bg-muted p-2 rounded-lg text-muted-foreground shrink-0">
+                        <span className="material-symbols-outlined">logout</span>
                       </div>
-                      <button
-                        onClick={handleLogout}
-                        disabled={isLoggingOut}
-                        className="w-full sm:w-auto px-4 py-2 text-foreground font-semibold hover:bg-muted rounded-lg transition-colors border border-border sm:border-transparent disabled:opacity-50"
-                      >
-                        {isLoggingOut ? t('common.loading') : t('profile.logout')}
-                      </button>
+                      <div>
+                        <h3 className="font-bold text-foreground">{t('profile.logout')}</h3>
+                        <p className="text-muted-foreground text-sm">{t('profile.logoutDesc')}</p>
+                      </div>
                     </div>
+                    <button
+                      onClick={handleLogout}
+                      disabled={isLoggingOut}
+                      className="w-full sm:w-auto px-4 py-2 text-foreground font-semibold hover:bg-muted rounded-lg transition-colors border border-border sm:border-transparent disabled:opacity-50"
+                    >
+                      {isLoggingOut ? t('common.loading') : t('profile.logout')}
+                    </button>
+                  </div>
+                </div>
+              </section>
 
-                    {/* Delete Account */}
-                    <div className="p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors">
-                      <div className="flex items-center gap-4">
-                        <div className="bg-red-100 dark:bg-red-900/30 p-2 rounded-lg text-red-500 shrink-0">
-                          <span className="material-symbols-outlined">delete_forever</span>
+              {/* Danger Zone Section */}
+              <section className="mt-8">
+                <button
+                  onClick={() => setIsDangerZoneOpen(!isDangerZoneOpen)}
+                  className="w-full flex items-center justify-between gap-2 p-4 bg-red-50 dark:bg-red-900/10 rounded-xl text-red-600 hover:bg-red-100 dark:hover:bg-red-900/20 transition-colors"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="material-symbols-outlined text-red-500">warning</span>
+                    <h2 className="text-xl font-bold tracking-tight text-red-600 dark:text-red-500">{t('profile.dangerZone')}</h2>
+                  </div>
+                  <span className={`material-symbols-outlined transition-transform duration-300 ${isDangerZoneOpen ? "rotate-180" : ""}`}>
+                    expand_more
+                  </span>
+                </button>
+
+                <div
+                  className={`grid transition-[grid-template-rows,opacity,margin] duration-300 ease-in-out ${isDangerZoneOpen ? "grid-rows-[1fr] opacity-100 mt-4" : "grid-rows-[0fr] opacity-0 mt-0"
+                    }`}
+                >
+                  <div className="overflow-hidden">
+                    <div className="bg-card rounded-xl border border-red-900/10 dark:border-red-900/30 shadow-sm">
+                      <div className="p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors">
+                        <div className="flex items-center gap-4">
+                          <div className="bg-red-100 dark:bg-red-900/30 p-2 rounded-lg text-red-500 shrink-0">
+                            <span className="material-symbols-outlined">delete_forever</span>
+                          </div>
+                          <div>
+                            <h3 className="font-bold text-red-600 dark:text-red-400">{t('profile.withdraw')}</h3>
+                            <p className="text-muted-foreground text-sm">{t('profile.withdrawDesc')}</p>
+                          </div>
                         </div>
-                        <div>
-                          <h3 className="font-bold text-red-600 dark:text-red-400">{t('profile.withdraw')}</h3>
-                          <p className="text-muted-foreground text-sm">{t('profile.withdrawDesc')}</p>
-                        </div>
+                        <button
+                          onClick={() => setIsWithdrawModalOpen(true)}
+                          className="w-full sm:w-auto px-4 py-2 bg-red-500 text-white font-semibold hover:bg-red-600 rounded-lg transition-colors shadow-sm shadow-red-500/20"
+                        >
+                          {t('profile.deleteForever')}
+                        </button>
                       </div>
-                      <button
-                        onClick={() => setIsWithdrawModalOpen(true)}
-                        className="w-full sm:w-auto px-4 py-2 bg-red-500 text-white font-semibold hover:bg-red-600 rounded-lg transition-colors shadow-sm shadow-red-500/20"
-                      >
-                        {t('profile.deleteForever')}
-                      </button>
                     </div>
                   </div>
                 </div>

@@ -23,6 +23,10 @@ export const en: typeof ko = {
     deleteConfirm: "Are you sure you want to delete?",
     theme: "Theme",
   },
+  theme: {
+    lightText: "Daymode",
+    darkText: "Darkmode",
+  },
   sidebar: {
     planner: "Planner",
     dashboard: "Dashboard",
