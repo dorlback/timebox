@@ -39,27 +39,32 @@ export async function updateSession(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
 
-  // 1. 로그인 상태인 경우 '/', '/login' 접근 시 '/timebox'로 리다이렉트
-  if (user && (pathname === "/" || pathname === "/login")) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/timebox";
-    return NextResponse.redirect(url);
-  }
+  const hasVisited = request.cookies.get("has_visited");
 
-  // 2. 로그인되지 않은 경우 '/' 접근 처리
-  if (!user && pathname === "/") {
-    const hasVisited = request.cookies.get("has_visited");
-    if (hasVisited) {
-      // 재방문인 경우 '/login'으로 리다이렉트
+  if (user) {
+    if (pathname === "/login") {
       const url = request.nextUrl.clone();
-      url.pathname = "/login";
+      url.pathname = "/timebox";
       return NextResponse.redirect(url);
-    } else {
-      // 첫 방문인 경우 쿠키 설정 후 '/' 허용
-      supabaseResponse.cookies.set("has_visited", "true", {
-        maxAge: 60 * 60 * 24 * 365, // 1년
-        path: "/",
-      });
+    }
+
+    if (pathname === "/") {
+      if (!hasVisited) {
+        const url = request.nextUrl.clone();
+        // 타임박스 플래너 경로로 리다이렉트
+        url.pathname = "/timebox";
+        const response = NextResponse.redirect(url);
+        response.cookies.set("has_visited", "true", {
+          maxAge: 60 * 60 * 24 * 365,
+          path: "/",
+        });
+        return response;
+      }
+      // visited 쿠키가 있으면 루트 접근 허용
+    }
+  } else {
+    // 미인증 사용자 루트 접근 허용
+    if (pathname === "/") {
       return supabaseResponse;
     }
   }
