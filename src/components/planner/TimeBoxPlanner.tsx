@@ -26,6 +26,7 @@ import { ItemDetailModal } from './ItemDetailModal';
 import { DiaryModal } from './DiaryModal';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { MobileToolsFab } from './MobileToolsFab';
+import { DesktopToolsDropdown } from './DesktopToolsDropdown';
 import { useTranslation } from '@/contexts/LanguageContext';
 
 
@@ -834,7 +835,10 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
                   {isSaving ? 'Saving...' : lastSavedAt ? `Saved ${lastSavedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : 'Ready'}
                 </span>
               </div>
-              <DateSelector date={date} onDateChange={handleDateChange} isMobile={false} />
+              <div className="flex items-center gap-3">
+                <DesktopToolsDropdown onOpenDiary={() => setIsDiaryModalOpen(true)} />
+                <DateSelector date={date} onDateChange={handleDateChange} isMobile={false} />
+              </div>
             </div>
 
             <ErrorToast message={errorMessage} />
