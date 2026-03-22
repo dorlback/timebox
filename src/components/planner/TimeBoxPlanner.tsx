@@ -97,7 +97,14 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
   const [touchPos, setTouchPos] = useState<{ x: number; y: number } | null>(null);
   const [editingBlock, setEditingBlock] = useState<TimeBlock | null>(null);
 
+  const [immediateSaveTrigger, setImmediateSaveTrigger] = useState(0);
 
+  useEffect(() => {
+    if (immediateSaveTrigger > 0) {
+      handleAutoSave();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [immediateSaveTrigger]);
   // 모바일 뷰포트 감지
   useEffect(() => {
     const checkMobile = () => {
@@ -265,6 +272,7 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
         timeBlocks: updatedTimeBlocks
       };
     });
+    setImmediateSaveTrigger(prev => prev + 1);
   }, [brainDump, setAllData]);
 
   // Todo 핸들러
@@ -293,6 +301,7 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
         timeBlocks: updatedTimeBlocks
       };
     });
+    setImmediateSaveTrigger(prev => prev + 1);
   }, [setAllData]);
 
   const handleItemDetailSave = useCallback((updatedItem: any) => {
