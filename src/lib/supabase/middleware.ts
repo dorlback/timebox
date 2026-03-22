@@ -49,10 +49,12 @@ export async function updateSession(request: NextRequest) {
     }
 
     if (pathname === "/") {
-      if (!hasVisited) {
+      const isPwa = request.nextUrl.searchParams.get("pwa") === "true";
+      if (!hasVisited || isPwa) {
         const url = request.nextUrl.clone();
-        // 타임박스 플래너 경로로 리다이렉트
+        // 타임박스 플래너 경로로 리다이렉트 (PWA 진입 파라미터 제거)
         url.pathname = "/timebox";
+        url.search = ""; // 파라미터 깔끔하게 제거
         const response = NextResponse.redirect(url);
         response.cookies.set("has_visited", "true", {
           maxAge: 60 * 60 * 24 * 365,
