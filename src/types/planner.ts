@@ -31,6 +31,7 @@ export interface DailyData {
   brainDump: BrainDumpItem[];
   todoList: TodoItem[];
   timeBlocks: TimeBlock[];
+  diary?: string;
 }
 
 export interface PastelColor {
@@ -81,7 +82,7 @@ export class Planner {
     try {
       return JSON.parse(this.jsonb);
     } catch (e) {
-      return { brainDump: [], todoList: [], timeBlocks: [] };
+      return { brainDump: [], todoList: [], timeBlocks: [], diary: '' };
     }
   }
 }

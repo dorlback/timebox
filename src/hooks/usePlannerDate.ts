@@ -26,7 +26,8 @@ export const usePlannerData = (currentDate: Date, userId: string, showSuccess: (
     return dailyData[dateKey] || {
       brainDump: [],
       todoList: [],
-      timeBlocks: []
+      timeBlocks: [],
+      diary: ''
     };
   }, [dailyData, dateKey]);
 
@@ -118,7 +119,7 @@ export const usePlannerData = (currentDate: Date, userId: string, showSuccess: (
         } else {
           setDailyData(prev => ({
             ...prev,
-            [dateKey]: { brainDump: [], todoList: [], timeBlocks: [] }
+            [dateKey]: { brainDump: [], todoList: [], timeBlocks: [], diary: '' }
           }));
         }
       } catch (err) {
@@ -202,10 +203,22 @@ export const usePlannerData = (currentDate: Date, userId: string, showSuccess: (
     });
   }, [dateKey, currentData, pushHistory]);
 
+  const setDiary = useCallback((newDiary: string | ((prev: string) => string)) => {
+    pushHistory(currentData);
+    setDailyData(prev => {
+      const currentText = prev[dateKey]?.diary || '';
+      const updatedText = typeof newDiary === 'function' ? newDiary(currentText) : newDiary;
+      return {
+        ...prev,
+        [dateKey]: { ...prev[dateKey], diary: updatedText }
+      };
+    });
+  }, [dateKey, currentData, pushHistory]);
+
   const setAllData = useCallback((newData: DailyData | ((prev: DailyData) => DailyData)) => {
     pushHistory(currentData);
     setDailyData(prev => {
-      const current = prev[dateKey] || { brainDump: [], todoList: [], timeBlocks: [] };
+      const current = prev[dateKey] || { brainDump: [], todoList: [], timeBlocks: [], diary: '' };
       const updated = typeof newData === 'function' ? newData(current) : newData;
       return {
         ...prev,
@@ -218,9 +231,11 @@ export const usePlannerData = (currentDate: Date, userId: string, showSuccess: (
     brainDump: currentData.brainDump,
     todoList: currentData.todoList,
     timeBlocks: currentData.timeBlocks,
+    diary: currentData.diary || '',
     setBrainDump,
     setTodoList,
     setTimeBlocks,
+    setDiary,
     setAllData,
     undo,
     redo,

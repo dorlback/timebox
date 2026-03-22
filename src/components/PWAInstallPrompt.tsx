@@ -71,7 +71,7 @@ export default function PWAInstallPrompt() {
       {/* Floating Action Button */}
       <button
         onClick={() => setShowInfo(!showInfo)}
-        className="fixed right-4 bottom-20 w-12 h-12 bg-white dark:bg-card border border-border rounded-full shadow-lg flex items-center justify-center text-primary z-[60] active:scale-95 transition-all text-xs"
+        className="fixed left-4 md:left-auto md:right-4 bottom-20 w-12 h-12 bg-white dark:bg-card border border-border rounded-full shadow-lg flex items-center justify-center text-primary z-[60] active:scale-95 transition-all text-xs"
         style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}
         aria-label="App Download"
       >

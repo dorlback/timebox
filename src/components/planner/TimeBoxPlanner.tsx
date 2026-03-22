@@ -23,7 +23,9 @@ import DarkModeToggle from '@/components/DarkModeToggle';
 import { TimePlan } from './TimePlan';
 import { BrainDumpAddModal } from './BrainDumpAddModal';
 import { ItemDetailModal } from './ItemDetailModal';
+import { DiaryModal } from './DiaryModal';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
+import { MobileToolsFab } from './MobileToolsFab';
 import { useTranslation } from '@/contexts/LanguageContext';
 
 
@@ -76,9 +78,11 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
     brainDump,
     todoList,
     timeBlocks,
+    diary,
     setBrainDump,
     setTodoList,
     setTimeBlocks,
+    setDiary,
     setAllData,
     undo,
     redo,
@@ -96,6 +100,7 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
   const [dragSource, setDragSource] = useState<'brain-dump' | 'todo-list' | null>(null);
   const [touchPos, setTouchPos] = useState<{ x: number; y: number } | null>(null);
   const [editingBlock, setEditingBlock] = useState<TimeBlock | null>(null);
+  const [isDiaryModalOpen, setIsDiaryModalOpen] = useState(false);
 
   const [immediateSaveTrigger, setImmediateSaveTrigger] = useState(0);
 
@@ -950,6 +955,21 @@ const TimeBoxPlanner = ({ CurrentUser }: { CurrentUser: User }) => {
           </div>
         </div>
       ) : null}
+
+      <DiaryModal 
+        isOpen={isDiaryModalOpen} 
+        onClose={() => setIsDiaryModalOpen(false)} 
+        diaryText={diary || ''} 
+        onSave={(text) => {
+          setDiary(text);
+          setImmediateSaveTrigger(prev => prev + 1);
+          setIsDiaryModalOpen(false);
+        }} 
+        isMobile={isMobile}
+        date={date} 
+      />
+
+      <MobileToolsFab onOpenDiary={() => setIsDiaryModalOpen(true)} />
     </div>
   );
 };
