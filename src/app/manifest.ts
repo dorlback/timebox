@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: 'TimeBox Planner',
     short_name: 'TimeBox',
     description: '효율적인 시간 관리를 위한 타임박스 플래너',
-    start_url: '/?pwa=true',
+    start_url: '/',
     display: 'standalone',
     background_color: '#ffffff',
     theme_color: '#000000',

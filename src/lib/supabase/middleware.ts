@@ -42,31 +42,28 @@ export async function updateSession(request: NextRequest) {
   const hasVisited = request.cookies.get("has_visited");
 
   if (user) {
-    if (pathname === "/login") {
+    if (pathname === "/" || pathname === "/login") {
       const url = request.nextUrl.clone();
       url.pathname = "/timebox";
-      return NextResponse.redirect(url);
-    }
-
-    if (pathname === "/") {
-      const isPwa = request.nextUrl.searchParams.get("pwa") === "true";
-      if (!hasVisited || isPwa) {
-        const url = request.nextUrl.clone();
-        // 타임박스 플래너 경로로 리다이렉트 (PWA 진입 파라미터 제거)
-        url.pathname = "/timebox";
-        url.search = ""; // 파라미터 깔끔하게 제거
-        const response = NextResponse.redirect(url);
+      const response = NextResponse.redirect(url);
+      
+      if (!hasVisited) {
         response.cookies.set("has_visited", "true", {
           maxAge: 60 * 60 * 24 * 365,
           path: "/",
         });
-        return response;
       }
-      // visited 쿠키가 있으면 루트 접근 허용
+      return response;
     }
   } else {
     // 미인증 사용자 루트 접근 허용
     if (pathname === "/") {
+      if (!hasVisited) {
+        supabaseResponse.cookies.set("has_visited", "true", {
+          maxAge: 60 * 60 * 24 * 365,
+          path: "/",
+        });
+      }
       return supabaseResponse;
     }
   }
