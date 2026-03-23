@@ -146,13 +146,13 @@ export const usePlannerData = (currentDate: Date, userId: string, showSuccess: (
     }
   }, [userId, dateKey, currentData, showSuccess, showError]);
 
-  const handleAutoSave = useCallback(async () => {
+  const handleAutoSave = useCallback(async (dataOverride?: DailyData) => {
     if (!userId) {
       return;
     }
     setIsSaving(true);
     try {
-      await savePlannerData(userId, dateKey, currentData, true, showSuccess, showError);
+      await savePlannerData(userId, dateKey, dataOverride || currentData, true, showSuccess, showError);
       setLastSavedAt(new Date());
     } finally {
       setIsSaving(false);

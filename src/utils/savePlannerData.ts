@@ -32,7 +32,8 @@ export const savePlannerData = async (
           payload: {
             brainDump: data.brainDump,
             todoList: data.todoList,
-            timeBlocks: data.timeBlocks
+            timeBlocks: data.timeBlocks,
+            diary: data.diary
           },
           updated_at: new Date().toISOString()
         },
